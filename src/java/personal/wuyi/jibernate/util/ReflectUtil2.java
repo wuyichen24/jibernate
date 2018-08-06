@@ -1,4 +1,4 @@
-package personal.wuyi.autostock.util;
+package personal.wuyi.jibernate.util;
 
 import java.lang.reflect.Method;
 import java.util.Iterator;

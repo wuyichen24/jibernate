@@ -1,4 +1,4 @@
-package personal.wuyi.autostock.io.persist.entity;
+package personal.wuyi.jibernate.io.persist.entity;
 
 import java.util.Date;
 
@@ -11,7 +11,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-import personal.wuyi.autostock.io.persist.core.Uri;
+import personal.wuyi.jibernate.io.persist.core.Uri;
 
 @Entity
 @Table(name="stock_order")
@@ -33,8 +33,7 @@ public class StockOrder extends AbstractAutoStockEntity {
 	@Column(name="sell_total_cost")    private double       sellTotalCost;
 	@Column(name="sell_date_time")     private Date         sellDateTime;
 	@Column(name="earning")            private double       earning;
-	@Enumerated(EnumType.STRING)
-	@Column(name="status")             private BoughtOrSold status;
+	@Column(name="status")             private String       status;
 	
 	public Long         getId()                                      { return id;                                }
 	public void         setId(Long id)                               { this.id = id;                             }
@@ -62,8 +61,8 @@ public class StockOrder extends AbstractAutoStockEntity {
 	public void         setSellTotalCost(double sellTotalCost)       { this.sellTotalCost = sellTotalCost;       }
 	public double       getEarning()                                 { return earning;                           }
 	public void         setEarning(double earning)                   { this.earning = earning;                   }
-	public BoughtOrSold getStatus()                                  { return status;                            }
-	public void         setStatus(BoughtOrSold status)               { this.status = status;                     }
+	public String       getStatus()                                  { return status;                            }
+	public void         setStatus(String status)                     { this.status = status;                     }
 	
 	@Override
 	public Uri getUri() {

@@ -16,6 +16,8 @@ import javax.sql.DataSource;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 
+import personal.wuyi.jibernate.io.persist.query.Query;
+import personal.wuyi.jibernate.io.persist.query.QueryConverter;
 import personal.wuyi.reflect.ReflectUtil;
 
 abstract class AbstractEntityManagerDao {

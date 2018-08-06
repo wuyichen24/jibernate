@@ -1,4 +1,4 @@
-package personal.wuyi.autostock.util;
+package personal.wuyi.jibernate.util;
 
 import java.util.Arrays;
 import java.util.Collection;

@@ -1,4 +1,4 @@
-package personal.wuyi.autostock.io.persist.transformer;
+package personal.wuyi.jibernate.io.persist.transformer;
 
 /**
  * Abstract transformer

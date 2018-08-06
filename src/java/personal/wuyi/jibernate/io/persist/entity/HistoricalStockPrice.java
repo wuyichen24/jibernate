@@ -1,4 +1,4 @@
-package personal.wuyi.autostock.io.persist.entity;
+package personal.wuyi.jibernate.io.persist.entity;
 
 import java.util.Date;
 
@@ -9,7 +9,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-import personal.wuyi.autostock.io.persist.core.Uri;
+import personal.wuyi.jibernate.io.persist.core.Uri;
 
 @Entity
 @Table(name="historical_stock_price")

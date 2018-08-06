@@ -1,6 +1,6 @@
-package personal.wuyi.autostock.io.persist.expression;
+package personal.wuyi.jibernate.io.persist.expression;
 
-import personal.wuyi.autostock.io.persist.transformer.AbstractTransformer;
+import personal.wuyi.jibernate.io.persist.transformer.AbstractTransformer;
 
 /**
  * AbstractExpressionTransformer.java

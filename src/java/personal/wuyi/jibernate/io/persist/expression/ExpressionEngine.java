@@ -1,8 +1,8 @@
-package personal.wuyi.autostock.io.persist.expression;
+package personal.wuyi.jibernate.io.persist.expression;
 
 import org.apache.commons.lang3.time.DateUtils;
 
-import personal.wuyi.autostock.util.StringUtil;
+import personal.wuyi.jibernate.util.StringUtil;
 
 import java.util.ArrayList;
 import java.util.List;

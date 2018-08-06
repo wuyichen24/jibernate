@@ -1,8 +1,8 @@
-package personal.wuyi.autostock.io.persist.transformer;
+package personal.wuyi.jibernate.io.persist.transformer;
 
-import personal.wuyi.autostock.io.persist.expression.Expression;
-import personal.wuyi.autostock.io.persist.expression.ExpressionTransformer;
-import personal.wuyi.autostock.io.persist.expression.Subject;
+import personal.wuyi.jibernate.io.persist.expression.Expression;
+import personal.wuyi.jibernate.io.persist.expression.ExpressionTransformer;
+import personal.wuyi.jibernate.io.persist.expression.Subject;
 
 /**
  * Search Expression Transformer

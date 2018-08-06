@@ -1,4 +1,4 @@
-package personal.wuyi.autostock.io.persist.expression;
+package personal.wuyi.jibernate.io.persist.expression;
 
 import java.io.Serializable;
 

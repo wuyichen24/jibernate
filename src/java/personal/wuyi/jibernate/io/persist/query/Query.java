@@ -1,7 +1,7 @@
-package personal.wuyi.autostock.io.persist.query;
+package personal.wuyi.jibernate.io.persist.query;
 
-import personal.wuyi.autostock.io.persist.core.Persisted;
-import personal.wuyi.autostock.io.persist.expression.Expression;
+import personal.wuyi.jibernate.io.persist.core.Persisted;
+import personal.wuyi.jibernate.io.persist.expression.Expression;
 
 /**
  * Query

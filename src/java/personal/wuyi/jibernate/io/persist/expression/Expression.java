@@ -1,4 +1,4 @@
-package personal.wuyi.autostock.io.persist.expression;
+package personal.wuyi.jibernate.io.persist.expression;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -7,8 +7,8 @@ import java.util.List;
 import java.util.Stack;
 import java.util.function.Consumer;
 
-import personal.wuyi.autostock.util.ReflectUtil2;
-import personal.wuyi.autostock.util.StringUtil;
+import personal.wuyi.jibernate.util.ReflectUtil2;
+import personal.wuyi.jibernate.util.StringUtil;
 
 /**
  * Expression

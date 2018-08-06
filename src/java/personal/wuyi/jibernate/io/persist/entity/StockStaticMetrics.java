@@ -1,4 +1,4 @@
-package personal.wuyi.autostock.io.persist.entity;
+package personal.wuyi.jibernate.io.persist.entity;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;

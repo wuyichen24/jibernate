@@ -1,4 +1,4 @@
-package personal.wuyi.autostock.io.persist.exception;
+package personal.wuyi.jibernate.io.persist.exception;
 
 public class EntityNotFoundException extends Exception {
 	private static final long serialVersionUID = 1L;

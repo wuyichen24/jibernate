@@ -1,4 +1,4 @@
-package personal.wuyi.autostock.io.persist.query;
+package personal.wuyi.jibernate.io.persist.query;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -7,12 +7,12 @@ import java.util.Map;
 
 import javax.persistence.EntityManager;
 
-import personal.wuyi.autostock.io.persist.core.Versioned;
-import personal.wuyi.autostock.io.persist.expression.Expression;
-import personal.wuyi.autostock.io.persist.expression.Subject;
-import personal.wuyi.autostock.io.persist.transformer.SearchExpressionTransformer;
-import personal.wuyi.autostock.io.persist.transformer.UriExpressionTransformer;
-import personal.wuyi.autostock.util.Md5;
+import personal.wuyi.jibernate.io.persist.core.Versioned;
+import personal.wuyi.jibernate.io.persist.expression.Expression;
+import personal.wuyi.jibernate.io.persist.expression.Subject;
+import personal.wuyi.jibernate.io.persist.transformer.SearchExpressionTransformer;
+import personal.wuyi.jibernate.io.persist.transformer.UriExpressionTransformer;
+import personal.wuyi.jibernate.util.Md5;
 import personal.wuyi.reflect.ReflectUtil;
 
 /**

@@ -1,4 +1,4 @@
-package personal.wuyi.autostock.io.persist.entity;
+package personal.wuyi.jibernate.io.persist.entity;
 
 import java.util.Arrays;
 import java.util.Date;
@@ -24,8 +24,7 @@ public class OperationDecision extends AbstractAutoStockEntity {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name="id")                    private Long          id;
 	@Column(name="symbol")                private String        symbol;
-	@Enumerated(EnumType.STRING)
-	@Column(name="type")                  private DecisionType  type;
+	@Column(name="type")                  private String        type;
 	@Column(name="quantity")              private int           quantity;
 	@Column(name="create_date_time")      private Date          createDateTime;
 	@Column(name="valid_until_date_time") private Date          validUntilDateTime;
@@ -38,8 +37,8 @@ public class OperationDecision extends AbstractAutoStockEntity {
 	public void          setId(Long id)                                 { this.id = id;                                 }
 	public String        getSymbol()                                    { return symbol;                                }
 	public void          setSymbol(String symbol)                       { this.symbol = symbol;                         }
-	public DecisionType  getType()                                      { return type;                                  }
-	public void          setType(DecisionType type)                     { this.type = type;                             }
+	public String        getType()                                      { return type;                                  }
+	public void          setType(String type)                           { this.type = type;                             }
 	public int           getQuantity()                                  { return quantity;                              }
 	public void          setQuantity(int quantity)                      { this.quantity = quantity;                     }
 	public Date          getCreateDateTime()                            { return createDateTime;                        }
@@ -58,25 +57,6 @@ public class OperationDecision extends AbstractAutoStockEntity {
 	public OperationDecision (String symbol, String madeBy) {
 		this.symbol = symbol;
 		this.madeBy = madeBy;
-	}
-	
-	public void makeDecision(DecisionType type, int quantity, long timeout, TimeUnit unit) {
-		long timeoutInMillis = unit.toMillis(timeout);
-		Date createDateTime = new Date();
-		Date validUntilDateTime = new Date(createDateTime.getTime() + timeoutInMillis);
-		makeDecision(type, quantity, createDateTime, validUntilDateTime);
-	}
-	
-	public void makeDecision(DecisionType type, int quantity, Date validUntilDateTime) {
-		makeDecision(type, quantity, new Date(), validUntilDateTime);
-	}
-	
-	public void makeDecision(DecisionType type, int quantity, Date createDateTime, Date validUntilDateTime) {
-		this.type               = type;
-		this.quantity           = quantity;
-		this.createDateTime     = createDateTime;
-		this.validUntilDateTime = validUntilDateTime;
-		this.isExecuted         = false;
 	}
 	
 	@Override

@@ -1,4 +1,4 @@
-package personal.wuyi.autostock.io.persist.transformer;
+package personal.wuyi.jibernate.io.persist.transformer;
 
 import personal.wuyi.reflect.ReflectUtil;
 

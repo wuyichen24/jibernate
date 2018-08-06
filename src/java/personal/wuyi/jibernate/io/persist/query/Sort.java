@@ -1,4 +1,4 @@
-package personal.wuyi.autostock.io.persist.query;
+package personal.wuyi.jibernate.io.persist.query;
 
 import java.util.ArrayList;
 import java.util.List;

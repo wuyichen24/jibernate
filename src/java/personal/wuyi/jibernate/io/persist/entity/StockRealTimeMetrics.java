@@ -1,4 +1,4 @@
-package personal.wuyi.autostock.io.persist.entity;
+package personal.wuyi.jibernate.io.persist.entity;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -17,7 +17,7 @@ import javax.persistence.Table;
 
 import com.google.common.base.Joiner;
 
-import personal.wuyi.autostock.io.persist.core.Uri;
+import personal.wuyi.jibernate.io.persist.core.Uri;
 import personal.wuyi.numeric.NumUtil;
 
 @Entity
@@ -67,9 +67,7 @@ public class StockRealTimeMetrics extends AbstractAutoStockEntity {
 	@Column(name="low_moving_average_gap_delta")     private double lowMovingAverageGapDelta;
 	@Column(name="low_moving_average_up_percent")    private double lowMovingAverageUpPercent;
 	@Column(name="low_moving_average_date_time")     private Date   lowMovingAverageDateTime;
-	
-	@Enumerated(EnumType.STRING)
-	@Column(name="status")                           private BoughtOrWatch status;
+	@Column(name="status")                           private String status;
 	
 	public Long          getId()                                                              { return id;                                                        }
 	public void          setId(Long id)                                                       { this.id = id;                                                     }
@@ -139,12 +137,12 @@ public class StockRealTimeMetrics extends AbstractAutoStockEntity {
 	public void          setLowMovingAverageUpPercent(double lowMovingAverageUpPercent)       { this.lowMovingAverageUpPercent = lowMovingAverageUpPercent;       }
 	public Date          getLowMovingAverageDateTime()                                        { return lowMovingAverageDateTime;                                  }
 	public void          setLowMovingAverageDateTime(Date lowMovingAverageDateTime)           { this.lowMovingAverageDateTime = lowMovingAverageDateTime;         }
-	public BoughtOrWatch getStatus()                                                          { return status;                                                    }
-	public void          setStatus(BoughtOrWatch status)                                      { this.status = status;                                             }
+	public String        getStatus()                                                          { return status;                                                    }
+	public void          setStatus(String status)                                             { this.status = status;                                             }
 	
 	public StockRealTimeMetrics() {}
 	
-	public StockRealTimeMetrics (String symbol, double currentPrice, Date currentDateTime, BoughtOrWatch status) {
+	public StockRealTimeMetrics (String symbol, double currentPrice, Date currentDateTime, String status) {
 		this.symbol = symbol;
 		this.status = status;
 		initialize(currentPrice, currentDateTime, true);
@@ -180,7 +178,7 @@ public class StockRealTimeMetrics extends AbstractAutoStockEntity {
 		updateLowMovingAverage(newCurrentMovingAverage, currentDateTime);
 	}
 	
-	public void reset (BoughtOrWatch status) {
+	public void reset (String status) {
 		this.status    = status;
 		this.highPrice = - Double.MAX_VALUE;
 		this.lowPrice  = Double.MAX_VALUE;
