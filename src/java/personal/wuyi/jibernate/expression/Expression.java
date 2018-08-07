@@ -61,7 +61,9 @@ public class Expression implements Cloneable, Serializable {
      * 
      * <p>This function will create a new simple expression.
      *
-     * @param subject
+     * @param  subject
+     *         The field name in the Java class (not the column name in database).
+     *         
      * @param predicate
      * @param value
      */
@@ -74,7 +76,9 @@ public class Expression implements Cloneable, Serializable {
      * 
      * <p>This function will create a new simple expression.
      * 
-     * @param subject
+     * @param  subject
+     *         The field name in the Java class (not the column name in database).
+     *         
      * @param predicate
      * @param value
      */

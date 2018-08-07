@@ -27,7 +27,7 @@ public class QueryConverter {
      * @param transformedQuery
      * @return
      */
-    public static javax.persistence.Query getJpaQuery(EntityManager entityManager, Query<?> query, String... select) {
+    public static javax.persistence.Query getJpaQuery(EntityManager entityManager, Query<?> query, String... selects) {
     	Query<?> transformedQuery = transform(query);
 
         Class<?> persistedClass = transformedQuery.getPersistedClass();
@@ -41,7 +41,7 @@ public class QueryConverter {
         // explicit JPQL is given precedent, otherwise convert query to JPQL
         String jpql = (transformedQuery instanceof EntityQuery) ? ((EntityQuery<?>)transformedQuery).getJpql() : null;
         if(jpql == null) {
-            jpql = getJpql(persistedClass, criteria, sort, caseSensitive, distinct, select);
+            jpql = getJpql(persistedClass, criteria, sort, caseSensitive, distinct, selects);
         }
 
         // create JPA query
@@ -158,7 +158,7 @@ public class QueryConverter {
      * Generate JPA JPQL string from query values
      *
      * @param persistedClass
-     * @param select
+     * @param selects
      * @param criteria
      * @param sort
      * @param caseSensitive
@@ -166,12 +166,12 @@ public class QueryConverter {
      *
      * @return
      */
-    protected static String getJpql(Class<?> persistedClass, Expression criteria, Sort sort, boolean caseSensitive, boolean distinct, String... select) {
+    protected static String getJpql(Class<?> persistedClass, Expression criteria, Sort sort, boolean caseSensitive, boolean distinct, String... selects) {
         String jpqlName = persistedClass.getSimpleName();
         String jpqlAlias = getAlias( persistedClass );
 
         // SELECT -> * or columns
-        String jpqlSelect = getSelect(persistedClass, distinct, select);
+        String jpqlSelect = getSelect(persistedClass, distinct, selects);
 
         StringBuilder sb = new StringBuilder();
         sb.append("SELECT ").append( jpqlSelect ).append(" FROM ").append( jpqlName ).append(" ").append(jpqlAlias);
@@ -214,21 +214,21 @@ public class QueryConverter {
      * specified an explicit select clause we need to modify with explicit alias.
      *
      * @param persistedClass
-     * @param select
+     * @param selects
      * @param distinct
      *
      * @return
      */
-    protected static String getSelect(Class<?> persistedClass, boolean distinct, String... select) {
+    protected static String getSelect(Class<?> persistedClass, boolean distinct, String... selects) {
         String alias = getAlias(persistedClass);
 
-        if(select == null || select.length == 0) {
+        if(selects == null || selects.length == 0) {
             return alias;
         } else {
             // qualify the select clause with the JPQL table alias
             boolean first = true;
             StringBuilder sb = new StringBuilder();
-            for(String prop : select) {
+            for(String prop : selects) {
                 if(!first) {
                     sb.append(",");
                 }
