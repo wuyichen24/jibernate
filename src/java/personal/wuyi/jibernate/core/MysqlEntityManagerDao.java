@@ -32,7 +32,7 @@ public class MysqlEntityManagerDao extends AbstractEntityManagerDao {
 
 	@Override
 	protected String getPersistenceUnit() {
-		return "autostock.persistence";
+		return "mysql.persistence";
 	}
 
 }

@@ -1,11 +1,19 @@
 package personal.wuyi.jibernate.config;
 
-import java.io.IOException;
+import java.io.FileNotFoundException;
 
 import personal.wuyi.jpropertiesorm.annotation.PathX;
 import personal.wuyi.jpropertiesorm.annotation.ValueX;
 import personal.wuyi.jpropertiesorm.core.ConfigurationX;
 
+/**
+ * The configuration class for MySQL connection.
+ * 
+ * @author  Wuyi Chen
+ * @date    08/07/2018
+ * @version 1.0
+ * @since   1.0
+ */
 public class MysqlDbConfig {
 	@PathX                           private String path;
 	
@@ -16,11 +24,35 @@ public class MysqlDbConfig {
 	@ValueX(value="username")        private String username;
 	@ValueX(value="password")        private String password;
 	
-	public MysqlDbConfig(String path) {
+	/**
+	 * Constructs a {@code MysqlDbConfig}.
+	 * 
+	 * @param  path
+	 *         The path of the external configuration file.
+	 *         
+     * @since   1.0
+	 */
+	public MysqlDbConfig(final String path) {
 		this.path = path;
 	}
 	
-	public MysqlDbConfig initialize() throws IllegalArgumentException, IllegalAccessException, IOException {
+	/**
+	 * Load parameters from the external configuration file.
+	 * 
+	 * @return  A new {@code MysqlDbConfig} with the loaded parameters. 
+	 * 
+	 * @throws  IllegalAccessException
+	 *          If a certain field is enforcing Java language access control 
+	 *          and the underlying field is either inaccessible or final.
+	 *          
+	 * @throws  FileNotFoundException
+	 *          If the external configuration file does not exist, is a 
+	 *          directory rather than a regular file, or for some other reason 
+	 *          cannot be opened for reading.
+	 *          
+     * @since   1.0
+	 */
+	public MysqlDbConfig initialize() throws IllegalAccessException, FileNotFoundException  {
 		return ConfigurationX.bindExternalConfigurationWithInstanceFieldsUsingPathX(this);
 	}
 
