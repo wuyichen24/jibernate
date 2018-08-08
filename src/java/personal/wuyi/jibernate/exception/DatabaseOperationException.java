@@ -1,28 +1,28 @@
 package personal.wuyi.jibernate.exception;
 
-public class EntityNotFoundException extends Exception {
+public class DatabaseOperationException extends Exception {
 	private static final long serialVersionUID = 1L;
 
-	protected EntityNotFoundException() {
+	protected DatabaseOperationException() {
         super();
     }
 
-    protected EntityNotFoundException(Throwable cause) {
+    protected DatabaseOperationException(Throwable cause) {
         super(cause);
     }
 
     /**
-     * Construct a {@code EntityNotFoundException}
+     * Construct a {@code DatabaseOperationException}
      * 
      * @param  message
      *         The error message in string.
      */
-    public EntityNotFoundException(String message) {
+    public DatabaseOperationException(String message) {
         super(message);
     }
 
     /**
-     * Construct a {@code EntityNotFoundException}
+     * Construct a {@code DatabaseOperationException}
      * 
      * @param  message
      *         The error message in string.
@@ -30,7 +30,7 @@ public class EntityNotFoundException extends Exception {
      * @param  cause
      *         The exception.
      */
-    public EntityNotFoundException(String message, Throwable cause) {
+    public DatabaseOperationException(String message, Throwable cause) {
         super(message, cause);
     }
 }

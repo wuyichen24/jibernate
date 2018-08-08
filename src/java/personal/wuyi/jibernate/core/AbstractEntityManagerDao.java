@@ -15,7 +15,10 @@ import javax.sql.DataSource;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.HibernatePersistenceProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import personal.wuyi.jibernate.exception.DatabaseOperationException;
 import personal.wuyi.jibernate.query.Query;
 import personal.wuyi.jibernate.query.QueryConverter;
 import personal.wuyi.reflect.ReflectUtil;
@@ -37,6 +40,8 @@ import personal.wuyi.reflect.ReflectUtil;
  */
 abstract class AbstractEntityManagerDao {
 	private EntityManagerFactory entityManagerFactory;
+	
+	private static Logger logger = LoggerFactory.getLogger(AbstractEntityManagerDao.class);
 	
 	abstract String     getDialect();
 	abstract DataSource getDataSource();
@@ -167,6 +172,8 @@ abstract class AbstractEntityManagerDao {
      *         The {@code Query} as criteria to limit the set of results.
      *         
      * @return  The number of matched records.
+     * 
+     * @since   1.0
      */
     public <T extends Persisted> long count(Query<T> query) {
         final EntityManager entityManager = getEntityManager();
@@ -181,13 +188,33 @@ abstract class AbstractEntityManagerDao {
         }
     }
 
-    public <T extends Persisted> void write(T t)  {
-        EntityManager entityManager = getEntityManager();
+    /**
+     * Insert a new record or update a existing record to database.
+     * 
+     * @param  t
+     *         The record needs to be inserted or updated.
+     *         
+     * @throws  DatabaseOperationException
+     *          There is an error occurred when writing a record.
+     * 
+     * @see  <a href="http://stackoverflow.com/questions/1069992/jpa-entitymanager-why-use-persist-over-merge">
+     *           Why use persist() over merge()?
+     *       </a>
+     *       
+     * @see  <a href="http://spitballer.blogspot.com/2010/04/jpa-persisting-vs-merging-entites.html">
+     *           JPA: persisting vs. merging entites
+     *       </a>
+     *       
+     * @since   1.0
+     */
+    public <T extends Persisted> void write(T t) throws DatabaseOperationException  {
+        final EntityManager entityManager = getEntityManager();
 
         try {
             entityManager.getTransaction().begin();
 
-            // TODO http://stackoverflow.com/questions/1069992/jpa-entitymanager-why-use-persist-over-merge
+            // create new records, use persist()
+            // update existing records, use merge()
             if(((ManagedEntity) t).getId() == null) {
                 entityManager.persist(t);
             } else {
@@ -197,21 +224,43 @@ abstract class AbstractEntityManagerDao {
             entityManager.getTransaction().commit();
         } catch(Exception e) {
             entityManager.getTransaction().rollback();
-            e.printStackTrace();
+            logger.error("Error occurred when writing an object", e);
+            throw new DatabaseOperationException("Error occurred when writing an object", e);
         } finally {
             entityManager.close();
         }
     }
 
-    public <T extends Persisted> void write(List<T> tList) {
-        EntityManager entityManager = getEntityManager();
+    /**
+     * Insert a list of new records or update a list of existing records to 
+     * database.
+     * 
+     * @param  tList
+     *         The list of records needs to be inserted or updated.
+     *         
+     * @throws  DatabaseOperationException
+     *          There is an error occurred when writing a record.
+     * 
+     * @see  <a href="http://stackoverflow.com/questions/1069992/jpa-entitymanager-why-use-persist-over-merge">
+     *           Why use persist() over merge()?
+     *       </a>
+     *       
+     * @see  <a href="http://spitballer.blogspot.com/2010/04/jpa-persisting-vs-merging-entites.html">
+     *           JPA: persisting vs. merging entites
+     *       </a>
+     *       
+     * @since   1.0
+     */
+    public <T extends Persisted> void write(List<T> tList) throws DatabaseOperationException {
+        final EntityManager entityManager = getEntityManager();
 
         try {
             entityManager.getTransaction().begin();
 
             for (T t : tList) {
-                // TODO http://stackoverflow.com/questions/1069992/jpa-entitymanager-why-use-persist-over-merge
-                if (((ManagedEntity) t).getId() == null) {
+                // create new records, use persist()
+                // update existing records, use merge()                
+            	    if (((ManagedEntity) t).getId() == null) {
                     entityManager.persist(t);
                 } else {
                     entityManager.merge(t);
@@ -221,7 +270,8 @@ abstract class AbstractEntityManagerDao {
             entityManager.getTransaction().commit();
         } catch(Exception e) {
             entityManager.getTransaction().rollback();
-            // TODO Add logging
+            logger.error("Error occurred when writing objects", e);
+            throw new DatabaseOperationException("Error occurred when writing objects", e);
         } finally {
             entityManager.close();
         }

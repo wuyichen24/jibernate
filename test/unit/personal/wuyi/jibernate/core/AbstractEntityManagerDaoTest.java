@@ -18,7 +18,7 @@ import personal.wuyi.jibernate.exception.DatabaseOperationException;
 import personal.wuyi.jibernate.expression.Expression;
 import personal.wuyi.jibernate.query.EntityQuery;
 
-public class CrudTest {
+public class AbstractEntityManagerDaoTest {
 	private static MysqlDbConfig          dbConfig;
 	private static MysqlEntityManagerDao  dao;
 	
@@ -30,7 +30,7 @@ public class CrudTest {
 	}
 	
 	@Test
-	public void insertTest() throws ParseException, DatabaseOperationException  {
+	public void writeTest() throws ParseException, DatabaseOperationException  {
 		DateFormat df = new SimpleDateFormat("MM/dd/yyyy");
 		
 	    Student student = new Student();
@@ -44,12 +44,11 @@ public class CrudTest {
 	}
 	
 	@Test
-	public void queryTest() {
+	public void readTest() {
 		// basic query
 		EntityQuery<Student> q1 = new EntityQuery<Student>(Student.class);
-		q1.setCriteria(new Expression("first_Name", Expression.EQUAL, "John"));
+		q1.setCriteria(new Expression("firstName", Expression.EQUAL, "John"));
 		List<Student> studentList = dao.read(q1);
-		Assert.assertEquals(2, studentList.size());
 		
 		// query for only few columns
 		EntityQuery<Student> q2 = new EntityQuery<Student>(Student.class);
@@ -61,5 +60,14 @@ public class CrudTest {
 				System.out.println(str);
 			}
 		}
+	}
+	
+	@Test
+	public void countTest() {
+		// basic query
+		EntityQuery<Student> q1 = new EntityQuery<Student>(Student.class);
+		q1.setCriteria(new Expression("firstName", Expression.EQUAL, "John"));
+		long count = dao.count(q1);
+		System.out.println(count);
 	}
 }
