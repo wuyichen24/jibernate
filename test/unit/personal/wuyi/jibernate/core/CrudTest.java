@@ -34,11 +34,11 @@ public class CrudTest {
 		DateFormat df = new SimpleDateFormat("MM/dd/yyyy");
 		
 	    Student student = new Student();
-	    student.setFirstName("John");
-	    student.setLastName("Doe");
-	    student.setDob(df.parse("07/16/1993"));
-	    student.setGpa(3.45);
-	    student.setRace(Ethnicity.ASIAN);
+	    student.setFirstName("Mary");
+	    student.setLastName("Wang");
+	    student.setDob(df.parse("07/16/1994"));
+	    student.setGpa(3.43);
+	    student.setRace(Ethnicity.WHITE);
 		
 		dao.write(student);
 	}
@@ -47,7 +47,7 @@ public class CrudTest {
 	public void queryTest() {
 		// basic query
 		EntityQuery<Student> q1 = new EntityQuery<Student>(Student.class);
-		q1.setCriteria(new Expression("first_Name", Expression.EQUAL, "John"));
+		q1.setCriteria(new Expression("firstName", Expression.EQUAL, "John"));
 		List<Student> studentList = dao.read(q1);
 		Assert.assertEquals(2, studentList.size());
 		
@@ -61,5 +61,24 @@ public class CrudTest {
 				System.out.println(str);
 			}
 		}
+	}
+	
+	@Test
+	public void updateTest() throws DatabaseOperationException {
+		EntityQuery<Student> q1 = new EntityQuery<Student>(Student.class);
+		q1.setCriteria(new Expression("firstName", Expression.EQUAL, "Mary"));
+		List<Student> studentList = dao.read(q1);
+		for (Student student : studentList) {
+			student.setGpa(student.getGpa() * 1.1);
+		}
+		dao.write(studentList);
+	}
+	
+	@Test
+	public void deleteTest() throws DatabaseOperationException {
+		EntityQuery<Student> q1 = new EntityQuery<Student>(Student.class);
+		q1.setCriteria(new Expression("firstName", Expression.EQUAL, "Mary"));
+		List<Student> studentList = dao.read(q1);
+		dao.delete(studentList.get(0));
 	}
 }

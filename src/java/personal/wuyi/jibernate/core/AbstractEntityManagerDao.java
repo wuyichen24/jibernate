@@ -1,12 +1,10 @@
 package personal.wuyi.jibernate.core;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -43,8 +41,27 @@ abstract class AbstractEntityManagerDao {
 	
 	private static Logger logger = LoggerFactory.getLogger(AbstractEntityManagerDao.class);
 	
+	/**
+	 * Get the Hibernate dialect string corresponding to DB technology (MySQL, Oracle, etc.)
+	 * 
+	 * @return  The string of dialect.
+	 */
 	abstract String     getDialect();
+	
+	/**
+     * Build the {@code DataSource} used by current {@code EntityManager} 
+     * which is specific to DB technology (MySQL, Oracle, etc.),
+     * host/environment and credentials.
+     *
+     * @return  The {@code DataSource}.
+     */
 	abstract DataSource getDataSource();
+	
+	/**
+	 * Get the name of persistence unit.
+	 * 
+	 * @return  The name of persistence unit.
+	 */
 	abstract String     getPersistenceUnit();
 	
 	/**
@@ -260,7 +277,7 @@ abstract class AbstractEntityManagerDao {
             for (T t : tList) {
                 // create new records, use persist()
                 // update existing records, use merge()                
-            	    if (((ManagedEntity) t).getId() == null) {
+            	if (((ManagedEntity) t).getId() == null) {
                     entityManager.persist(t);
                 } else {
                     entityManager.merge(t);
@@ -277,63 +294,157 @@ abstract class AbstractEntityManagerDao {
         }
     }
 
-    public <T extends Persisted> void delete(T persisted) {
-        EntityManager entityManager = getEntityManager();
+    /**
+     * Delete an record from database.
+     * 
+     * <p>You can not remove an record which is not managed by the entity 
+     * manager, so this method will check the record is managed or not. 
+     * If not, that record will be managed first an then deleted.
+     * 
+     * @param  t
+     *         The record needs to be deleted.
+     *         
+     * @throws  DatabaseOperationException
+     *          There is an error occurred when deleting a record.
+     *          
+     * @see  <a href="https://stackoverflow.com/questions/17027398/java-lang-illegalargumentexception-removing-a-detached-instance-com-test-user5">
+     *           java.lang.IllegalArgumentException: Removing a detached instance com.test.User#5
+     *       </a>
+     *          
+     * @since   1.0
+     */
+    public <T extends Persisted> void delete(T t) throws DatabaseOperationException {
+        final EntityManager entityManager = getEntityManager();
 
         try {
             entityManager.getTransaction().begin();
-            entityManager.remove(persisted);
+            // Can not delete an entity which is not managed by entityManager
+            // So check an entity is managed or not, if not, manage it first.
+            entityManager.remove(entityManager.contains(t) ? t : entityManager.merge(t));
             entityManager.getTransaction().commit();
         } catch(Exception e) {
             entityManager.getTransaction().rollback();
-            // TODO Add logging
+            logger.error("Error occurred when deleting an object", e);
+            throw new DatabaseOperationException("Error occurred when deleting an object", e);
         } finally {
             entityManager.close();
         }
     }
     
+    /**
+     * Delete a list of records from database.
+     * 
+     * <p>You can not remove an record which is not managed by the entity 
+     * manager, so this method will check the record is managed or not. 
+     * If not, that record will be managed first an then deleted.
+     * 
+     * @param  tList
+     *         The list of the records needs to be deleted.
+     *         
+     * @throws  DatabaseOperationException
+     *          There is an error occurred when deleting a list of records.
+     *          
+     * @see  <a href="https://stackoverflow.com/questions/17027398/java-lang-illegalargumentexception-removing-a-detached-instance-com-test-user5">
+     *           java.lang.IllegalArgumentException: Removing a detached instance com.test.User#5
+     *       </a>
+     *          
+     * @since   1.0
+     */
+    public <T extends Persisted> void delete(List<T> tList) throws DatabaseOperationException {
+    	final EntityManager entityManager = getEntityManager();
+
+        try {
+            entityManager.getTransaction().begin();
+            
+            for (T t : tList) {
+            	// Can not delete an entity which is not managed by entityManager
+                // So check an entity is managed or not, if not, manage it first.
+            	entityManager.remove(entityManager.contains(t) ? t : entityManager.merge(t));
+            }
+            
+            entityManager.getTransaction().commit();
+        } catch(Exception e) {
+            entityManager.getTransaction().rollback();
+            logger.error("Error occurred when deleting objects", e);
+            throw new DatabaseOperationException("Error occurred when deleting objects", e);
+        } finally {
+            entityManager.close();
+        }
+    }
+    
+	/**
+	 * Get an {@code EntityManager}.
+	 * 
+	 * @return  An {@code EntityManager}.
+	 * 
+     * @since   1.0
+	 */
 	protected EntityManager getEntityManager() {
 		return getEntityManagerFactory().createEntityManager();
 	}
 	
+	/**
+	 * Get an {@code EntityManagerFactory}.
+	 * 
+	 * <p>{@code EntityManagerFactory} will be initialized once and reuse 
+	 * after that.
+	 * 
+	 * @return  An {@code EntityManagerFactory}.
+	 * 
+     * @since   1.0
+	 */
 	protected EntityManagerFactory getEntityManagerFactory() {
 		if (entityManagerFactory == null) {
-			Map<String, Object> properties = getProperties();
+			Map<String, Object> properties          = getProperties();
 			PersistenceUnitInfo persistenceUnitInfo = getPersistUnitInfo();
 			entityManagerFactory = new HibernatePersistenceProvider().createContainerEntityManagerFactory(persistenceUnitInfo, properties);
 		}
 		return entityManagerFactory;
 	}
 	
+	/**
+	 * Get the properties based on different types of {@code EntityManager}.
+	 * 
+	 * @return  The {@code HashMap} contains all the properties.
+	 * 
+     * @since   1.0
+	 */
 	private Map<String,Object> getProperties() {
         Map<String,Object> properties = new HashMap<>();
 
-        properties.put("hibernate.dialect", getDialect());
-
-        // use programmatic DataSource builder (instead of normal JPA persistence unit configuration)
-        properties.put( AvailableSettings.DATASOURCE, getDataSource());
-
-        // JPA spec does not support dynamic class discovery so we use Hibernate feature to "discover" for us (which works but is kinda a hack)
-        Set<Class<?>> classes = getEntityClasses();
-        if(classes != null) {
-            // convert set to list expected by hibernate
-            properties.put( "hibernate.ejb.loaded.classes", new ArrayList<>(classes));
-        }
+        properties.put(AvailableSettings.DIALECT,    getDialect());
+        properties.put(AvailableSettings.DATASOURCE, getDataSource());
 
         return properties;
     }
 	
-	private Set<Class<?>> getEntityClasses() {
-		try {
-			return ReflectUtil.getPackageClasses("personal.wuyi.autostock.entity", true);
-		} catch (ClassNotFoundException | IOException e) {
-			e.printStackTrace();
-		}
-		
-		return null;
-    }
-	
+	/**
+	 * Get the info of the persistence unit based on the {@code EntityManager}.
+	 * 
+	 * @return  The {@code PersistenceUnitInfo}.
+	 * 
+	 * @since   1.0
+	 */
 	private PersistenceUnitInfo getPersistUnitInfo() {
 		return new CommonPersistenceUnitInfo(getPersistenceUnit());
 	}
+	
+    /**
+     * Open a {@code EntityManagerFactory}.
+     * 
+	 * @since   1.0
+     */
+    public void start() {
+        getEntityManagerFactory();
+    }
+
+    /**
+     * Close the {@code EntityManagerFactory}.
+     * 
+	 * @since   1.0
+     */
+    public void stop() {
+        getEntityManagerFactory().close();
+        entityManagerFactory = null;
+    }
 }
