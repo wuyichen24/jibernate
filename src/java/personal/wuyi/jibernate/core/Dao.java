@@ -5,7 +5,16 @@ import java.util.List;
 import personal.wuyi.jibernate.exception.DatabaseOperationException;
 import personal.wuyi.jibernate.query.Query;
 
-public interface Dao {
+/**
+ * The interface to provides some specific data operations without exposing 
+ * details of the database.
+ * 
+ * @author  Wuyi Chen
+ * @date    08/08/2018
+ * @version 1.0
+ * @since   1.0
+ */
+public interface Dao extends Plugin {
 	/**
 	 * Query a single record from database. 
 	 * 

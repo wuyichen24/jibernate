@@ -14,10 +14,25 @@ import javax.persistence.spi.PersistenceUnitInfo;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 import javax.sql.DataSource;
 
+/**
+ * The common persistence unit info class for creating entity manager 
+ * programmatically without persistence file.
+ * 
+ * @author  Wuyi Chen
+ * @date    08/08/2018
+ * @version 1.0
+ * @since   1.0
+ */
 public class CommonPersistenceUnitInfo implements PersistenceUnitInfo {
     private String name;
 
-    public CommonPersistenceUnitInfo( String name ) {
+    /**
+     * Constructs a {@code CommonPersistenceUnitInfo}.
+     * 
+     * @param  name
+     *         The name of persistence unit.
+     */
+    public CommonPersistenceUnitInfo(String name) {
         this.name = name;
     }
 

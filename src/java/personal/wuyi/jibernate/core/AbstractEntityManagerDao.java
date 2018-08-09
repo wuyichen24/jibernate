@@ -45,6 +45,8 @@ abstract class AbstractEntityManagerDao implements Dao {
 	 * Get the Hibernate dialect string corresponding to DB technology (MySQL, Oracle, etc.)
 	 * 
 	 * @return  The string of dialect.
+	 * 
+     * @since   1.0
 	 */
 	abstract String     getDialect();
 	
@@ -54,6 +56,8 @@ abstract class AbstractEntityManagerDao implements Dao {
      * host/environment and credentials.
      *
      * @return  The {@code DataSource}.
+     * 
+     * @since   1.0
      */
 	abstract DataSource getDataSource();
 	
@@ -61,6 +65,8 @@ abstract class AbstractEntityManagerDao implements Dao {
 	 * Get the name of persistence unit.
 	 * 
 	 * @return  The name of persistence unit.
+	 * 
+     * @since   1.0
 	 */
 	abstract String     getPersistenceUnit();
 	
@@ -222,25 +228,14 @@ abstract class AbstractEntityManagerDao implements Dao {
         }
     }
 
-    /**
-     * Delete an record from database.
+    /* (non-Javadoc)
+     * @see personal.wuyi.jibernate.core.Dao#delete(personal.wuyi.jibernate.core.Persisted)
      * 
-     * <p>You can not remove an record which is not managed by the entity 
-     * manager, so this method will check the record is managed or not. 
-     * If not, that record will be managed first an then deleted.
-     * 
-     * @param  t
-     *         The record needs to be deleted.
-     *         
-     * @throws  DatabaseOperationException
-     *          There is an error occurred when deleting a record.
-     *          
      * @see  <a href="https://stackoverflow.com/questions/17027398/java-lang-illegalargumentexception-removing-a-detached-instance-com-test-user5">
      *           java.lang.IllegalArgumentException: Removing a detached instance com.test.User#5
      *       </a>
-     *          
-     * @since   1.0
      */
+    @Override
     public <T extends Persisted> void delete(T t) throws DatabaseOperationException {
         final EntityManager entityManager = getEntityManager();
 
@@ -259,27 +254,16 @@ abstract class AbstractEntityManagerDao implements Dao {
         }
     }
     
-    /**
-     * Delete a list of records from database.
+    /* (non-Javadoc)
+     * @see personal.wuyi.jibernate.core.Dao#delete(personal.wuyi.jibernate.core.Persisted)
      * 
-     * <p>You can not remove an record which is not managed by the entity 
-     * manager, so this method will check the record is managed or not. 
-     * If not, that record will be managed first an then deleted.
-     * 
-     * @param  tList
-     *         The list of the records needs to be deleted.
-     *         
-     * @throws  DatabaseOperationException
-     *          There is an error occurred when deleting a list of records.
-     *          
      * @see  <a href="https://stackoverflow.com/questions/17027398/java-lang-illegalargumentexception-removing-a-detached-instance-com-test-user5">
      *           java.lang.IllegalArgumentException: Removing a detached instance com.test.User#5
      *       </a>
-     *          
-     * @since   1.0
      */
+    @Override
     public <T extends Persisted> void delete(List<T> tList) throws DatabaseOperationException {
-    	final EntityManager entityManager = getEntityManager();
+    		final EntityManager entityManager = getEntityManager();
 
         try {
             entityManager.getTransaction().begin();
@@ -357,20 +341,22 @@ abstract class AbstractEntityManagerDao implements Dao {
 		return new CommonPersistenceUnitInfo(getPersistenceUnit());
 	}
 	
-    /**
+    /* (non-Javadoc)
      * Open a {@code EntityManagerFactory}.
      * 
-	 * @since   1.0
+     * @see personal.wuyi.jibernate.core.Plugin#start()
      */
+	@Override
     public void start() {
         getEntityManagerFactory();
     }
 
-    /**
+    /* (non-Javadoc)
      * Close the {@code EntityManagerFactory}.
      * 
-	 * @since   1.0
+     * @see personal.wuyi.jibernate.core.Plugin#stop()
      */
+	@Override
     public void stop() {
         getEntityManagerFactory().close();
         entityManagerFactory = null;
