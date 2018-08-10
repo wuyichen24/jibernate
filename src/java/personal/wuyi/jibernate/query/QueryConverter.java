@@ -7,7 +7,7 @@ import java.util.Map;
 
 import javax.persistence.EntityManager;
 
-import personal.wuyi.jibernate.core.Versioned;
+import personal.wuyi.jibernate.entity.Versioned;
 import personal.wuyi.jibernate.expression.Expression;
 import personal.wuyi.jibernate.expression.Subject;
 import personal.wuyi.jibernate.transformer.SearchExpressionTransformer;

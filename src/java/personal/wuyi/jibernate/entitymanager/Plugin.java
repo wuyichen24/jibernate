@@ -1,4 +1,4 @@
-package personal.wuyi.jibernate.core;
+package personal.wuyi.jibernate.entitymanager;
 
 /**
  * The plug-in interface so that you can manually start or stop an event. 

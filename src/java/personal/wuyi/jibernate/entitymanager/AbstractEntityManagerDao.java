@@ -1,4 +1,4 @@
-package personal.wuyi.jibernate.core;
+package personal.wuyi.jibernate.entitymanager;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,6 +16,9 @@ import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import personal.wuyi.jibernate.entity.ManagedEntity;
+import personal.wuyi.jibernate.entity.Persisted;
+import personal.wuyi.jibernate.entity.Uri;
 import personal.wuyi.jibernate.exception.DatabaseOperationException;
 import personal.wuyi.jibernate.query.Query;
 import personal.wuyi.jibernate.query.QueryConverter;

@@ -1,4 +1,4 @@
-package personal.wuyi.jibernate.core;
+package personal.wuyi.jibernate.entitymanager;
 
 import java.io.IOException;
 import java.text.DateFormat;
@@ -14,6 +14,7 @@ import org.junit.Test;
 import personal.wuyi.jibernate.config.MysqlDbConfig;
 import personal.wuyi.jibernate.entity.Ethnicity;
 import personal.wuyi.jibernate.entity.Student;
+import personal.wuyi.jibernate.entitymanager.MysqlEntityManagerDao;
 import personal.wuyi.jibernate.exception.DatabaseOperationException;
 import personal.wuyi.jibernate.expression.Expression;
 import personal.wuyi.jibernate.query.EntityQuery;

@@ -1,6 +1,6 @@
 package personal.wuyi.jibernate.transformer;
 
-import personal.wuyi.jibernate.core.Uri;
+import personal.wuyi.jibernate.entity.Uri;
 import personal.wuyi.jibernate.expression.Expression;
 import personal.wuyi.jibernate.expression.ExpressionTransformer;
 import personal.wuyi.jibernate.expression.Subject;

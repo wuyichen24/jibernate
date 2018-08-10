@@ -1,4 +1,4 @@
-package personal.wuyi.jibernate.core;
+package personal.wuyi.jibernate.entity;
 
 
 import java.time.ZonedDateTime;

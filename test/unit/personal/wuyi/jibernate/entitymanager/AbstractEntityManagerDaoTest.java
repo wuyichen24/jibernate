@@ -1,4 +1,4 @@
-package personal.wuyi.jibernate.core;
+package personal.wuyi.jibernate.entitymanager;
 
 import java.io.IOException;
 import java.text.DateFormat;
@@ -14,6 +14,8 @@ import org.junit.Test;
 import personal.wuyi.jibernate.config.MysqlDbConfig;
 import personal.wuyi.jibernate.entity.Ethnicity;
 import personal.wuyi.jibernate.entity.Student;
+import personal.wuyi.jibernate.entity.Uri;
+import personal.wuyi.jibernate.entitymanager.MysqlEntityManagerDao;
 import personal.wuyi.jibernate.exception.DatabaseOperationException;
 import personal.wuyi.jibernate.expression.Expression;
 import personal.wuyi.jibernate.query.EntityQuery;
@@ -41,6 +43,8 @@ public class AbstractEntityManagerDaoTest {
 	    student.setRace(Ethnicity.ASIAN);
 		
 		dao.write(student);
+		
+		System.out.println(student.isPersisted());
 	}
 	
 	@Test
@@ -49,6 +53,11 @@ public class AbstractEntityManagerDaoTest {
 		EntityQuery<Student> q1 = new EntityQuery<Student>(Student.class);
 		q1.setCriteria(new Expression("firstName", Expression.EQUAL, "John"));
 		List<Student> studentList = dao.read(q1);
+		Student student = studentList.get(0);
+		student.setFirstName("Alex");
+		Uri uri = student.getUri();
+		System.out.println(uri.toString());
+		System.out.println(student.isPersisted());
 		
 		// query for only few columns
 		EntityQuery<Student> q2 = new EntityQuery<Student>(Student.class);

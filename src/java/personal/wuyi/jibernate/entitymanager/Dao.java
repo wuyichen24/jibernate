@@ -1,7 +1,9 @@
-package personal.wuyi.jibernate.core;
+package personal.wuyi.jibernate.entitymanager;
 
 import java.util.List;
 
+import personal.wuyi.jibernate.entity.Persisted;
+import personal.wuyi.jibernate.entity.Uri;
 import personal.wuyi.jibernate.exception.DatabaseOperationException;
 import personal.wuyi.jibernate.query.Query;
 

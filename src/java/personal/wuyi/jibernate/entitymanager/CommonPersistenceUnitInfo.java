@@ -1,4 +1,4 @@
-package personal.wuyi.jibernate.core;
+package personal.wuyi.jibernate.entitymanager;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -31,6 +31,8 @@ public class CommonPersistenceUnitInfo implements PersistenceUnitInfo {
      * 
      * @param  name
      *         The name of persistence unit.
+     *         
+     * @since   1.0
      */
     public CommonPersistenceUnitInfo(String name) {
         this.name = name;
@@ -69,11 +71,11 @@ public class CommonPersistenceUnitInfo implements PersistenceUnitInfo {
     @Override
     public List<URL> getJarFileUrls() {
         try {
-            return Collections.list( this.getClass()
+            return Collections.list(this.getClass()
                     .getClassLoader()
-                    .getResources( "" ) );
-        } catch ( IOException e ) {
-            throw new UncheckedIOException( e );
+                    .getResources(""));
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
     }
 
@@ -124,6 +126,6 @@ public class CommonPersistenceUnitInfo implements PersistenceUnitInfo {
 
 	@Override
 	public void addTransformer(ClassTransformer transformer) {
-		
+		// nothing needs to be implemented.
 	}
 }

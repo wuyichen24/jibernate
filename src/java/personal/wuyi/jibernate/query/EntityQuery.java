@@ -1,6 +1,6 @@
 package personal.wuyi.jibernate.query;
 
-import personal.wuyi.jibernate.core.Persisted;
+import personal.wuyi.jibernate.entity.Persisted;
 
 /**
  * EntityQuery
