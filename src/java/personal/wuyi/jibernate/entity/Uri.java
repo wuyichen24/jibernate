@@ -1,9 +1,15 @@
 package personal.wuyi.jibernate.entity;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.math.NumberUtils;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 
 /**
  * The URI (Uniform Resource Identifier) for entity.
@@ -118,7 +124,8 @@ public class Uri {
     public static Uri parse(final String uriString) {
         final Uri uri   = new Uri();
         uri.uriString   = uriString;
-        uri.clazz       = getType(uriString);
+        String path     = getClassPathWithoutId(uriString);
+        uri.clazz       = getType(path);
 
         final String classpath = getPath(uri.clazz);
 
@@ -128,10 +135,18 @@ public class Uri {
             id = id.trim();
 
             if(id.length() > 0) {
-                uri.id = id;
+                uri.id = Integer.parseInt(id);
             }
         }
         return uri;
+    }
+    
+    private static String getClassPathWithoutId(String uriString) {
+        List<String> classPathList = Lists.newArrayList(Splitter.on('/').omitEmptyStrings().split(uriString));
+        if (NumberUtils.isCreatable(classPathList.get(classPathList.size() - 1))) {
+        		classPathList.remove(classPathList.size() - 1);	
+        }
+        return Joiner.on("").join(SEPARATOR, Joiner.on("/").join(classPathList), SEPARATOR);
     }
 
     /**
@@ -162,7 +177,7 @@ public class Uri {
         if(clazz != null) {
             return Joiner.on("").join(SEPARATOR, clazz.getName().replaceAll("\\.", SEPARATOR), SEPARATOR);
         } else {
-        	return "";
+        	    return "";
         }
     }
 
@@ -184,12 +199,13 @@ public class Uri {
             return null;
         }
 
-        int last = (path.endsWith("/")) ? path.length() - 1: path.length();
-        String packageName = path.substring(1, last).replaceAll(SEPARATOR, ".");
+        int last  = (path.endsWith("/")) ? path.length() - 1: path.length();
+        int first = (path.startsWith("/")) ? 1 : 0;
+        String packageName = path.substring(first, last).replaceAll(SEPARATOR, ".");
         try {
-        	return Class.forName(packageName);
+        		return Class.forName(packageName);
         } catch (ClassNotFoundException e) {
-        	return null;
+        		return null;
         }
     }
 
@@ -266,7 +282,7 @@ public class Uri {
      * @since   1.0
      */
     private boolean isEqualId(Uri uri) {
-    	if (getId() != null) {
+    	  	if (getId() != null) {
             if(uri.getId() != null) {
                 if(!getId().equals(uri.getId())) {
                     return false;
@@ -280,7 +296,7 @@ public class Uri {
             }
         }
     	
-    	return true;
+    	  	return true;
     }
 }
 
