@@ -15,4 +15,12 @@ public class UriTest {
 		Assert.assertEquals(Student.class,                                uri2.getType());
 		Assert.assertEquals(24,                                           uri2.getId());
 	}
+	
+	@Test
+	public void getTypeTest() throws ClassNotFoundException {
+		Assert.assertEquals(Student.class, Uri.getType("/personal/wuyi/jibernate/entity/Student/"));
+		Assert.assertEquals(null, Uri.getType(null));
+		Assert.assertEquals(null, Uri.getType(""));
+		Assert.assertEquals(null, Uri.getType("/personal/wuyi/jibernate/entity/XYZ/"));
+	}
 }

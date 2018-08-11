@@ -3,9 +3,7 @@ package personal.wuyi.jibernate.entity;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import com.google.common.base.Joiner;
-
-import java.util.Arrays;
-import java.util.List;
+import com.google.common.base.Strings;
 
 /**
  * The URI (Uniform Resource Identifier) for entity.
@@ -27,9 +25,9 @@ import java.util.List;
  * @since   1.0
  */
 public class Uri {
-    public final static String SEPARATOR = "/";
+    public static final String SEPARATOR = "/";
 
-    private String uri;
+    private String uriString;
 
     /** cache for convenience but do not serialize or persist */
     private transient Class<?> clazz;
@@ -46,8 +44,8 @@ public class Uri {
      * @since   1.0
      */
     public Uri(Class<?> clazz) {
-        this.clazz = clazz;
-        this.uri   = getPath(clazz);
+        this.clazz     = clazz;
+        this.uriString = getPath(clazz);
     }
 
     /**
@@ -62,9 +60,9 @@ public class Uri {
      * @since   1.0
      */
     public Uri(Class<?> clazz, Object id) {
-        this.clazz = clazz;
-        this.id    = id;
-        this.uri   = Joiner.on("").skipNulls().join(getPath(clazz), id.toString());
+        this.clazz     = clazz;
+        this.id        = id;
+        this.uriString = Joiner.on("").skipNulls().join(getPath(clazz), id.toString());
     }
     
     /**
@@ -100,12 +98,10 @@ public class Uri {
      * @since   1.0
      */
     public void reload() {
-    	if(id == null && clazz == null) {
-            if(uri != null) {
-            	final Uri parsed = Uri.parse(uri);
-                this.id    = parsed.id;
-                this.clazz = parsed.clazz;
-            }
+    	if(id == null && clazz == null && uriString != null) {
+            final Uri parsed = Uri.parse(uriString);
+            this.id          = parsed.id;
+            this.clazz       = parsed.clazz;
         }
     }
 
@@ -121,7 +117,7 @@ public class Uri {
      */
     public static Uri parse(final String uriString) {
         final Uri uri   = new Uri();
-        uri.uri         = uriString;
+        uri.uriString   = uriString;
         uri.clazz       = getType(uriString);
 
         final String classpath = getPath(uri.clazz);
@@ -139,92 +135,67 @@ public class Uri {
     }
 
     /**
-     * Get the path portion of URI (uri - path).
+     * Get the class path of the class which this {@code URI} represents of.
      *
-     * @return
+     * @return  The class path of a class.
+     * 
+     * @since   1.0
      */
     public String getPath() {
        return getPath(this.clazz);
     }
 
     /**
-     * Get the URI path of a type (class)
+     * Get the class path of a class.
+     * 
+     * <p>If the {@code Class} object is null, the class path will be empty 
+     * string.
      *
-     * @param type
-     * @return
+     * @param  clazz
+     *         The class need to get path.
+     *         
+     * @return  The class path of the class.
+     * 
+     * @since   1.0
      */
-    public static String getPath(Class<?> type) {
-        StringBuilder path = new StringBuilder();
-
-        if(type != null) {
-            String name = type.getName();
-
-            path.append(SEPARATOR).append(name.replaceAll("\\.", SEPARATOR)).append(SEPARATOR);
+    public static String getPath(Class<?> clazz) {
+        if(clazz != null) {
+            return Joiner.on("").join(SEPARATOR, clazz.getName().replaceAll("\\.", SEPARATOR), SEPARATOR);
+        } else {
+        	return "";
         }
-
-        return path.toString();
     }
 
-	
-
     /**
-     * Get the type (class) of a URI path
+     * Get the {@code Class} by the class path.
+     * 
+     * <p>If the class is not found based on the path or the path is null or 
+     * empty, this function will return {@code null}.
      *
-     * @param path
-     * @return
+     * @param  path
+     *         The class path of a class.
+     *         
+     * @return  The {@code Class} based on the path.
+     * 
+     * @since   1.0
      */
-    public static Class<?> getType(String path)  {
-        if(path == null) {
+    public static Class<?> getType(String path) {
+        if(Strings.isNullOrEmpty(path)) {
             return null;
         }
 
         int last = (path.endsWith("/")) ? path.length() - 1: path.length();
-        String name = path.substring(1, last);  // trim beginning/ending separators
-        name = name.replaceAll(SEPARATOR, ".");
-        Class<?> type = findClass(name);
-        return type;
-    }
-
-    /**
-     * Given URI, try to find a class which best matches pattern.  
-     * 
-     * <p>This is necessary because domain prefix may be ambiguous (com, org, 
-     * net, etc.) and because the ID suffix may be non-numeric, in which case 
-     * we may need to guess whether path is just class "type" or "type" + "id".
-     *
-     * @param name
-     * @return
-     */
-    private static Class<?> findClass(String name) {
-        int index = name.indexOf(".");
-        String maybe = (index > 0) ? name.substring(0, index) : "";
-
-        // check if domain prefix specified, otherwise try to infer/guess
-        List<String> prefixes = Arrays.asList(maybe, "com", "org", "net");
-
-        for(String prefix : prefixes) {
-            String qname = prefix + "." + name;
-            try {
-                Class<?> c = Class.forName(qname);
-                return c;
-            } catch(Exception e) {
-                // eat it
-            }
+        String packageName = path.substring(1, last).replaceAll(SEPARATOR, ".");
+        try {
+        	return Class.forName(packageName);
+        } catch (ClassNotFoundException e) {
+        	return null;
         }
-
-        // if not matched, try removing suffix which may actually be ID
-        int subPath = name.lastIndexOf(".");
-        if(subPath > 0) {
-            name = name.substring(0, subPath);
-            return findClass(name);
-        }
-        
-        return null;
     }
 
     @Override
     public String toString() {
-        return uri;
+        return uriString;
     }
     
     @Override
@@ -247,37 +218,69 @@ public class Uri {
 
         Uri uri = (Uri) o;
 
-        if (getPath() != null) {
-            if(uri.getPath() != null) {
-                if(getPath().equals(uri.getPath()) == false) {
-                    return false;
-                }
-            } else {
-                return false;
-            }
-        } else {
-            if(uri.getPath() != null) {
-                return false;
-            }
-        }
-
-        if (getId() != null) {
-            if(uri.getId() != null) {
-                if(getId().equals(uri.getId()) == false) {
-                    return false;
-                }
-            } else {
-                return false;
-            }
-        } else {
-            if(uri.getId() != null) {
-                return false;
-            }
-        }
-
-        return true;
+        return isEqualPath(uri) && isEqualId(uri);
     }
-
-
+    
+    /**
+     * Check the class path of this {@code Uri} is same with class path of the 
+     * provided {@code Uri}.
+     * 
+     * @param  uri
+     *         The {@code Uri} needs to be compared with this {@code Uri}.
+     *         
+     * @return  {@code true} if the class path is equal between this and the 
+     *          provided {@code Uri};
+     *          {@code false} otherwise.
+     *          
+     * @since   1.0
+     */
+    private boolean isEqualPath(Uri uri) {
+    	if (getPath() != null) {
+            if(uri.getPath() != null) {
+                if(!getPath().equals(uri.getPath())) {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        } else {
+            if(uri.getPath() != null) {
+                return false;
+            }
+        }
+    	
+    	return true;
+    }
+    
+    /**
+     * Check the unique ID of this {@code Uri} is same with unique ID of the 
+     * provided {@code Uri}.
+     * 
+     * @param  uri
+     *         The {@code Uri} needs to be compared with this {@code Uri}.
+     *         
+     * @return  {@code true} if the unique ID is equal between this and the 
+     *          provided {@code Uri};
+     *          {@code false} otherwise.
+     *          
+     * @since   1.0
+     */
+    private boolean isEqualId(Uri uri) {
+    	if (getId() != null) {
+            if(uri.getId() != null) {
+                if(!getId().equals(uri.getId())) {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        } else {
+            if(uri.getId() != null) {
+                return false;
+            }
+        }
+    	
+    	return true;
+    }
 }
 
