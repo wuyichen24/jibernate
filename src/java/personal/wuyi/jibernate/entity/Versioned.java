@@ -5,54 +5,75 @@ import java.time.ZonedDateTime;
 
 
 /**
- * Versioned
- *
- * Defines interface for version controlled data. Versioned objects have a 
- * "revision" number indicating their sequential historical ordering. The most 
- * recent revision is designated as the "master".
+ * The interface for version-controlled data. 
+ * 
+ * <p>The versioned objects have a "revision" number indicating their 
+ * sequential historical ordering. The most recent revision is designated as 
+ * the "master".
+ * 
+ * @author  Wuyi Chen
+ * @date    08/10/2018
+ * @version 1.0
+ * @since   1.0
  */
 public interface Versioned extends Persisted {
     /**
-     * Get the sequential historical revision order
+     * Get the sequential historical revision order.
      *
-     * @return
+     * @return  The revision number of the current entity.
+     * 
+     * @since   1.0
      */
     Integer getRevision();
 
     /**
-     * Set the sequential historical revision order
+     * Set the sequential historical revision order.
      *
-     * @param revision
+     * @param  revision
+     *         The revision number of the current entity. 
+     *         
+     * @since   1.0
      */
     void setRevision(Integer revision);
 
     /**
-     * Get the revision date time
+     * Get the revision date time.
      *
-     * @return
+     * @return  The date time of the revision.
+     * 
+     * @since   1.0
      */
     ZonedDateTime getRevisionDate();
 
     /**
-     * Set the revision date time
+     * Set the revision date time.
      *
-     * @param revisionDate
+     * @param  revisionDate
+     *         The date time of the revision.
+     *         
+     * @since   1.0
      */
     void setRevisionDate(ZonedDateTime revisionDate);
 
 
     /**
-     * Check the current revision is the head revision or not
+     * Check the current revision is the head revision or not.
      *
-     * @return
+     * @return  {@code true} if the current revision is the head revision;
+     *          {@code false} otherwise.
+     *          
+     * @since   1.0
      */
-    Boolean getHead();
+    Boolean isHead();
 
 
     /**
      * Set the current revision as the head revision.
      *
-     * @param head
+     * @param  head
+     *         The current revision is the head revision or not.
+     *         
+     * @since   1.0
      */
     void setHead(Boolean head);
 }
