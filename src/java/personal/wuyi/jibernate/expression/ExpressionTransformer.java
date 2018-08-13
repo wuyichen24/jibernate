@@ -29,14 +29,14 @@ public abstract class ExpressionTransformer extends AbstractTransformer<Expressi
 
 		if ( expression.isCompound() == false ) {
 
-			Expression transformed = transform( expression.getSubject(), expression.getPredicate(), expression.getValue() );
+			Expression transformed = transform( expression.getSubject(), expression.getOperator(), expression.getValue() );
 			return super.transform( transformed, context );
 		}
 		else {
 			
 			Expression transformed = new Expression();
 
-			for ( int i = 0; i < expression.size(); i++ ) {
+			for ( int i = 0; i < expression.getNumberOfSubExpression(); i++ ) {
 				
 				Expression child = expression.getSubExpression( i );
 				child = transform( child );
@@ -52,7 +52,7 @@ public abstract class ExpressionTransformer extends AbstractTransformer<Expressi
 				}
 			}
 			
-			if ( transformed.size() == 0 ) {
+			if ( transformed.getNumberOfSubExpression() == 0 ) {
 				return null;
 			}
 			

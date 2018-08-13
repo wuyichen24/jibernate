@@ -45,10 +45,10 @@ public class ExpressionEngine {
 			if( minterm.isCompound() ) {
 				
 				boolean minTruth = true;
-				for ( int i = 0; i < minterm.size(); i++ ) {
+				for ( int i = 0; i < minterm.getNumberOfSubExpression(); i++ ) {
 					
 					Expression child = minterm.getSubExpression( i );
-					boolean eval = evaluate( child.getSubject().getValue(), child.getPredicate(), child.getValue() );
+					boolean eval = evaluate( child.getSubject().getValue(), child.getOperator(), child.getValue() );
 					minTruth = minTruth && eval;
 				}
 				
@@ -56,7 +56,7 @@ public class ExpressionEngine {
 			}
 			else {
 				
-				boolean eval = evaluate( minterm.getSubject().getValue(), minterm.getPredicate(), minterm.getValue() );
+				boolean eval = evaluate( minterm.getSubject().getValue(), minterm.getOperator(), minterm.getValue() );
 				truth = truth || eval;				
 			}
 		}	
@@ -205,14 +205,14 @@ public class ExpressionEngine {
 
 			// use a divide-and-conquor strategy to avoid stack overflow
 			// for very large expressions
-			if( expr.size() > threshold ) {
+			if( expr.getNumberOfSubExpression() > threshold ) {
 				ArrayList<Expression> dividedList = new ArrayList<Expression>();
 				int p = 0;
 				int q = threshold - 1;
 
 				// Try to break the compound into discrete sub-expressions,
 				// and return the union of the minimized results
-				while( p <= q && q < expr.size() ) {
+				while( p <= q && q < expr.getNumberOfSubExpression() ) {
 					// get the lookahead operator
 					String la = expr.getOperator( q, Expression.SIDE_RIGHT );
 
@@ -234,8 +234,8 @@ public class ExpressionEngine {
 						// advance the indices
 						p = q + 1;
 						q += threshold;
-						if( q >= expr.size() ) {
-							q = expr.size() - 1;
+						if( q >= expr.getNumberOfSubExpression() ) {
+							q = expr.getNumberOfSubExpression() - 1;
 						}
 					}
 					else {
@@ -333,7 +333,7 @@ public class ExpressionEngine {
 
 			// break out of loop if descending into child expression, otherwise
 			// continue left to right evaluation parse
-			for( int i = itr; !descend && i < expr.size(); i++ ) {
+			for( int i = itr; !descend && i < expr.getNumberOfSubExpression(); i++ ) {
 				Expression child = expr.getSubExpression( i );
 
 				// attempt to reduce nested parens
@@ -343,7 +343,7 @@ public class ExpressionEngine {
 
 				String op = (i > 0 ? expr.getOperator( i, Expression.SIDE_LEFT ) : null);
 
-				String la = (i == (expr.size() - 1) ? null : expr.getOperator( i, Expression.SIDE_RIGHT ));
+				String la = (i == (expr.getNumberOfSubExpression() - 1) ? null : expr.getOperator( i, Expression.SIDE_RIGHT ));
 
 				// DEBUG
 				/*
@@ -413,7 +413,7 @@ public class ExpressionEngine {
 		if( sop.isCompound() ) {
 			sop = simplify( sop );
 
-			if( sop.size() == 1 ) {
+			if( sop.getNumberOfSubExpression() == 1 ) {
 				Expression temp = sop.getSubExpression( 0 );
 
 				if( sop.isComplement() ) {
@@ -452,7 +452,7 @@ public class ExpressionEngine {
 							if( complementExpr.isCompound() ) {
 								complementExpr.complement( true );
 
-								if( complementExpr.size() == 1 ) {
+								if( complementExpr.getNumberOfSubExpression() == 1 ) {
 									complementExpr = simmer( complementExpr );
 								}
 								else {
@@ -461,7 +461,7 @@ public class ExpressionEngine {
 									// so we need to multiply out
 									// !A!CD + !A!C!E + !B!CD + !B!C!E
 									Expression temp = complementExpr.getSubExpression( 0 );
-									for( int i = 1; i < complementExpr.size(); i++ ) {
+									for( int i = 1; i < complementExpr.getNumberOfSubExpression(); i++ ) {
 										Expression blah = complementExpr.getSubExpression( i );
 										temp = intersection( temp, blah );
 									}
@@ -497,7 +497,7 @@ public class ExpressionEngine {
 				Expression complementExpr = (Expression) pdaStack.pop();
 				if( complementExpr.isCompound() ) {
 					complementExpr.complement( true );
-					if( complementExpr.size() == 1 ) {
+					if( complementExpr.getNumberOfSubExpression() == 1 ) {
 						complementExpr = simmer( complementExpr );
 					}
 					else {
@@ -506,7 +506,7 @@ public class ExpressionEngine {
 						// so we need to multiply out
 						// !A!CD + !A!C!E + !B!CD + !B!C!E
 						Expression temp = complementExpr.getSubExpression( 0 );
-						for( int i = 1; i < complementExpr.size(); i++ ) {
+						for( int i = 1; i < complementExpr.getNumberOfSubExpression(); i++ ) {
 							Expression blah = complementExpr.getSubExpression( i );
 							temp = intersection( temp, blah );
 						}
@@ -560,10 +560,10 @@ public class ExpressionEngine {
 		List<Expression> minterm = new ArrayList<Expression>();
 
 		// build Arraylist of minterms
-		for( int i = 0; i < minimized.size(); i++ ) {
+		for( int i = 0; i < minimized.getNumberOfSubExpression(); i++ ) {
 
 			Expression child = minimized.getSubExpression( i );
-			String la = (i + 1 == minimized.size() ? null : minimized.getOperator( i, Expression.SIDE_RIGHT ));
+			String la = (i + 1 == minimized.getNumberOfSubExpression() ? null : minimized.getOperator( i, Expression.SIDE_RIGHT ));
 
 			if( !minterm.contains( child ) )
 				minterm.add( child );
@@ -722,7 +722,7 @@ public class ExpressionEngine {
 
 				intersection = new Expression();
 
-				for( int i = 0; i < e2.size(); i++ ) {
+				for( int i = 0; i < e2.getNumberOfSubExpression(); i++ ) {
 
 					Expression child = (Expression) e2.getSubExpression( i );
 					String op = (i == 0 ? null : e2.getOperator( i, Expression.SIDE_LEFT ));
@@ -747,11 +747,11 @@ public class ExpressionEngine {
 				intersection = new Expression();
 
 				boolean matched = false;
-				for( int i = 0; i < e1.size(); i++ ) {
+				for( int i = 0; i < e1.getNumberOfSubExpression(); i++ ) {
 
 					Expression child = e1.getSubExpression( i );
 					String op = (i == 0 ? null : e1.getOperator( i, Expression.SIDE_LEFT ));
-					String la = (i + 1 == e1.size() ? null : e1.getOperator( i, Expression.SIDE_RIGHT ));
+					String la = (i + 1 == e1.getNumberOfSubExpression() ? null : e1.getOperator( i, Expression.SIDE_RIGHT ));
 
 					intersection.add( child, op );
 
@@ -779,16 +779,16 @@ public class ExpressionEngine {
 				List<Expression> minterm2 = new ArrayList<Expression>();
 
 				// calculate product minterms
-				for( int i = 0; i < e1.size(); i++ ) {
+				for( int i = 0; i < e1.getNumberOfSubExpression(); i++ ) {
 					Expression alpha = e1.getSubExpression( i );
-					String op1 = (i + 1 == e1.size() ? null : e1.getOperator( i, Expression.SIDE_RIGHT ));
+					String op1 = (i + 1 == e1.getNumberOfSubExpression() ? null : e1.getOperator( i, Expression.SIDE_RIGHT ));
 
 					minterm1.add( alpha );
 
 					if( null == op1 || op1.equals( Expression.OR ) ) {
-						for( int j = 0; j < e2.size(); j++ ) {
+						for( int j = 0; j < e2.getNumberOfSubExpression(); j++ ) {
 							Expression beta = e2.getSubExpression( j );
-							String op2 = (j + 1 == e2.size() ? null : e2.getOperator( j, Expression.SIDE_RIGHT ));
+							String op2 = (j + 1 == e2.getNumberOfSubExpression() ? null : e2.getOperator( j, Expression.SIDE_RIGHT ));
 
 							minterm2.add( beta );
 
@@ -838,7 +838,7 @@ public class ExpressionEngine {
 
 		Expression simmered = expr;
 
-		while( simmered.size() == 1 ) {
+		while( simmered.getNumberOfSubExpression() == 1 ) {
 			// preserve the complement
 			boolean complement = simmered.isComplement();
 
@@ -893,10 +893,10 @@ public class ExpressionEngine {
 		Expression minterm = new Expression();
 
 		// build list of minterm expressions
-		for( int i = 0; i < minimized.size(); i++ ) {
+		for( int i = 0; i < minimized.getNumberOfSubExpression(); i++ ) {
 			Expression child = minimized.getSubExpression( i );
 
-			String la = ((i + 1) == minimized.size()) ? null : minimized.getOperator( i, Expression.SIDE_RIGHT );
+			String la = ((i + 1) == minimized.getNumberOfSubExpression()) ? null : minimized.getOperator( i, Expression.SIDE_RIGHT );
 
 			minterm.add( child, Expression.AND );
 

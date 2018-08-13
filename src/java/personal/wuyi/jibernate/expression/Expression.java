@@ -11,18 +11,21 @@ import personal.wuyi.jibernate.util.ReflectUtil2;
 import personal.wuyi.jibernate.util.StringUtil;
 
 /**
- * Expression
+ * The class for representing query expression.
  * 
- * <p>This class represents the where clause of the SQL statement
- * 
- * @author Wuyi Chen
+ * @author  Wuyi Chen
+ * @date    08/12/2018
+ * @version 1.0
+ * @since   1.0
  */
 public class Expression implements Cloneable, Serializable {
-    private static final long serialVersionUID = -1378805926311132288L;
+    private static final long serialVersionUID = 1L;
 
+    // For combining 2 expressions.
     public static final String AND                = "&&";
     public static final String OR                 = "||";
-
+    
+    // For operators in a single expression.
     public static final String EQUAL              = "==";
     public static final String NOT_EQUAL          = "!=";
     public static final String GREATER_THAN       = ">";
@@ -40,60 +43,75 @@ public class Expression implements Cloneable, Serializable {
     // by default complement is false, if true then opposite of expression value
     private boolean complement = false;
 
-    private Subject subject   = null;
-    private String  predicate = null;
-    private Object  value     = null;
+    // If the expression is a single expression, those 3 fields will be populated.
+    private Subject subject  = null;
+    private String  operator = null;
+    private Object  value    = null;
 
+    // If the expression is a compound expression, this list will be populated.
+    /** The list of sub-expressions and operators */
     private List<Object> expressionsAndOperators = null;
 
     /**
-     * Constructs a {@code Expression}
+     * Constructs a {@code Expression}.
      * 
-     * <p>Use of the default constructor is discouraged due to ambiguity 
-     * concerning whether the uninitialized expression is simple or compound.
+     * @since   1.0
      */
-    protected Expression() {
-
-    }
+    protected Expression() { }
 
     /**
-     * Constructs a {@code Expression}
+     * Constructs a {@code Expression}.
      * 
-     * <p>This function will create a new simple expression.
+     * <p>This method will create a new simple expression.
      *
      * @param  subject
-     *         The field name in the Java class (not the column name in database).
+     *         The field name in the Java class (not the column name in 
+     *         database).
      *         
-     * @param predicate
-     * @param value
+     * @param  operator
+     *         The operator for the expression.
+     * 
+     * @param  value
+     *         The value for the expression.
+     *         
+     * @since   1.0
      */
-    public Expression(String subject, String predicate, Object value) {
-        this(new Subject(subject, null), predicate, value);
+    public Expression(String subject, String operator, Object value) {
+        this(new Subject(subject, null), operator, value);
     }
 
     /**
-     * Constructs a {@code Expression}
+     * Constructs a {@code Expression}.
      * 
-     * <p>This function will create a new simple expression.
+     * <p>This method will create a new simple expression.
      * 
      * @param  subject
-     *         The field name in the Java class (not the column name in database).
+     *         The field name in the Java class (not the column name in 
+     *         database).
      *         
-     * @param predicate
-     * @param value
+     * @param  operator
+     *         The operator for the expression.
+     *         
+     * @param  value
+     *         The value for the expression.
+     *         
+     * @since   1.0
      */
-    public Expression(Subject subject, String predicate, Object value) {
+    public Expression(Subject subject, String operator, Object value) {
         setSubject(subject);
-        setPredicate(predicate);
+        setOperator(operator);
         setValue(value);
     }
 
     /**
-     * Constructs a {@code Expression}
+     * Constructs a {@code Expression}.
      * 
      * <p>Create a new compound expression with the argument sub-expression.
      *
-     * @param expression
+     * @param  expression
+     *         The expression needs to be compounded.
+     *         
+     * @since   1.0
      */
     public Expression(Expression expression) {
         add(expression, null);
@@ -101,23 +119,22 @@ public class Expression implements Cloneable, Serializable {
     
     public Subject getSubject()                      { return subject;               }
     public void    setSubject(Subject subject)       { this.subject = subject;       }
-    public String  getPredicate()                    { return predicate;             }
-    public void    setPredicate(String predicate)    { this.predicate = predicate;   }
+    public String  getOperator()                     { return operator;              }
+    public void    setOperator(String operator)      { this.operator = operator;     }
     public Object  getValue()                        { return value;                 }
     public void    setValue(Object value)            { this.value = value;           }
     public boolean isComplement()                    { return complement;            }
     public void    setComplement(boolean complement) { this.complement = complement; }
 
     /**
-     * Check a expression is a simple statement or is compound.
+     * Check an expression is a simple statement or is compound.
      * 
-     * <p>
-     * E = subject + predicate + value
-     * E = (E)
-     * E = (E && E)
-     * E = (E || E)
+     * If an expression has sub-expression(s), it is a compound expression.
      *
-     * @return
+     * @return  {@code true} if it is a compound expression;
+     *          {@code false} otherwise.
+     *          
+     * @since   1.0
      */
     public boolean isCompound() {
         if (expressionsAndOperators == null || expressionsAndOperators.isEmpty()) {
@@ -127,121 +144,167 @@ public class Expression implements Cloneable, Serializable {
     }
 
     /**
-     * Get the number of the sub-sub-expressions of a compound expression.
+     * Get the number of the sub-expressions of an expression.
+     * 
+     * <p>If an expression is a simple expression, the number of 
+     * sub-expressions will be 0. 
+     * 
+     * @since   1.0
      */
-    public int size() {
+    public int getNumberOfSubExpression() {
         if (expressionsAndOperators == null || expressionsAndOperators.size() == 0) {
-            return (0);
+            return 0;
         } else {
+        	    // the list will look like  [Ex, Op, Ex, Op, Ex, Op, Ex]
+        	    // ignore the last Ex, the list will be (Ex, Op) pairs, so divided by 2.
+        	    // and then add the Ex back.
             return ((expressionsAndOperators.size() - 1) / 2) + 1;
         }
     }
-
+    
     /**
-     * Operate AND on 2 expressions
-     * 
-     * <p>Perform logical intersections by appending argument expression as a
-     * sub-expression to the end of the current expression. If current 
-     * expression is simple, it will compound() self prior to "ANDing" new 
-     * sub-expression.
+     * Operate AND with an expression.
      *
-     * @param expression
-     * @return this
+     * @param  subject
+     *         The field name in the Java class (not the column name in 
+     *         database).
+     *         
+     * @param  operator
+     *         The operator for the expression.
+     * 
+     * @param  value
+     *         The value for the expression.
+     *         
+     * @return  The new compound expression after doing AND operation on 
+     *          another expression.
+     *          
+     * @since   1.0
      */
-    public Expression and(Expression expression) {
-        if (!isCompound()) {
-            compound();
-        }
-        add(expression, AND);
-        return this;
+    public Expression and(String subject, String operator, Object value) {
+        return and(new Expression(subject, operator, value));
     }
 
-
     /**
-     * Operate AND on 2 expressions
-     * 
-     * <p>Perform logical intersections by appending argument expression as a
-     * sub-expression to the end of the current expression. If current 
-     * expression is simple, it will compound() self prior to "ANDing" new 
-     * sub-expression.
+     * Operate AND with an expression.
      *
-     * @param subject
-     * @param predicate
-     * @param value
-     * @return
+     * @param  expression
+     *         Another expression needs to do AND operation with this expression.
+     * 
+     * @return  The new compound expression after doing AND operation on 
+     *          another expression.
+     * 
+     * @since   1.0
      */
-    public Expression and(String subject, String predicate, Object value) {
-        return and(new Expression(subject, predicate, value));
+    public Expression and(Expression expression) {
+    		return combineExpression(AND, expression);
     }
 
     /**
      * Operate AND on multiple expressions
-     * 
-     * <p>Creates a new compound expression from the logical intersection 
-     * of argument sub-expression(s).
      *
-     * @param subExpressions
-     * @return new expression
+     * @param  subExpressions
+     *         One or more expressions need to do AND operation.
+     * 
+     * @return  The new compound expression.
+     * 
+     * @since   1.0
      */
-    public static Expression and(Expression... subExpressions) {
-        Expression expression = new Expression();
-        
-        for (int i = 0; i < subExpressions.length; i++) {
-            expression.add(subExpressions[i], AND);
-        }
-        
-        return expression;
+    public static Expression and(Expression... subExpressions) {        
+        return combineExpressions(AND, subExpressions);
     }
-
-	/**
-	 * Operate OR on 2 expressions
-	 * 
-	 * <p> Perform logical union by appending argument expression as a
-	 * sub-expression to the end of the current expression. If current
-	 * expression is simple, it will compound() self prior to "ORing" new
-	 * sub-expression.
-	 *
-	 * @param expression
-	 * @return this
-	 */
-    public Expression or(Expression expression) {
-        if (!isCompound()) {
-            compound();
-        }
-        add(expression, OR);
-        return this;
-    }
-
-
+    
     /**
-     * Operate OR on 2 expressions
-     * 
-	 * <p> Perform logical union by appending argument expression as a
-	 * sub-expression to the end of the current expression. If current
-	 * expression is simple, it will compound() self prior to "ORing" new
-	 * sub-expression.
+     * Operate OR with an expression.
      *
-     * @param subject
-     * @param predicate
-     * @param value
-     * @return
+     * @param  subject
+     *         The field name in the Java class (not the column name in 
+     *         database).
+     *         
+     * @param  operator
+     *         The operator for the expression.
+     * 
+     * @param  value
+     *         The value for the expression.
+     *         
+     * @return  The new compound expression after doing OR operation on 
+     *          another expression.
+     *          
+     * @since   1.0
      */
     public Expression or(String subject, String predicate, Object value) {
         return or(new Expression(subject, predicate, value));
     }
 
+    /**
+     * Operate OR with an expression.
+     *
+     * @param  expression
+     *         Another expression needs to do OR operation with this expression.
+     * 
+     * @return  The new compound expression after doing OR operation on 
+     *          another expression.
+     * 
+     * @since   1.0
+     */
+    public Expression or(Expression expression) {
+        return combineExpression(OR, expression);
+    }
 
     /**
      * Operate OR on multiple expressions
      *
-     * @param subExpressions
-     * @return new expression
+     * @param  subExpressions
+     *         One or more expressions need to do OR operation.
+     * 
+     * @return  The new compound expression.
+     * 
+     * @since   1.0
      */
     public static Expression or(Expression... subExpressions) {
-        Expression expression = new Expression();
+        return combineExpressions(OR, subExpressions);
+    }
+    
+    /**
+     * Combine this expression with another expression.
+     * 
+     * @param  operator
+     *         The operator of the combination.
+     *         
+     * @param  expression
+     *         Another expression needs to combine with this expression.
+     *         
+     * @return  The new compound expression.
+     * 
+     * @since   1.0
+     */
+    public Expression combineExpression(String operator, Expression expression) {
+       	// If current expression is a simple expression, it will compound 
+	    // itself prior to doing AND/OR operation with another expression.
+    		if (!isCompound()) {
+            compound();
+        }
+        add(expression, operator);
+        return this;
+    }
+    
+    /**
+     * Combine multiple expressions.
+     * 
+     * @param  operator
+     *         The operator of the combination.
+     *         
+     * @param  subExpressions
+     *         One or more expressions need to be combined.
+     * 
+     * @return  The new compound expression.
+     * 
+     * @since   1.0
+     */
+    public static Expression combineExpressions(String operator, Expression... subExpressions) {
+    		Expression expression = new Expression();
 
         for (int i = 0; i < subExpressions.length; i++) {
-            expression.add(subExpressions[i], OR);
+            expression.add(subExpressions[i], operator);
         }
 
         return expression;
@@ -258,7 +321,7 @@ public class Expression implements Cloneable, Serializable {
      */
     public Expression compound() {
         // only compound if non-empty expression
-        if (subject != null || predicate != null || value != null || expressionsAndOperators != null) {
+        if (subject != null || operator != null || value != null || expressionsAndOperators != null) {
             Expression subExpr = (Expression) this.clone();
             clear();
             add(subExpr, null);
@@ -369,7 +432,7 @@ public class Expression implements Cloneable, Serializable {
      * @param operator
      */
     protected void add(Expression expression, String operator) {
-        add(size(), expression, operator);
+        add(getNumberOfSubExpression(), expression, operator);
     }
 
     /**
@@ -420,7 +483,7 @@ public class Expression implements Cloneable, Serializable {
                 // Just add expression. There are no other expressions yet.
                 expressionsAndOperators.add(expression);
             }
-        } else if (index >= size()) {
+        } else if (index >= getNumberOfSubExpression()) {
             // If this the first expression, we'll ignore the logicalOperator.
             // Otherwise we require one.
             if (!expressionsAndOperators.isEmpty()) {
@@ -563,7 +626,7 @@ public class Expression implements Cloneable, Serializable {
                 return this;
             }
         } else {
-            for (int i = 0; i < size(); i++) {
+            for (int i = 0; i < getNumberOfSubExpression(); i++) {
                 Expression subExpression = getSubExpression(i);
                 if (subExpression != null) {
                     Expression matched = subExpression.find(subject);
@@ -599,7 +662,7 @@ public class Expression implements Cloneable, Serializable {
             return this;
         }
 
-        if (size() == 1) {
+        if (getNumberOfSubExpression() == 1) {
             Expression expr = getSubExpression(0);
 
             if (expr.isCompound() == false) {
@@ -666,10 +729,10 @@ public class Expression implements Cloneable, Serializable {
 
             // break out of loop if descending into child expression, otherwise
             // continue left to right evaluation parse
-            for (int i = itr.intValue(); !descend && i < expr.size(); i++) {
+            for (int i = itr.intValue(); !descend && i < expr.getNumberOfSubExpression(); i++) {
                 Expression child = expr.getSubExpression(i);
                 String op = (i > 0 ? expr.getOperator(i, Expression.SIDE_LEFT) : null);
-                String la = (i == expr.size() - 1) ? null : expr.getOperator(i, Expression.SIDE_RIGHT);
+                String la = (i == expr.getNumberOfSubExpression() - 1) ? null : expr.getOperator(i, Expression.SIDE_RIGHT);
                 String dual = null;
                 if (op != null) {
                     dual = (op.equals(OR) ? AND : OR);
@@ -688,7 +751,7 @@ public class Expression implements Cloneable, Serializable {
                             logicalComplement.add(child, Expression.AND);
                         } else {
                             // case 2
-                            if (disjunctExpression.size() > 0) {
+                            if (disjunctExpression.getNumberOfSubExpression() > 0) {
                                 disjunctExpression = new Expression();
                             }
                             disjunctExpression.add(child, null);
@@ -714,7 +777,7 @@ public class Expression implements Cloneable, Serializable {
                             parent.add(logicalComplement, dual);
                         } else {
                             // case 2
-                            if (disjunctExpression.size() > 0) {
+                            if (disjunctExpression.getNumberOfSubExpression() > 0) {
                                 disjunctExpression = new Expression();
                             }
                             disjunctExpression.add(logicalComplement, null);
@@ -786,7 +849,7 @@ public class Expression implements Cloneable, Serializable {
      */
     protected void clear() {
         setSubject(null);
-        setPredicate(null);
+        setOperator(null);
         setValue(null);
         setComplement(false);
         expressionsAndOperators = null;
@@ -810,7 +873,7 @@ public class Expression implements Cloneable, Serializable {
             }
             sb.append("] ");
 
-            sb.append(predicate);
+            sb.append(operator);
             sb.append(" ");
 
             if (value instanceof String) {
@@ -847,7 +910,7 @@ public class Expression implements Cloneable, Serializable {
 
         sb.append("(");
 
-        int size = expression.size();
+        int size = expression.getNumberOfSubExpression();
 
         for (int i = 0; i < size; i++) {
             Expression subExpression = expression.getSubExpression(i);
@@ -935,7 +998,7 @@ public class Expression implements Cloneable, Serializable {
             // calculate min-terms
             List<List<Expression>> minterms = new ArrayList<>();
             List<Expression> minterm = null;
-            for (int i = 0; i < this.size(); i++) {
+            for (int i = 0; i < this.getNumberOfSubExpression(); i++) {
                 String op = this.getOperator(i);
                 if (op == null || Expression.OR.equals(op)) {
                     minterm = new ArrayList<>();
@@ -1004,11 +1067,11 @@ public class Expression implements Cloneable, Serializable {
                 }
 
                 // Predicate
-                if (getPredicate() != null) {
-                    if (getPredicate().equals(expression.getPredicate()) == false) {
+                if (getOperator() != null) {
+                    if (getOperator().equals(expression.getOperator()) == false) {
                         return false;
                     }
-                } else if (expression.getPredicate() != null) {
+                } else if (expression.getOperator() != null) {
                     return false;
                 }
 
@@ -1032,12 +1095,12 @@ public class Expression implements Cloneable, Serializable {
         }
 
         // compare compound
-        if (size() != expression.size()) {
+        if (getNumberOfSubExpression() != expression.getNumberOfSubExpression()) {
             return false;
         }
 
         // iterate over expressions and operators and evaluate side-by-side comparisons
-        for (int i = 0; i < size(); i++) {
+        for (int i = 0; i < getNumberOfSubExpression(); i++) {
             Expression expressionA = getSubExpression(i);
             Expression expressionB = expression.getSubExpression(i);
 

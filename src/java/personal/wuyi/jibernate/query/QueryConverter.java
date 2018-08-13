@@ -266,11 +266,11 @@ public class QueryConverter {
         }
 
         if (!expression.isCompound()) {
-            return generateJpqlWhereClauseSingleCondition(persistedClass, expression.getSubject(), expression.getPredicate(), expression.getValue(), caseSensitive);
+            return generateJpqlWhereClauseSingleCondition(persistedClass, expression.getSubject(), expression.getOperator(), expression.getValue(), caseSensitive);
         } else {
             StringBuilder c = new StringBuilder();
 
-            for (int i = 0; i < expression.size(); i++) {
+            for (int i = 0; i < expression.getNumberOfSubExpression(); i++) {
                 Expression child = expression.getSubExpression(i);
                 if (child != null) {
                     String childClause = generateJpqlWhereClause(persistedClass, child, caseSensitive);
