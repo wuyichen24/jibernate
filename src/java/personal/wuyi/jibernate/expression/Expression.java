@@ -50,7 +50,7 @@ public class Expression implements Cloneable, Serializable {
 
     // If the expression is a compound expression, this list will be populated.
     /** The list of sub-expressions and operators */
-    private List<Object> expressionsAndOperators = null;
+    private List<Object> subExpressionAndOperatorList = null;
 
     /**
      * Constructs a {@code Expression}.
@@ -114,7 +114,7 @@ public class Expression implements Cloneable, Serializable {
      * @since   1.0
      */
     public Expression(Expression expression) {
-        add(expression, null);
+    	addSubExpressionWithOperator(expression, null);
     }
     
     public Subject getSubject()                      { return subject;               }
@@ -137,7 +137,7 @@ public class Expression implements Cloneable, Serializable {
      * @since   1.0
      */
     public boolean isCompound() {
-        if (expressionsAndOperators == null || expressionsAndOperators.isEmpty()) {
+        if (subExpressionAndOperatorList == null || subExpressionAndOperatorList.isEmpty()) {
             return false;
         }
         return true;
@@ -152,13 +152,13 @@ public class Expression implements Cloneable, Serializable {
      * @since   1.0
      */
     public int getNumberOfSubExpression() {
-        if (expressionsAndOperators == null || expressionsAndOperators.size() == 0) {
+        if (subExpressionAndOperatorList == null || subExpressionAndOperatorList.size() == 0) {
             return 0;
         } else {
         	    // the list will look like  [Ex, Op, Ex, Op, Ex, Op, Ex]
         	    // ignore the last Ex, the list will be (Ex, Op) pairs, so divided by 2.
         	    // and then add the Ex back.
-            return ((expressionsAndOperators.size() - 1) / 2) + 1;
+            return ((subExpressionAndOperatorList.size() - 1) / 2) + 1;
         }
     }
     
@@ -283,7 +283,7 @@ public class Expression implements Cloneable, Serializable {
     		if (!isCompound()) {
             compound();
         }
-        add(expression, operator);
+    	addSubExpressionWithOperator(expression, operator);
         return this;
     }
     
@@ -301,10 +301,10 @@ public class Expression implements Cloneable, Serializable {
      * @since   1.0
      */
     public static Expression combineExpressions(String operator, Expression... subExpressions) {
-    		Expression expression = new Expression();
+    	final Expression expression = new Expression();
 
         for (int i = 0; i < subExpressions.length; i++) {
-            expression.add(subExpressions[i], operator);
+            expression.addSubExpressionWithOperator(subExpressions[i], operator);
         }
 
         return expression;
@@ -312,19 +312,20 @@ public class Expression implements Cloneable, Serializable {
 
 
     /**
-     * Compound the current expression
+     * Compound the current expression.
      * 
-     * <p>Method will clone current expression, reset all current state, then 
-     * nest cloned value as a sub-expression inside new compound structure.
+     * <p>This method will make the current expression as sub-expression so 
+     * that it is ready for combining with other expressions.
      *
-     * @return
+     * @return  The compounded version of the current expression.
+     * 
+     * @since   1.0
      */
-    public Expression compound() {
-        // only compound if non-empty expression
-        if (subject != null || operator != null || value != null || expressionsAndOperators != null) {
-            Expression subExpr = (Expression) this.clone();
-            clear();
-            add(subExpr, null);
+    private Expression compound() {
+        if (subject != null || operator != null || value != null || subExpressionAndOperatorList != null) {
+            final Expression subExpr = (Expression) this.clone();
+            reset();
+            addSubExpressionWithOperator(subExpr, null);
         }
 
         return this;
@@ -332,25 +333,35 @@ public class Expression implements Cloneable, Serializable {
 
 
     /**
-     * Get the sub-expression referenced by the specified index.
+     * Get the sub-expression by index.
      *
      * <p>Expressions are on even numbers starting at 0.
      *
-     * @param index
-     * @return
+     * @param  index
+     *         The index of the sub-expression.
+     *         
+     * @return  The target sub-expression.
+     * 
+     * @since   1.0
      */
     public Expression getSubExpression(int index) {
-        return (Expression) expressionsAndOperators.get(expressionIndexToArrayIndex(index));
+        return (Expression) subExpressionAndOperatorList.get(expressionIndexToArrayIndex(index));
     }
     
     /**
-     * Replace the sub-expression existing at the specified index with the new one
+     * Replace the sub-expression existing at the specified index with the new 
+     * one.
      *
-     * @param index
-     * @param expression
+     * @param  index
+     *         The index of the sub-expression needs to be replaced.
+     * 
+     * @param  expression
+     *         The new expression for replacing.
+     *         
+     * @since   1.0
      */
     protected void setSubExpression(int index, Expression expression) {
-        expressionsAndOperators.set(expressionIndexToArrayIndex(index), expression);
+        subExpressionAndOperatorList.set(expressionIndexToArrayIndex(index), expression);
     }
 
     /**
@@ -389,12 +400,12 @@ public class Expression implements Cloneable, Serializable {
         if (side == SIDE_LEFT) {
             int realIndex = expressionIndexToArrayIndex(index) - 1;
             if (realIndex > 0) {
-                operator = (String) expressionsAndOperators.get(realIndex);
+                operator = (String) subExpressionAndOperatorList.get(realIndex);
             }
         } else {
             int realIndex = expressionIndexToArrayIndex(index) + 1;
-            if (realIndex < expressionsAndOperators.size()) {
-                operator = (String) expressionsAndOperators.get(realIndex);
+            if (realIndex < subExpressionAndOperatorList.size()) {
+                operator = (String) subExpressionAndOperatorList.get(realIndex);
             }
         }
 
@@ -418,10 +429,10 @@ public class Expression implements Cloneable, Serializable {
         // There is no operator left of the first expression or right
         // of the last expression.
         if (side == SIDE_LEFT) {
-            expressionsAndOperators.set(expressionIndexToArrayIndex(index) - 1, operator);
+            subExpressionAndOperatorList.set(expressionIndexToArrayIndex(index) - 1, operator);
         }
         else {
-            expressionsAndOperators.set(expressionIndexToArrayIndex(index) + 1, operator);
+            subExpressionAndOperatorList.set(expressionIndexToArrayIndex(index) + 1, operator);
         }
     }
 
@@ -431,8 +442,8 @@ public class Expression implements Cloneable, Serializable {
      * @param expression
      * @param operator
      */
-    protected void add(Expression expression, String operator) {
-        add(getNumberOfSubExpression(), expression, operator);
+    protected void addSubExpressionWithOperator(Expression expression, String operator) {
+    	addSubExpressionWithOperator(getNumberOfSubExpression(), expression, operator);
     }
 
     /**
@@ -442,16 +453,16 @@ public class Expression implements Cloneable, Serializable {
      * @param expression
      * @param operator
      */
-    protected void add(int index, Expression expression, String operator) {
+    protected void addSubExpressionWithOperator(int index, Expression expression, String operator) {
         if (expression == null) {
             throw new NullPointerException("Expression cannot be null");
         }
 
-        if (expressionsAndOperators == null) {
-            expressionsAndOperators = new ArrayList<Object>();
+        if (subExpressionAndOperatorList == null) {
+            subExpressionAndOperatorList = new ArrayList<Object>();
         }
 
-        if (!expressionsAndOperators.isEmpty()) {
+        if (!subExpressionAndOperatorList.isEmpty()) {
             // We need a valid logicalOperator.
             if (operator == null) {
                 throw new NullPointerException("The operator cannot be null");
@@ -476,34 +487,34 @@ public class Expression implements Cloneable, Serializable {
         //
         if (index <= 0) {
             // Add at beginging
-            if (!expressionsAndOperators.isEmpty()) {
-                expressionsAndOperators.add(0, operator);
-                expressionsAndOperators.add(0, expression);
+            if (!subExpressionAndOperatorList.isEmpty()) {
+                subExpressionAndOperatorList.add(0, operator);
+                subExpressionAndOperatorList.add(0, expression);
             } else {
                 // Just add expression. There are no other expressions yet.
-                expressionsAndOperators.add(expression);
+                subExpressionAndOperatorList.add(expression);
             }
         } else if (index >= getNumberOfSubExpression()) {
             // If this the first expression, we'll ignore the logicalOperator.
             // Otherwise we require one.
-            if (!expressionsAndOperators.isEmpty()) {
+            if (!subExpressionAndOperatorList.isEmpty()) {
                 // Add the logicalOperator and then the expression, resulting
                 // in the following:
                 //
                 // <compound expression> logicalOperator expression
                 //
-                expressionsAndOperators.add(operator);
-                expressionsAndOperators.add(expression);
+                subExpressionAndOperatorList.add(operator);
+                subExpressionAndOperatorList.add(expression);
             } else {
                 // Size is zero. We ignore the logicalOperator.
-                expressionsAndOperators.add(expression);
+                subExpressionAndOperatorList.add(expression);
             }
         } else {
             // Add someone in between beginning and end. We have the expression
             // index to add at. But we must add the logicalOperator and expression
             // at it's logicalOperator index to displace the logicalOperator and expression.
-            expressionsAndOperators.add(expressionIndexToArrayIndex(index) - 1, expression);
-            expressionsAndOperators.add(expressionIndexToArrayIndex(index) - 1, operator);
+            subExpressionAndOperatorList.add(expressionIndexToArrayIndex(index) - 1, expression);
+            subExpressionAndOperatorList.add(expressionIndexToArrayIndex(index) - 1, operator);
         }
     }
 
@@ -517,7 +528,7 @@ public class Expression implements Cloneable, Serializable {
      */
     protected void add(int index, Expression expression, String operator, int side) {
         if (side == SIDE_LEFT || index <= 0) {
-            add(index, expression, operator);
+        	addSubExpressionWithOperator(index, expression, operator);
             return;
         }
 
@@ -527,7 +538,7 @@ public class Expression implements Cloneable, Serializable {
         }
 
         // We'll only be using the operator if we already have crud.
-        if (!expressionsAndOperators.isEmpty()) {
+        if (!subExpressionAndOperatorList.isEmpty()) {
             // We need a valid operator.
             if (operator == null) {
                 throw new NullPointerException("The operator cannot be null");
@@ -540,8 +551,8 @@ public class Expression implements Cloneable, Serializable {
         }
 
         // inserts <expr> <op> at specified index
-        expressionsAndOperators.add(expressionIndexToArrayIndex(index), operator);
-        expressionsAndOperators.add(expressionIndexToArrayIndex(index), expression);
+        subExpressionAndOperatorList.add(expressionIndexToArrayIndex(index), operator);
+        subExpressionAndOperatorList.add(expressionIndexToArrayIndex(index), expression);
     }
 
     /**
@@ -557,12 +568,12 @@ public class Expression implements Cloneable, Serializable {
         }
 
         if (expression.isCompound() == false) {
-            add(expression, operator);
+        	addSubExpressionWithOperator(expression, operator);
             return;
         }
 
         // We'll only be using the operator if we already have crud.
-        if (!expressionsAndOperators.isEmpty()) {
+        if (!subExpressionAndOperatorList.isEmpty()) {
             // We need a valid operator.
             if (operator == null) {
                 throw new NullPointerException("The operator cannot be null");
@@ -574,10 +585,10 @@ public class Expression implements Cloneable, Serializable {
             }
         }
 
-        if (!expressionsAndOperators.isEmpty()) {
-            expressionsAndOperators.add(operator);
+        if (!subExpressionAndOperatorList.isEmpty()) {
+            subExpressionAndOperatorList.add(operator);
         }
-        expressionsAndOperators.addAll(expression.expressionsAndOperators);
+        subExpressionAndOperatorList.addAll(expression.subExpressionAndOperatorList);
     }
 
     /**
@@ -594,17 +605,17 @@ public class Expression implements Cloneable, Serializable {
         // to its right. Blowing away any other expression removes it
         // and the operator to its left.
         if (index == 0) {
-            if (expressionsAndOperators.size() > 1) {
-                expressionsAndOperators.remove(0);
-                expressionsAndOperators.remove(0);
+            if (subExpressionAndOperatorList.size() > 1) {
+                subExpressionAndOperatorList.remove(0);
+                subExpressionAndOperatorList.remove(0);
             } else {
                 // Just remove root expression. There are no others.
-                expressionsAndOperators.remove(0);
+                subExpressionAndOperatorList.remove(0);
             }
         } else {
             // Blow away expression and operator to left.
-            expressionsAndOperators.remove(expressionIndexToArrayIndex(index));
-            expressionsAndOperators.remove(expressionIndexToArrayIndex(index) - 1);
+            subExpressionAndOperatorList.remove(expressionIndexToArrayIndex(index));
+            subExpressionAndOperatorList.remove(expressionIndexToArrayIndex(index) - 1);
         }
     }
 
@@ -748,18 +759,18 @@ public class Expression implements Cloneable, Serializable {
                     if (op == null || op.equals(Expression.OR)) {
                         if (la == null || la.equals(Expression.OR)) {
                             // case 1
-                            logicalComplement.add(child, Expression.AND);
+                            logicalComplement.addSubExpressionWithOperator(child, Expression.AND);
                         } else {
                             // case 2
                             if (disjunctExpression.getNumberOfSubExpression() > 0) {
                                 disjunctExpression = new Expression();
                             }
-                            disjunctExpression.add(child, null);
-                            logicalComplement.add(disjunctExpression, Expression.AND);
+                            disjunctExpression.addSubExpressionWithOperator(child, null);
+                            logicalComplement.addSubExpressionWithOperator(disjunctExpression, Expression.AND);
                         }
                     } else {
                     	// case 3
-                        disjunctExpression.add(child, Expression.OR);
+                        disjunctExpression.addSubExpressionWithOperator(child, Expression.OR);
                     }
                 } else {
                 	/*
@@ -774,18 +785,18 @@ public class Expression implements Cloneable, Serializable {
                     if (op == null || op.equals(Expression.OR)) {
                         if (la == null || la.equals(Expression.OR)) {
                             // case 1
-                            parent.add(logicalComplement, dual);
+                            parent.addSubExpressionWithOperator(logicalComplement, dual);
                         } else {
                             // case 2
                             if (disjunctExpression.getNumberOfSubExpression() > 0) {
                                 disjunctExpression = new Expression();
                             }
-                            disjunctExpression.add(logicalComplement, null);
-                            parent.add(disjunctExpression, Expression.AND);
+                            disjunctExpression.addSubExpressionWithOperator(logicalComplement, null);
+                            parent.addSubExpressionWithOperator(disjunctExpression, Expression.AND);
                         }
                     } else {
                         // case 3
-                        disjunctExpression.add(logicalComplement, Expression.OR);
+                        disjunctExpression.addSubExpressionWithOperator(logicalComplement, Expression.OR);
                     }
 
                     // push parent
@@ -814,7 +825,7 @@ public class Expression implements Cloneable, Serializable {
             }
         }
 
-        this.expressionsAndOperators = logicalComplement.expressionsAndOperators;
+        this.subExpressionAndOperatorList = logicalComplement.subExpressionAndOperatorList;
 
         return this;
     }
@@ -842,17 +853,17 @@ public class Expression implements Cloneable, Serializable {
 
 
     /**
-     * Reset current state
+     * Reset the state of the current expression.
      * 
      * <p>Sets subject, predicate, value, or any sub-expressions to null and 
      * sets complement to false;
      */
-    protected void clear() {
+    protected void reset() {
         setSubject(null);
         setOperator(null);
         setValue(null);
         setComplement(false);
-        expressionsAndOperators = null;
+        subExpressionAndOperatorList = null;
     }
 
     public String toString() {
@@ -1147,8 +1158,8 @@ public class Expression implements Cloneable, Serializable {
                 cloned.subject = (Subject) subject.clone();
             }
 
-            if (expressionsAndOperators != null) {
-                cloned.expressionsAndOperators = new ArrayList<>();
+            if (subExpressionAndOperatorList != null) {
+                cloned.subExpressionAndOperatorList = new ArrayList<>();
                 clone(this, cloned);
             }
 
@@ -1159,18 +1170,18 @@ public class Expression implements Cloneable, Serializable {
     }
 
     private void clone(Expression expr, Expression cloned) {
-        for (int i = 0; i < expr.expressionsAndOperators.size(); i++) {
-            Object o = expr.expressionsAndOperators.get(i);
+        for (int i = 0; i < expr.subExpressionAndOperatorList.size(); i++) {
+            Object o = expr.subExpressionAndOperatorList.get(i);
 
             if (o instanceof Expression) {
                 // clone child expression
                 Expression childClone = (Expression) ((Expression) o).clone();
 
                 // add cloned expressions
-                cloned.expressionsAndOperators.add(childClone);
+                cloned.subExpressionAndOperatorList.add(childClone);
             } else {
                 // copy operators (Strings)
-                cloned.expressionsAndOperators.add(o);
+                cloned.subExpressionAndOperatorList.add(o);
             }
         }
     }
