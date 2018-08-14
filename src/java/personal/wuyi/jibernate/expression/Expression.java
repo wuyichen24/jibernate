@@ -338,7 +338,7 @@ public class Expression implements Cloneable, Serializable {
      * <p>Expressions are on even numbers starting at 0.
      *
      * @param  index
-     *         The index of the sub-expression.
+     *         The expression index of the sub-expression.
      *         
      * @return  The target sub-expression.
      * 
@@ -349,14 +349,13 @@ public class Expression implements Cloneable, Serializable {
     }
     
     /**
-     * Replace the sub-expression existing at the specified index with the new 
-     * one.
+     * Set an expression into the list of sub-expressions.
      *
      * @param  index
-     *         The index of the sub-expression needs to be replaced.
+     *         The expression index.
      * 
      * @param  expression
-     *         The new expression for replacing.
+     *         The new expression needs to be added.
      *         
      * @since   1.0
      */
@@ -365,13 +364,14 @@ public class Expression implements Cloneable, Serializable {
     }
 
     /**
-     * Get the operator on the left side of a sub-expression.
+     * Get the operator on the left side of a sub-expression from the list of 
+     * sub-expressions..
      * 
      * <p>The operator is referenced by the specified expression index if 
      * operator exists to the immediate left of the expression.
      *
      * @param  index
-     *         The index of the sub-expression.
+     *         The expression index of the sub-expression.
      *         
      * @return  The operator on the left side of the specified sub-expression.
      * 
@@ -382,14 +382,15 @@ public class Expression implements Cloneable, Serializable {
     }
 
     /**
-     * Get the operator of one side of a sub-expression.
+     * Get the operator of one side of a sub-expression from the list of 
+     * sub-expressions.
      * 
      * <p>The operator referenced by the specified expression index where side 
      * specifies the operator existing to the immediate left or right of the 
      * expression.
      *
      * @param  index
-     *         The index of the sub-expression.
+     *         The expression index of the sub-expression.
      *         
      * @param  side
      *         Which side of the expression, left or right.
@@ -423,44 +424,59 @@ public class Expression implements Cloneable, Serializable {
     }
     
     /**
-     * Replace the specified operator with the new one.
+     * Set an operator into the list of sub-expressions.
      *
      * @param  index
-     * @param side
-     * @param operator
+     *         The expression index of the referenced sub-expression.
+     *         
+     * @param  side
+     *         Which side of the expression, left or right.
+     *         
+     * @param  operator
+     *         The operator needs to be added.
+     *         
+     * @since   1.0
      */
     protected void setOperator(int index, int side, String operator) {
-
         if ((side != SIDE_LEFT) || (side != SIDE_RIGHT)) {
             throw (new IllegalArgumentException("The side \"" + side + "\" is unknown"));
         }
 
-        // There is no operator left of the first expression or right
-        // of the last expression.
         if (side == SIDE_LEFT) {
             subExpressionAndOperatorList.set(expressionIndexToArrayIndex(index) - 1, operator);
-        }
-        else {
+        } else {
             subExpressionAndOperatorList.set(expressionIndexToArrayIndex(index) + 1, operator);
         }
     }
 
     /**
-     * Add a sub-expression at the end of the expression
+     * Add a sub-expression at the end of the list of sub-expressions.
      * 
-     * @param expression
-     * @param operator
+     * @param  expression
+     *         The expression needs to be added.
+     *         
+     * @param  operator
+     *         The operator needs to be added.
+     *         
+     * @since   1.0
      */
     protected void addSubExpressionWithOperator(Expression expression, String operator) {
-    	addSubExpressionWithOperator(getNumberOfSubExpression(), expression, operator);
+    	    addSubExpressionWithOperator(getNumberOfSubExpression(), expression, operator);
     }
 
     /**
-     * Add a sub-expression at a certain position by the specified index.
+     * Add a sub-expression with a operator into a list of sub-expressions.
      * 
-     * @param index
-     * @param expression
-     * @param operator
+     * @param  index
+     *         The expression index.
+     *         
+     * @param  expression
+     *         The expression needs to be added.
+     * 
+     * @param  operator
+     *         The operator needs to be added.
+     *         
+     * @since   1.0     
      */
     protected void addSubExpressionWithOperator(int index, Expression expression, String operator) {
         if (expression == null) {
@@ -468,18 +484,17 @@ public class Expression implements Cloneable, Serializable {
         }
 
         if (subExpressionAndOperatorList == null) {
-            subExpressionAndOperatorList = new ArrayList<Object>();
+            subExpressionAndOperatorList = new ArrayList<>();
         }
 
         if (!subExpressionAndOperatorList.isEmpty()) {
-            // We need a valid logicalOperator.
             if (operator == null) {
                 throw new NullPointerException("The operator cannot be null");
             }
 
             // Only binary boolean operators may be used to combine expressions.
-            if ((operator.equals(Expression.AND) == false) && (operator.equals(Expression.OR) == false)) {
-                throw (new IllegalArgumentException("Operator must be either " + AND + " or " + OR));
+            if (!operator.equals(Expression.AND) && !operator.equals(Expression.OR)) {
+                throw new IllegalArgumentException("Operator must be either " + AND + " or " + OR);
             }
         }
 
