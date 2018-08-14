@@ -467,6 +467,20 @@ public class Expression implements Cloneable, Serializable {
     /**
      * Add a sub-expression with a operator into a list of sub-expressions.
      * 
+     * <p>There are 2 situations for adding an expression with an operator:
+     * <ul>
+     *   <li>If the index > 0, add the operator first, and then add the sub-expression.
+     *     <pre>
+     *       [sub-expression list] + operator + sub-expression
+     *     </pre>
+     *   <li>If the index = 0, add the sub-expression first, and then add the operator.
+     *     <pre>
+     *       sub-expression + operator + [sub-expression list]
+     *     </pre>
+     * </ul>
+     * 
+     * This method will add the operator first, and then add the sub-expression to the list of sub-expressions.
+     * 
      * @param  index
      *         The expression index.
      *         
@@ -497,49 +511,21 @@ public class Expression implements Cloneable, Serializable {
                 throw new IllegalArgumentException("Operator must be either " + AND + " or " + OR);
             }
         }
-
-        // The logicalOperator will be added first, followed by the expression,
-        // resulting in the following:
-        //
-        // <compound expression> logicalOperator expression
-        //
-        // However, if index is zero, then the pair go before the first
-        // expression. As a result the logicalOperator cannot be first, the
-        // given expression must come first. This results in:
-        //
-        // expression logicalOperator <compound expression>
-        //
-        if (index <= 0) {
-            // Add at beginging
-            if (!subExpressionAndOperatorList.isEmpty()) {
-                subExpressionAndOperatorList.add(0, operator);
-                subExpressionAndOperatorList.add(0, expression);
-            } else {
-                // Just add expression. There are no other expressions yet.
-                subExpressionAndOperatorList.add(expression);
-            }
-        } else if (index >= getNumberOfSubExpression()) {
-            // If this the first expression, we'll ignore the logicalOperator.
-            // Otherwise we require one.
-            if (!subExpressionAndOperatorList.isEmpty()) {
-                // Add the logicalOperator and then the expression, resulting
-                // in the following:
-                //
-                // <compound expression> logicalOperator expression
-                //
+        
+        if (subExpressionAndOperatorList.isEmpty()) {            // if the sub-expression list is empty, just add the new sub-expression.
+        	subExpressionAndOperatorList.add(expression);
+        } else {
+        	if (index <= 0) {                                    // add at the left end
+        		subExpressionAndOperatorList.add(0, operator);
+        		subExpressionAndOperatorList.add(0, expression);
+            } else if (index >= getNumberOfSubExpression()) {    // add at the right end
                 subExpressionAndOperatorList.add(operator);
                 subExpressionAndOperatorList.add(expression);
-            } else {
-                // Size is zero. We ignore the logicalOperator.
-                subExpressionAndOperatorList.add(expression);
+            } else {                                             // add at the middle
+                subExpressionAndOperatorList.add(expressionIndexToArrayIndex(index) - 1, expression);
+                subExpressionAndOperatorList.add(expressionIndexToArrayIndex(index) - 1, operator);
             }
-        } else {
-            // Add someone in between beginning and end. We have the expression
-            // index to add at. But we must add the logicalOperator and expression
-            // at it's logicalOperator index to displace the logicalOperator and expression.
-            subExpressionAndOperatorList.add(expressionIndexToArrayIndex(index) - 1, expression);
-            subExpressionAndOperatorList.add(expressionIndexToArrayIndex(index) - 1, operator);
-        }
+        } 
     }
 
     /**
