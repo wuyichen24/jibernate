@@ -365,28 +365,38 @@ public class Expression implements Cloneable, Serializable {
     }
 
     /**
-     * Get the operator 
+     * Get the operator on the left side of a sub-expression.
      * 
      * <p>The operator is referenced by the specified expression index if 
      * operator exists to the immediate left of the expression.
      *
-     * @param index
-     * @return
+     * @param  index
+     *         The index of the sub-expression.
+     *         
+     * @return  The operator on the left side of the specified sub-expression.
+     * 
+     * @since   1.0
      */
     public String getOperator(int index) {
         return getOperator(index, SIDE_LEFT);
     }
 
     /**
-     * Get the operator
+     * Get the operator of one side of a sub-expression.
      * 
      * <p>The operator referenced by the specified expression index where side 
      * specifies the operator existing to the immediate left or right of the 
      * expression.
      *
-     * @param index
-     * @param side
-     * @return
+     * @param  index
+     *         The index of the sub-expression.
+     *         
+     * @param  side
+     *         Which side of the expression, left or right.
+     *         
+     * @return  The operator on one side of the specified sub-expression.
+     * 
+     * @since   1.0
      */
     protected String getOperator(int index, int side) {
         if ((side != SIDE_LEFT) && (side != SIDE_RIGHT)) {
@@ -395,15 +405,15 @@ public class Expression implements Cloneable, Serializable {
 
         String operator = null;
 
-        // There is no operator left of the first expression or right of the 
-        // last expression.
         if (side == SIDE_LEFT) {
             int realIndex = expressionIndexToArrayIndex(index) - 1;
+            // There is no operator left of the first expression
             if (realIndex > 0) {
                 operator = (String) subExpressionAndOperatorList.get(realIndex);
             }
         } else {
             int realIndex = expressionIndexToArrayIndex(index) + 1;
+            // There is no operator right of the last expression.
             if (realIndex < subExpressionAndOperatorList.size()) {
                 operator = (String) subExpressionAndOperatorList.get(realIndex);
             }
@@ -415,13 +425,12 @@ public class Expression implements Cloneable, Serializable {
     /**
      * Replace the specified operator with the new one.
      *
-     * @param index
+     * @param  index
      * @param side
      * @param operator
      */
     protected void setOperator(int index, int side, String operator) {
 
-        // Validate.
         if ((side != SIDE_LEFT) || (side != SIDE_RIGHT)) {
             throw (new IllegalArgumentException("The side \"" + side + "\" is unknown"));
         }
