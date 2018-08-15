@@ -469,17 +469,17 @@ public class Expression implements Cloneable, Serializable {
      * 
      * <p>There are 2 situations for adding an expression with an operator:
      * <ul>
-     *   <li>If the index > 0, add the operator first, and then add the sub-expression.
+     *   <li>If the index > 0, add the operator first, and then add the 
+     *   sub-expression.
      *     <pre>
      *       [sub-expression list] + operator + sub-expression
      *     </pre>
-     *   <li>If the index = 0, add the sub-expression first, and then add the operator.
+     *   <li>If the index = 0, add the sub-expression first, and then add the 
+     *   operator.
      *     <pre>
      *       sub-expression + operator + [sub-expression list]
      *     </pre>
      * </ul>
-     * 
-     * This method will add the operator first, and then add the sub-expression to the list of sub-expressions.
      * 
      * @param  index
      *         The expression index.
@@ -493,24 +493,7 @@ public class Expression implements Cloneable, Serializable {
      * @since   1.0     
      */
     protected void addSubExpressionWithOperator(int index, Expression expression, String operator) {
-        if (expression == null) {
-            throw new NullPointerException("Expression cannot be null");
-        }
-
-        if (subExpressionAndOperatorList == null) {
-            subExpressionAndOperatorList = new ArrayList<>();
-        }
-
-        if (!subExpressionAndOperatorList.isEmpty()) {
-            if (operator == null) {
-                throw new NullPointerException("The operator cannot be null");
-            }
-
-            // Only binary boolean operators may be used to combine expressions.
-            if (!operator.equals(Expression.AND) && !operator.equals(Expression.OR)) {
-                throw new IllegalArgumentException("Operator must be either " + AND + " or " + OR);
-            }
-        }
+    	validateConditionBeforeAddingSubExpression(expression, operator);
         
         if (subExpressionAndOperatorList.isEmpty()) {            // if the sub-expression list is empty, just add the new sub-expression.
         	subExpressionAndOperatorList.add(expression);
@@ -529,36 +512,29 @@ public class Expression implements Cloneable, Serializable {
     }
 
     /**
-     * Add a sub-expression at a certain position by the specified index and operator side
+     * Add a sub-expression with a operator on certain side into a list of 
+     * sub-expressions.
      * 
-     * @param index
-     * @param expression
-     * @param operator
-     * @param side
+     * @param  index
+     *         The expression index.
+     *         
+     * @param  expression
+     *         The expression needs to be added.
+     * 
+     * @param  operator
+     *         The operator needs to be added.
+     * 
+     * @param  side
+     *         The operator will be added to which side of the new 
+     *         sub-expression, left or right.
      */
-    protected void add(int index, Expression expression, String operator, int side) {
+    protected void addSubExpressionWithOperator(int index, Expression expression, String operator, int side) {
         if (side == SIDE_LEFT || index <= 0) {
         	addSubExpressionWithOperator(index, expression, operator);
             return;
         }
 
-        // We must have a valid expression.
-        if (expression == null) {
-            throw new NullPointerException("Expression cannot be null");
-        }
-
-        // We'll only be using the operator if we already have crud.
-        if (!subExpressionAndOperatorList.isEmpty()) {
-            // We need a valid operator.
-            if (operator == null) {
-                throw new NullPointerException("The operator cannot be null");
-            }
-
-            // Only binary boolean operators may be used to combine expressions.
-            if ((operator.equals(Expression.AND) == false) && (operator.equals(Expression.OR) == false)) {
-                throw new IllegalArgumentException("Operator must be either " + AND + " or " + OR);
-            }
-        }
+        validateConditionBeforeAddingSubExpression(expression, operator);
 
         // inserts <expr> <op> at specified index
         subExpressionAndOperatorList.add(expressionIndexToArrayIndex(index), operator);
@@ -566,13 +542,17 @@ public class Expression implements Cloneable, Serializable {
     }
 
     /**
-     * Add the compound expression into the expression
+     * Add a compound expression into the expression.
      *
-     * @param expression
-     * @param operator
+     * @param  expression
+     *         The compound expression needs to be added.
+     *         
+     * @param  operator
+     *         The operator needs to be added.
+     *         
+     * @since   1.0  
      */
-    protected void addAll(Expression expression, String operator) {
-        // We must have a valid expression.
+    protected void addCompoundExpression(Expression expression, String operator) {
         if (expression == null) {
             throw new NullPointerException("Expression cannot be null");
         }
@@ -582,62 +562,96 @@ public class Expression implements Cloneable, Serializable {
             return;
         }
 
-        // We'll only be using the operator if we already have crud.
-        if (!subExpressionAndOperatorList.isEmpty()) {
-            // We need a valid operator.
-            if (operator == null) {
-                throw new NullPointerException("The operator cannot be null");
-            }
-
-            // Only binary boolean operators may be used to combine expressions.
-            if ((operator.equals(Expression.AND) == false) && (operator.equals(Expression.OR) == false)) {
-                throw new IllegalArgumentException("Operator must be either " + Expression.AND + " or " + Expression.OR);
-            }
-        }
+        validateConditionBeforeAddingSubExpression(expression, operator);
 
         if (!subExpressionAndOperatorList.isEmpty()) {
             subExpressionAndOperatorList.add(operator);
         }
         subExpressionAndOperatorList.addAll(expression.subExpressionAndOperatorList);
     }
+    
+    /**
+     * Validate the conditions before adding a new sub-expression into the 
+     * sub-expression list.
+     * 
+     * <p>Several conditions will be validated:
+     * <ul>
+     *   <li>The new sub-expression can not be {@code null}.
+     *   <li>If the sub-expression list is {@code null}, create an empty list 
+     *       for it.
+     *   <li>If the sub-expression list is not empty, the operator is 
+     *       mandatory (can not be {@code null}) and can only be AND or OR.
+     * </ul>
+     * 
+     * @param  expression
+     *         The expression needs to be added.
+     *         
+     * @param  operator
+     *         The operator needs to be added.
+     *         
+     * @since   1.0 
+     */
+    protected void validateConditionBeforeAddingSubExpression(Expression expression, String operator) {
+    	if (expression == null) {
+            throw new NullPointerException("Expression cannot be null");
+        }
+        
+        if (subExpressionAndOperatorList == null) {
+            subExpressionAndOperatorList = new ArrayList<>();
+        }
+
+        if (!subExpressionAndOperatorList.isEmpty()) {
+            if (operator == null) {
+                throw new NullPointerException("The operator cannot be null");
+            }
+
+            if (!operator.equals(Expression.AND) && !operator.equals(Expression.OR)) {
+                throw new IllegalArgumentException("Operator must be either " + AND + " or " + OR);
+            }
+        }
+    }
 
     /**
-     * Remove the sub-expression existing at the specified location 
+     * Remove the sub-expression from the list of sub-expressions. 
      * 
      * <p>Removing an expression will result in the left-size operator also 
      * being removed. Note that if the first sub-expression is removed, then 
      * the right-side operator will be removed.
      *
-     * @param index
+     * @param  index
+     *         The expression index indicates which sub-expression needs to be 
+     *         removed.
+     *         
+     * @since   1.0 
      */
     protected void removeSubExpression(int index) {
-        // Blowing away the first expression whacks it and the expression
-        // to its right. Blowing away any other expression removes it
-        // and the operator to its left.
         if (index == 0) {
             if (subExpressionAndOperatorList.size() > 1) {
                 subExpressionAndOperatorList.remove(0);
                 subExpressionAndOperatorList.remove(0);
             } else {
-                // Just remove root expression. There are no others.
                 subExpressionAndOperatorList.remove(0);
             }
         } else {
-            // Blow away expression and operator to left.
             subExpressionAndOperatorList.remove(expressionIndexToArrayIndex(index));
             subExpressionAndOperatorList.remove(expressionIndexToArrayIndex(index) - 1);
         }
     }
 
-
     /**
-     * Execute DFS expression traversal to try and extract sub-expression by 
-     * subject name
+     * Find the sub-expression by subject.
+     * 
+     * <p>Because of expressions can be nested among multiple level, so this 
+     * method uses DFS to find the matched expression recursively.
      *
-     * @param subject
-     * @return
+     * @param  subject
+     *         The subject for matching.
+     *         
+     * @return  The matched sub-expression.
+     * 
+     * @since   1.0 
      */
-    public Expression find(String subject) {
+    public Expression findSubExpression(String subject) {
         if (subject == null) {
             return null;
         }
@@ -648,14 +662,13 @@ public class Expression implements Cloneable, Serializable {
             }
         } else {
             for (int i = 0; i < getNumberOfSubExpression(); i++) {
-                Expression subExpression = getSubExpression(i);
+                final Expression subExpression = getSubExpression(i);
                 if (subExpression != null) {
-                    Expression matched = subExpression.find(subject);
+                    final Expression matched = subExpression.findSubExpression(subject);
                     if (matched != null) {
                         return matched;
                     }
                 }
-
             }
         }
 
@@ -663,17 +676,41 @@ public class Expression implements Cloneable, Serializable {
     }
 
     /**
-     * Complements the current value of the expression
+     * Complements this expression.
      * 
-     * <p>Complementing a negated expression will result in a double negative 
+     * <p>Complementing is to do NOT operation on a boolean value.
+     * 
+     * <p>Complementing a negative expression will result in a double negative 
      * which cancels itself out. (e.g. !(!A) = A)
+     * 
+     * @since   1.0 
      */
     public Expression complement() {
         complement = !complement;
         return this;
     }
+    
+    /**
+     * Complements this expression.
+     * 
+     * <p>Complementing is to do NOT operation on a boolean value.
+     * 
+     * <p>Complementing a negative expression will result in a double negative 
+     * which cancels itself out. (e.g. !(!A) = A)
+     * 
+     * @param  expression
+     *         The expression needs to get the complement.
+     *         
+     * @since   1.0 
+     */
+    public Expression complement(Expression expression) {
+    	expression = (Expression) expression.clone();
+    	return expression.complement();
+    }
 
     /**
+     * Complements the current value of the expression with distribute.
+     * 
      * @param distribute
      */
     public Expression complement(boolean distribute) {
@@ -686,11 +723,10 @@ public class Expression implements Cloneable, Serializable {
         if (getNumberOfSubExpression() == 1) {
             Expression expr = getSubExpression(0);
 
-            if (expr.isCompound() == false) {
-                expr = (Expression) expr.clone();
-                expr.complement();
+            if (expr.isCompound()) {
+            	expr.complement(distribute);
             } else {
-                expr.complement(distribute);
+            	complement(expr);
             }
 
             return this;
@@ -705,9 +741,9 @@ public class Expression implements Cloneable, Serializable {
 		 *
 		 * The state machine has three cases:
 		 *
-		 * case 1: Simply add complement of term to parent complement
-		 *
-		 * (E) (E + + E) + E + ==> (... * !E
+		 * Case 1: Left operator is OR, right operator is OR
+		 * 
+		 * [sub-expression list of original expression] + E + ===> [sub-expression list of complement expression] * !E
 		 *
 		 * case 2: Need to create a new disjunctive sub-expr and add term
 		 *
@@ -718,114 +754,59 @@ public class Expression implements Cloneable, Serializable {
 		 * * E) * E + * E * ==> (... * (... + !E
 		 */
 
-        // stores the expression complement at each level of the tree
-        Expression logicalComplement = new Expression();
+        Stack<Serializable> exprStack      = new Stack<>();    // store the expression tree
+        exprStack.push(this);                                  // push the initial expression onto the stack
+        exprStack.push(new Integer(0));                        // push the expression index of the initial expression into the stack
+        
+        Stack<Expression>   compStack      = new Stack<>();    // store the complement tree
+        Expression          complementExpr = new Expression(); // stores the expression complement at each level of the tree
+        Expression          disjunctExpr   = new Expression(); // group all the ORs together
+        compStack.push(complementExpr);
+        compStack.push(disjunctExpr);
 
-        // group ORs to preserve order of evaluation
-        Expression disjunctExpression = new Expression();
-
-        Stack<Serializable> exprStack = new Stack<>(); // store the expression tree
-        Stack<Expression> compStack = new Stack<>(); // store the complement tree
-
-        // push initial expression onto the stack
-        exprStack.push(this);
-        exprStack.push(new Integer(0));
-
-        // push complement structure
-        compStack.push(logicalComplement);
-        compStack.push(disjunctExpression);
-
-        // walk the parse exprStack
         while(!exprStack.isEmpty()) {
             boolean descend = false;
 
-            // store current expr index
-            Integer itr = (Integer) exprStack.pop();
+            Integer    exprIndex = (Integer)    exprStack.pop();   // get the expression index of the current expression
+            Expression expr      = (Expression) exprStack.pop();   // get the current expression
 
-            // process stack expression
-            Expression expr = (Expression) exprStack.pop();
-
-            disjunctExpression = (Expression) compStack.pop();
-            logicalComplement = (Expression) compStack.pop();
+            disjunctExpr    = (Expression) compStack.pop();
+            complementExpr  = (Expression) compStack.pop();
 
             // break out of loop if descending into child expression, otherwise
             // continue left to right evaluation parse
-            for (int i = itr.intValue(); !descend && i < expr.getNumberOfSubExpression(); i++) {
-                Expression child = expr.getSubExpression(i);
-                String op = (i > 0 ? expr.getOperator(i, Expression.SIDE_LEFT) : null);
-                String la = (i == expr.getNumberOfSubExpression() - 1) ? null : expr.getOperator(i, Expression.SIDE_RIGHT);
-                String dual = null;
-                if (op != null) {
-                    dual = (op.equals(OR) ? AND : OR);
-                }
+            for (int i = exprIndex.intValue(); !descend && i < expr.getNumberOfSubExpression(); i++) {
+                Expression subExpr   = expr.getSubExpression(i);
+                String     leftOptr  = i > 0                                   ? expr.getOperator(i, Expression.SIDE_LEFT)  : null; // the left operator
+                String     rightOptr = i < expr.getNumberOfSubExpression() - 1 ? expr.getOperator(i, Expression.SIDE_RIGHT) : null; // the right operator
 
-                if (child.isCompound() == false) {
-					/*
-					 * Simple expression
-					 */
-                    child = (Expression) child.clone();
-                    child.complement();
+                if (!subExpr.isCompound()) {                // simple expression
+                	complement(subExpr);
+                	applyDeMorganLaw(complementExpr, disjunctExpr, subExpr, leftOptr, rightOptr); 
+                } else {                                    // compound expression
+                    Expression parentExpr = complementExpr;                 // use parent expression to preserve the state of the complement expression
+                    complementExpr = new Expression();                       
+                    complementExpr.setComplement(subExpr.isComplement());   // use complement expression to preserve sign of the sub-expression
 
-                    if (op == null || op.equals(Expression.OR)) {
-                        if (la == null || la.equals(Expression.OR)) {
-                            // case 1
-                            logicalComplement.addSubExpressionWithOperator(child, Expression.AND);
-                        } else {
-                            // case 2
-                            if (disjunctExpression.getNumberOfSubExpression() > 0) {
-                                disjunctExpression = new Expression();
-                            }
-                            disjunctExpression.addSubExpressionWithOperator(child, null);
-                            logicalComplement.addSubExpressionWithOperator(disjunctExpression, Expression.AND);
-                        }
-                    } else {
-                    	// case 3
-                        disjunctExpression.addSubExpressionWithOperator(child, Expression.OR);
-                    }
-                } else {
-                	/*
-					 * Compound expression
-					 */
-                    Expression parent = logicalComplement;
-                    logicalComplement = new Expression();
-
-                    // preserve sign of subexpression
-                    logicalComplement.setComplement(child.isComplement());
-
-                    if (op == null || op.equals(Expression.OR)) {
-                        if (la == null || la.equals(Expression.OR)) {
-                            // case 1
-                            parent.addSubExpressionWithOperator(logicalComplement, dual);
-                        } else {
-                            // case 2
-                            if (disjunctExpression.getNumberOfSubExpression() > 0) {
-                                disjunctExpression = new Expression();
-                            }
-                            disjunctExpression.addSubExpressionWithOperator(logicalComplement, null);
-                            parent.addSubExpressionWithOperator(disjunctExpression, Expression.AND);
-                        }
-                    } else {
-                        // case 3
-                        disjunctExpression.addSubExpressionWithOperator(logicalComplement, Expression.OR);
-                    }
+                    applyDeMorganLaw(parentExpr, disjunctExpr, complementExpr, leftOptr, rightOptr);
 
                     // push parent
-                    compStack.push(parent);
-                    compStack.push(disjunctExpression);
+                    compStack.push(parentExpr);
+                    compStack.push(disjunctExpr);
 
                     // push child
-                    compStack.push(logicalComplement);
+                    compStack.push(complementExpr);
                     compStack.push(new Expression());
 
                     // save parent position
                     exprStack.push(expr);
                     exprStack.push(new Integer(i + 1));
 
-                    // make the child the current expr
-                    expr = child;
+                    // make the child the current expression
+                    expr = subExpr;
 
                     // push child onto minimize stack
-                    exprStack.push(child);
+                    exprStack.push(subExpr);
                     exprStack.push(new Integer(0));
 
                     // descend branch to minimize child
@@ -835,9 +816,92 @@ public class Expression implements Cloneable, Serializable {
             }
         }
 
-        this.subExpressionAndOperatorList = logicalComplement.subExpressionAndOperatorList;
+        this.subExpressionAndOperatorList = complementExpr.subExpressionAndOperatorList;
 
         return this;
+    }
+    
+    /**
+     * Apply DeMorgan's Law to a sub-expression.
+     * 
+     * <p>The DeMorgan's Law is (* is AND, + is OR):
+     * <ul>
+     *   <li>!(P * Q) <==> !P + !Q
+     *   <li>!(P + Q) <==> !P * !Q
+     * </ul>
+     * 
+     * <p>When applying DeMorgan's Law, it is necessary to group ANDed terms which become OR'd terms, like
+     * <pre>
+     *     !(A * B * C + D) <==> ((!A + !B + !C) * !D)
+     * </pre>
+     * <p>So {@code disjunctExpr} is to group !A, !B, !C together
+     * 
+     * <p>The state machine has three cases when processing each sub-expression:
+     * <ul>
+     *   <li>Case 1: Left operator is OR, right operator is OR, so
+     *     <pre>
+     *       if 
+     *          [original expression] + E + 
+     *       do 
+     *          [complement expression] * !E
+     *     </pre>
+     *   <li>Case 2: Left operator is OR, right operator is AND, so add the 
+     *   flipped sub-expression into disjunct expression and then add the 
+     *   disjunct expression into the complement expression.
+     *     <pre>
+     *       if 
+     *          [original expression] + E *
+     *       do 
+     *          [disjunct expression] <= E
+     *          [original expression] * [disjunct expression]
+     *     </pre>
+     *   <li>Case 3: Left operator is AND 
+     *   (whatever the right operator is AND or OR), 
+     *   Don't add the flipped sub-expression to the complement expression directly. Cache it to disjunct expression.
+     *     <pre>
+     *       if 
+     *          [original expression] * E 
+     *       do 
+     *          [disjunct expression] + !E
+     *     </pre>
+     *   <li>
+     * </ul>
+     * 
+     * @param  complementExpr
+     *         The complement expression of the original expression.
+     *         
+     * @param  disjunctExpr
+     *         The disjunct expression to group ORs to preserve order of 
+     *         evaluation.
+     * 
+     * @param  subExpr
+     *         The sub-expression from the original expression.
+     * 
+     * @param  leftOptr
+     *         The left operator of the sub-expression.
+     * 
+     * @param  rightOptr
+     *         The right operator of the sub-expression.
+     *         
+     *         
+     */
+    public void applyDeMorganLaw(Expression complementExpr, Expression disjunctExpr, Expression subExpr, String leftOptr, String rightOptr) {
+    	if (leftOptr == null || leftOptr.equals(Expression.OR)) {
+            if (rightOptr == null || rightOptr.equals(Expression.OR)) {
+                // case 1
+                complementExpr.addSubExpressionWithOperator(subExpr, Expression.AND);
+            } else {
+                // case 2
+                if (disjunctExpr.getNumberOfSubExpression() > 0) {
+                    disjunctExpr = new Expression();
+                }
+                disjunctExpr.addSubExpressionWithOperator(subExpr, null);
+                complementExpr.addSubExpressionWithOperator(disjunctExpr, Expression.AND);
+            }
+        } else {
+        	// case 3
+            disjunctExpr.addSubExpressionWithOperator(subExpr, Expression.OR);
+        }
     }
 
 

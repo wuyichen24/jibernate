@@ -257,7 +257,7 @@ public class ExpressionEngine {
 							// concatenate with the main expression since they
 							// are logically the same expression and not really
 							// a nested sub-expression
-							divideAndConquor.addAll(normalized, Expression.OR);
+							divideAndConquor.addCompoundExpression(normalized, Expression.OR);
 						}
 					}
 					sop = divideAndConquor;
@@ -691,7 +691,7 @@ public class ExpressionEngine {
 			else {
 
 				union = e1;
-				union.addAll(e2, Expression.OR);
+				union.addCompoundExpression(e2, Expression.OR);
 			}
 		}
 
