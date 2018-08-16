@@ -711,7 +711,10 @@ public class Expression implements Cloneable, Serializable {
     /**
      * Complements the current value of the expression with distribute.
      * 
-     * @param distribute
+     * @param  distribute
+     *         The distribute option.
+     * 
+     * @since   1.0 
      */
     public Expression complement(boolean distribute) {
         // if not distributing then just change the sign
@@ -731,28 +734,6 @@ public class Expression implements Cloneable, Serializable {
 
             return this;
         }
-
-		/*
-		 * To generate the compound complement, it is sufficient to take the dual by switching all operators and then
-		 * flip the sign for all SimpleExpressions. When applying DeMorgan's Law, however, it is necessary to group
-		 * ANDed terms which become OR'd terms.
-		 *
-		 * !(A * B * C + D) <==> ((!A + !B + !C) * !D)
-		 *
-		 * The state machine has three cases:
-		 *
-		 * Case 1: Left operator is OR, right operator is OR
-		 * 
-		 * [sub-expression list of original expression] + E + ===> [sub-expression list of complement expression] * !E
-		 *
-		 * case 2: Need to create a new disjunctive sub-expr and add term
-		 *
-		 * (E * + E * ==> (... * (E ...
-		 *
-		 * case 3: ANDed term needs to be added to disjunctive sub-expr
-		 *
-		 * * E) * E + * E * ==> (... * (... + !E
-		 */
 
         Stack<Serializable> exprStack      = new Stack<>();    // store the expression tree
         exprStack.push(this);                                  // push the initial expression onto the stack
@@ -883,7 +864,7 @@ public class Expression implements Cloneable, Serializable {
      * @param  rightOptr
      *         The right operator of the sub-expression.
      *         
-     *         
+     * @since   1.0      
      */
     public void applyDeMorganLaw(Expression complementExpr, Expression disjunctExpr, Expression subExpr, String leftOptr, String rightOptr) {
     	if (leftOptr == null || leftOptr.equals(Expression.OR)) {
@@ -904,33 +885,13 @@ public class Expression implements Cloneable, Serializable {
         }
     }
 
-
-    /**
-     * Descends into the expression to distribute the complement by through 
-     * application of DeMorgan's Law.
-     * 
-     * <p>
-     * !(A + B) <==> !A * !B
-     * A + !(B + C) <==> A + !B * !C
-     * 
-     * <p>Sub-optimal solution
-     * sub-optimal solution will turn (A + B) into !(!A) + (!B)) if called on 
-     * a non complemented compound.
-     */
-    protected void distributeComplement() {
-        // toggle
-        this.complement();
-
-        // re-complement with distribution
-        this.complement(true);
-    }
-
-
     /**
      * Reset the state of the current expression.
      * 
-     * <p>Sets subject, predicate, value, or any sub-expressions to null and 
-     * sets complement to false;
+     * <p>This method will set subject, operator, value, or any 
+     * sub-expressions to null and sets complement to false.
+     * 
+     * @since   1.0 
      */
     protected void reset() {
         setSubject(null);
@@ -940,79 +901,106 @@ public class Expression implements Cloneable, Serializable {
         subExpressionAndOperatorList = null;
     }
 
+    @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-
-        if (isCompound() == false) {
-            if (isComplement() == true) {
-                sb.append("!");
-            }
-            sb.append("(");
-            sb.append("[");
-            if (subject != null) {
-                sb.append(subject.getName());
-                if (subject.getValue() != null) {
-                    sb.append(" = ");
-                    sb.append(subject.getValue());
-                }
-            }
-            sb.append("] ");
-
-            sb.append(operator);
-            sb.append(" ");
-
-            if (value instanceof String) {
-                sb.append("\"").append(value).append("\"");
-            } else if (value instanceof Collection) {
-				String s = StringUtil.join(",", (Collection<?>) value, v -> {
-                    if (v instanceof String) {
-                        return(StringUtil.wrap((String) v, "\""));
-                    }
-                    return v.toString();
-                });
-				sb.append("[").append(s).append("]");
-            } else {
-                sb.append(value);
-            }
-            sb.append(")");
-            return sb.toString();
+        if (!isCompound()) {
+            return toStringSimpleExpression();
+        } else {
+        	StringBuilder sb = new StringBuilder();
+        	toStringCompoundExpression(this, sb);
+        	return sb.toString();
         }
-        // Recursive eval of the compound expression.
-        toString(this, sb);
-
-        return (sb.toString());
     }
+    
+    /**
+     * Get the string of a simple expression.
+     * 
+     * @return  The string of a simple expression.
+     * 
+     * @since   1.0
+     */
+    private String toStringSimpleExpression() {
+    	StringBuilder sb = new StringBuilder();
+    	if (isComplement() == true) {
+            sb.append("!");
+        }
+        sb.append("(");
+        
+        sb.append("[");
+        if (subject != null) {
+            sb.append(subject.getName());
+            if (subject.getValue() != null) {
+                sb.append(" = ");
+                sb.append(subject.getValue());
+            }
+        }
+        sb.append("]");
 
-    private void toString(Expression expression, StringBuilder sb) {
-        if (expression.isCompound() == false) {
-            sb.append(expression.toString());
+        sb.append(operator);
+        sb.append(" ");
+
+        if (value instanceof String) {
+            sb.append("\"").append(value).append("\"");
+        } else if (value instanceof Collection) {
+			String s = StringUtil.join(",", (Collection<?>) value, v -> {
+                if (v instanceof String) {
+                    return(StringUtil.wrap((String) v, "\""));
+                }
+                return v.toString();
+            });
+			sb.append("[").append(s).append("]");
+        } else {
+            sb.append(value);
+        }
+        sb.append(")");
+        return sb.toString();
+    }
+    
+    /**
+     * Get the string of a simple expression.
+     * 
+     * <p>This method will use recursive way to get all the strings from the 
+     * current expression and its nested expressions.
+     * 
+     * @param  expr
+     *         The compound expression.
+     *         
+     * @param  sb
+     *         The {@code StringBuilder} to collect all the strings from this 
+     *         current expression and all the nested expressions.
+     *         
+     * @since   1.0
+     */
+    private void toStringCompoundExpression(Expression expr, StringBuilder sb) {
+    	if (!expr.isCompound()) {
+            sb.append(expr.toString());
             return;
         }
 
-        if (expression.isComplement() == true) {
+        if (expr.isComplement() == true) {
             sb.append("!");
         }
 
         sb.append("(");
 
-        int size = expression.getNumberOfSubExpression();
+        int size = expr.getNumberOfSubExpression();
 
         for (int i = 0; i < size; i++) {
-            Expression subExpression = expression.getSubExpression(i);
+            Expression subExpr = expr.getSubExpression(i);
 
             if (i > 0) {
                 sb.append(" ");
             }
 
-            if (subExpression.isCompound()) {
-                toString(subExpression, sb);
+            if (subExpr.isCompound()) {
+            	toStringCompoundExpression(subExpr, sb);
             } else {
-                sb.append(subExpression.toString());
+                sb.append(subExpr.toString());
             }
 
             if (i != (size - 1)) {
                 sb.append(" ");
-                sb.append(expression.getOperator(i, SIDE_RIGHT));
+                sb.append(expr.getOperator(i, SIDE_RIGHT));
             }
         }
         sb.append(")");
