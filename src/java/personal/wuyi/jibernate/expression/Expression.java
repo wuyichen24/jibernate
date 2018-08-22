@@ -1040,32 +1040,67 @@ public class Expression implements Cloneable, Serializable {
     }
 
     /**
-     * Converts a expression index into the index in the list of 
-     * sub-expressions which combines expressions and operators.
+     * Converts the expression index into the real index of combined 
+     * expressions and operators.
      * 
-     * <p>For the list of sub-expressions, it looks like:
+     * <p>The expression index is pseudo indexing of sub-expressions contained 
+     * by the current compound expression.
+     * 
+     * <p>Sub-expressions are on even numbers starting at zero and the list of 
+     * sub-expressions is the set of sub-expressions and operators, looks like: 
      * <pre>
-     *     [expr, optr, expr, optr, ......., optr, expr]
+     *     List = [ExprA, Optr, ExprB, Optr, ExprC, Optr, ExprD]
      * </pre>
      * 
-     * <p>You can see that expressions are on even numbers starting at zero.
+     * <p>We can also consider there is the list of only sub-expressions like:
+     * <pre>
+     *     Expr = [ExprA, ExprB, ExprC, ExprD]
+     * </pre>
      * 
-     * @param  expressionIndex
+     * <p>So you can see the relationship between the expression index for the 
+     * sub-expression only list and the index of the sub-expressions and 
+     * operators list:
+     * <pre>
+     *     Expr[0] = List[0] = ExprA
+     *     Expr[1] = List[2] = ExprB
+     *     Expr[2] = List[4] = ExprC
+     *     Expr[3] = List[6] = ExprD
+     * </pre>
+     * 
+     * @param  index
      *         The expression index.
      *         
-     * @return  The index of in the list of sub-expressions which combines 
-     *          expressions and operators.
-     *          
+     * @return  The index among the list of sub-expressions and operators mix.
+     *          list.
+     * 
      * @since   1.0
      */
-    private int convertExpressionIndexToArrayIndex(int expressionIndex) {
-        return expressionIndex * 2;
+    private int convertExpressionIndexToArrayIndex(int index) {
+        return index * 2;
     }
 
     /**
-     * Calculate the sum-of-products.
+     * Generate new expression representing minimized (sum-of-products) form 
+     * of current expression.
+     * 
+     * <p>Product term: Combine 2 or more variables only by AND operator, like
+     * <pre>
+     * x
+     * x * y
+     * !x * !y
+     * x * y * z
+     * </pre>
+     * 
+     * <p>Sum-of-products: Do OR operations on a set of product terms, like
+     * <pre>
+     * x + (x * y) + (!x * !y) + (x * y * z)
+     * </pre>
+     * 
+     * <p>Does not modify current expression instance.
      *
-     * @return  The minimized form of the current expression.
+     * @return  The new {@code Expression} representing the (sum-of-products) 
+     * of the current {@code Expression}.
+>>>>>>> e37bb64f166e075702b01ce1edf5ca95893b415a
      * 
      * @since   1.0
      */
@@ -1074,18 +1109,19 @@ public class Expression implements Cloneable, Serializable {
     }
 
     /**
-     * Perform top-down depth first search of Expression tree
+     * Perform DFS (Depth-First-Search) of Expression tree.
      * 
-     * <p>Consume BOTH expression and logical operator nodes to produce binary 
+     * <p>Consume both expression and logical operator nodes to produce binary 
      * pre-fix expression notation wherein the leading operator links the 
      * following sub-expressions. (Only "simple" Expressions will be produced. 
      * Every time an operator is encountered it indicates a new compound 
-     * expression was encountered.)
+     * expression was encountered)
      * 
-     * <p>
+     * <pre>
      * ((A || B)  && C) -> &&, ||, A, B, C
      * (A || (B  && C)) -> || A, &&, B, C
      * (A && B && C)) -> &&, &&, A, B, C
+     * </pre>
      * 
      * <p>
      * NOTE: postfix will produce "logical" evaluation which gives AND 
@@ -1093,10 +1129,14 @@ public class Expression implements Cloneable, Serializable {
      * from postfix evaluation will be logically equivalent, but may not be 
      * structurally identical to original expression.
      * 
-     * <p>
+     * <pre>
      * (A && B || C && D)) -> ||, && A, B, &&, C, D
+     * </pre>
      *
-     * @param consumer
+     * @param  consumer
+     *         The {@code Consumer} for performing an operation on each node.
+     *         
+     * @since   1.0
      */
     public void prefix(Consumer<Serializable> consumer) {
         if (!this.isCompound()) {
@@ -1107,7 +1147,7 @@ public class Expression implements Cloneable, Serializable {
             // or the Sum-of-Products form of an OR'd set of 2 or more minterms
             // (A || B && C || D) ->  ||, ||, A, &&, B, C, D
 
-            // calculate min-terms
+            // calculate minterms
             List<List<Expression>> minterms = new ArrayList<>();
             List<Expression> minterm = null;
             for (int i = 0; i < this.getNumberOfSubExpression(); i++) {
@@ -1143,14 +1183,14 @@ public class Expression implements Cloneable, Serializable {
         }
     }
 
-    /**
-     * Determines if two objects are equal
+    /* (non-Javadoc)
+     * @see java.lang.Object#equals(java.lang.Object)
      * 
-     * <p>Compound Expressions are considered equal only if they are structurally
-     * identical and contain all the same sub-expressions and operators in the same order.
-     *
-     * @param o
-     * @return true if the two objects are identically structured Compound Expressions
+     * Determines if two {@code Expression} are equal.
+     * 
+     * <p>Compound Expressions are considered equal only if they are 
+     * structurally identical and contain all the same sub-expressions and 
+     * operators in the same order.
      */
     @Override
     public boolean equals(Object o) {
@@ -1164,72 +1204,112 @@ public class Expression implements Cloneable, Serializable {
 
         Expression expression = (Expression) o;
 
-        if (!isCompound()) {
-            if (!expression.isCompound()) {
-                // For the expressions to be equal, the properties, predicates,
-                // expression values, subject values, and complements must also be equal.
-
-                // Subject
-                if (getSubject() != null) {
-                    if (getSubject().equals(expression.getSubject()) == false) {
-                        return false;
-                    }
-                } else if (expression.getSubject() != null) {
-                    return false;
-                }
-
-                // Predicate
-                if (getOperator() != null) {
-                    if (getOperator().equals(expression.getOperator()) == false) {
-                        return false;
-                    }
-                } else if (expression.getOperator() != null) {
-                    return false;
-                }
-
-                // Value (check values for "equivalence", we don't care about being same object)
-                if (getValue() != null) {
-                    if (ReflectUtil2.equivalent(getValue(), expression.getValue()) == false) {
-                        return false;
-                    }
-                } else if (expression.getValue() != null) {
-                    return false;
-                }
-
-                // Complement
-                if (isComplement() != expression.isComplement()) {
-                    return false;
-                }
-                return true;
+        if (isCompound() != expression.isCompound()) {
+        		// if one expression is simple and another is compound, 
+        	    // they should be considered as different.
+        		return false;
+        } else {
+        		if (!expression.isCompound()) {  
+        			// if 2 expressions are simple
+        			return isEqualSimpleExpressions(expression);
             } else {
-                return false;
+            		// if 2 expressions are compound
+            		return isEqualCompoundExpressions(expression);
             }
         }
+    }
+    
+    /**
+     * Check 2 simple expressions are equal or not.
+     * 
+     * <p>2 simple expressions are equal only if subject, operator, value and 
+     * complement are same.
+     * 
+     * @param  expression
+     *         The simple expression needs to be compared with this simple 
+     *         expression.
+     *         
+     * @return  {@code true} if 2 simple expressions are same;
+     *          {@code false} otherwise.
+     *          
+     * @since   1.0
+     */
+    private boolean isEqualSimpleExpressions(Expression expression) {
+        // Subject
+        if (getSubject() != null) {
+            if (!getSubject().equals(expression.getSubject())) {
+                return false;
+            }
+        } else if (expression.getSubject() != null) {
+            return false;
+        }
 
-        // compare compound
+        // Operator
+        if (getOperator() != null) {
+            if (!getOperator().equals(expression.getOperator())) {
+                return false;
+            }
+        } else if (expression.getOperator() != null) {
+            return false;
+        }
+
+        // Value (check values for "equivalence", we don't care about being same object)
+        if (getValue() != null) {
+            if (!ReflectUtil2.equivalent(getValue(), expression.getValue())) {
+                return false;
+            }
+        } else if (expression.getValue() != null) {
+            return false;
+        }
+
+        // Complement
+        if (isComplement() != expression.isComplement()) {
+            return false;
+        }
+        
+        return true;
+    }
+    
+    /**
+     * Check 2 compound expressions are equal or not.
+     * 
+     * @param  expression
+     *         The compound expression needs to be compared with this compound 
+     *         expression.
+     *         
+     * @return  {@code true} if 2 compound expressions are same;
+     *          {@code false} otherwise.
+     *          
+     * @since   1.0
+     */
+    private boolean isEqualCompoundExpressions(Expression expression) {
+    		// use size of sub-expressions to measure.
+    	    // if size is not same, they should be different.
         if (getNumberOfSubExpression() != expression.getNumberOfSubExpression()) {
             return false;
         }
 
-        // iterate over expressions and operators and evaluate side-by-side comparisons
+        // iterate over sub-expressions and operators
+        // evaluate side-by-side comparisons
         for (int i = 0; i < getNumberOfSubExpression(); i++) {
-            Expression expressionA = getSubExpression(i);
-            Expression expressionB = expression.getSubExpression(i);
-
-            if (expressionA != null) {
-                if (expressionA.equals(expressionB) == false) {
+        	    // compare sub-expression
+            Expression exprA = getSubExpression(i);
+            Expression exprB = expression.getSubExpression(i);
+            
+            if (exprA != null) {
+                if (!exprA.equals(exprB)) {
                     return false;
                 }
             } else {
-                // both must be null
-                if (expressionB != null) {
+                if (exprB != null) {
                     return false;
                 }
             }
 
+            // compare operator on the right side of the sub-expression
             String operatorA = getOperator(i, SIDE_RIGHT);
             String operatorB = expression.getOperator(i, SIDE_RIGHT);
-
+            
             if (operatorA != null) {
                 if (operatorA.equals(operatorB) == false) {
                     return false;
@@ -1240,17 +1320,22 @@ public class Expression implements Cloneable, Serializable {
                 }
             }
         }
-
+        
         return true;
     }
 
-    /**
+    /* (non-Javadoc)
+     * @see java.lang.Object#clone()
+     * 
      * Returns a deep copy of this {@code Expression} instance
      * 
-     * <p>Value of a simple expression is passed by reference (NOT cloned).
-     *
-     * @return  A clone of this <code>Expression</code> instance.
+     * <p>If an {@code Expression} is a simple expression (not a compound 
+     * expression), it will not be truly cloned and its value is passed by 
+     * reference.
+     * 
+     * @since   1.0
      */
+    @Override
     public Object clone() {
         try {
             Expression cloned = (Expression) (super.clone());
@@ -1270,19 +1355,27 @@ public class Expression implements Cloneable, Serializable {
         }
     }
 
-    private void clone(Expression expr, Expression cloned) {
-        for (int i = 0; i < expr.subExpressionAndOperatorList.size(); i++) {
-            Object o = expr.subExpressionAndOperatorList.get(i);
+    /**
+     * Clone all the sub-expressions from this {@code Expression} to 
+     * the cloned {@code Expression}.
+     * 
+     * @param  currentExpr
+     *         The {@code Expression} needs to be cloned.
+     *         
+     * @param  clonedExpr
+     *         The new cloned {@code Expression}.
+     *         
+     * @since   1.0
+     */
+    private void clone(Expression currentExpr, Expression clonedExpr) {
+        for (int i = 0; i < currentExpr.subExpressionAndOperatorList.size(); i++) {
+            final Object o = currentExpr.subExpressionAndOperatorList.get(i);
 
-            if (o instanceof Expression) {
-                // clone child expression
+            if (o instanceof Expression) {   // if it is an expression
                 Expression childClone = (Expression) ((Expression) o).clone();
-
-                // add cloned expressions
-                cloned.subExpressionAndOperatorList.add(childClone);
-            } else {
-                // copy operators (Strings)
-                cloned.subExpressionAndOperatorList.add(o);
+                clonedExpr.subExpressionAndOperatorList.add(childClone);
+            } else {                         // if it is a operator
+                clonedExpr.subExpressionAndOperatorList.add(o);
             }
         }
     }
