@@ -198,7 +198,7 @@ public class Expression implements Cloneable, Serializable {
      * @since   1.0
      */
     public Expression and(Expression expression) {
-    		return combineExpression(AND, expression);
+    	return combineExpression(AND, expression);
     }
 
     /**
@@ -269,6 +269,9 @@ public class Expression implements Cloneable, Serializable {
     /**
      * Combine this expression with another expression.
      * 
+	 * <p>If current expression is a simple expression, it will compound 
+	 * itself prior to doing AND/OR operation with another expression.
+     * 
      * @param  operator
      *         The operator of the combination.
      *         
@@ -282,7 +285,7 @@ public class Expression implements Cloneable, Serializable {
     public Expression combineExpression(String operator, Expression expression) {
        	// If current expression is a simple expression, it will compound 
 	    // itself prior to doing AND/OR operation with another expression.
-    		if (!isCompound()) {
+    	if (!isCompound()) {
             compound();
         }
     	addSubExpressionWithOperator(expression, operator);
@@ -312,7 +315,6 @@ public class Expression implements Cloneable, Serializable {
         return expression;
     }
 
-
     /**
      * Compound the current expression.
      * 
@@ -327,12 +329,12 @@ public class Expression implements Cloneable, Serializable {
         if (subject != null || operator != null || value != null || subExpressionAndOperatorList != null) {
             final Expression subExpr = (Expression) this.clone();
             reset();
-            addSubExpressionWithOperator(subExpr, null);
+            subExpressionAndOperatorList = new ArrayList<>();
+            subExpressionAndOperatorList.add(subExpr);
         }
 
         return this;
     }
-
 
     /**
      * Get the sub-expression by index.
@@ -357,6 +359,14 @@ public class Expression implements Cloneable, Serializable {
     	}
     }
     
+    /**
+     * Check the expression index is out of bound or not.
+     * 
+     * @param  index
+     *         The expression index needs to be checked.
+     *         
+     * @since   1.0
+     */
     private void checkExpressionIndexOutOfBound(int index) {
     	int size = getNumberOfSubExpression();
 		if (index < 0 || index > size - 1) {
@@ -471,19 +481,32 @@ public class Expression implements Cloneable, Serializable {
      * @since   1.0
      */
     protected void setOperator(int index, int side, String operator) {
-        if ((side != SIDE_LEFT) || (side != SIDE_RIGHT)) {
-            throw (new IllegalArgumentException("The side \"" + side + "\" is unknown"));
+        if ((side != SIDE_LEFT) && (side != SIDE_RIGHT)) {
+            throw new IllegalArgumentException("The side \"" + side + "\" is unknown");
         }
+        checkExpressionIndexOutOfBound(index);
 
         if (side == SIDE_LEFT) {
+        	if (index == 0) {
+        		throw new IllegalArgumentException("Can not set an operator on the left side of the first sub-expression without an expression");
+        	}
             subExpressionAndOperatorList.set(convertExpressionIndexToArrayIndex(index) - 1, operator);
         } else {
+        	if (index == getNumberOfSubExpression() - 1) {
+        		throw new IllegalArgumentException("Can not set an operator on the right side of the last sub-expression without an expression");
+        	}
             subExpressionAndOperatorList.set(convertExpressionIndexToArrayIndex(index) + 1, operator);
         }
     }
 
     /**
      * Add a sub-expression at the end of the list of sub-expressions.
+     * 
+     * <p>This method is not valid for any simple expression. The simple 
+     * expression needs to be compounded before adding a new sub-expression.
+     * You can use 
+     * {@code combineExpression(String operator, Expression expression)} 
+     * for a simple expression.
      * 
      * @param  expression
      *         The expression needs to be added.
@@ -499,6 +522,12 @@ public class Expression implements Cloneable, Serializable {
 
     /**
      * Add a sub-expression with a operator into a list of sub-expressions.
+     * 
+     * <p>This method is not valid for any simple expression. The simple 
+     * expression needs to be compounded before adding a new sub-expression.
+     * You can use 
+     * {@code combineExpression(String operator, Expression expression)} 
+     * for a simple expression.
      * 
      * <p>There are 2 situations for adding an expression with an operator:
      * <ul>
@@ -548,6 +577,12 @@ public class Expression implements Cloneable, Serializable {
      * Add a sub-expression with a operator on certain side into a list of 
      * sub-expressions.
      * 
+     * <p>This method is not valid for any simple expression. The simple 
+     * expression needs to be compounded before adding a new sub-expression.
+     * You can use 
+     * {@code combineExpression(String operator, Expression expression)} 
+     * for a simple expression.
+     * 
      * @param  index
      *         The expression index.
      *         
@@ -574,8 +609,42 @@ public class Expression implements Cloneable, Serializable {
         subExpressionAndOperatorList.add(convertExpressionIndexToArrayIndex(index), expression);
     }
 
+	/**
+	 * Combine this expression with another compound expression.
+	 * 
+	 * <p>If current expression is a simple expression, it will compound 
+	 * itself prior to doing AND/OR operation with another expression.
+	 * 
+	 * @param  operator
+	 *         The operator of the combination.
+	 *         
+	 * @param  expression
+	 *         Another compound expression needs to combine with this 
+	 *         expression.
+	 *         
+	 * @return  The new compound expression.
+	 * 
+	 * @since   1.0
+	 */
+    public void combineCompoundExpression(String operator, Expression expression) {
+    	// If current expression is a simple expression, it will compound 
+	    // itself prior to doing AND/OR operation with another expression.
+    	if (!isCompound()) {
+            compound();
+        }
+    	addCompoundExpression(expression, operator);
+    }
+
     /**
      * Add a compound expression into the expression.
+     * 
+     * <p>This method also allow to insert a simple expression.
+     * 
+     * <p>This method is not valid for any simple expression. The simple 
+     * expression needs to be compounded before adding a new sub-expression.
+     * You can use 
+     * {@code combineCompoundExpression(String operator, Expression expression)} 
+     * for a simple expression.
      *
      * @param  expression
      *         The compound expression needs to be added.
@@ -590,7 +659,7 @@ public class Expression implements Cloneable, Serializable {
             throw new NullPointerException("Expression cannot be null");
         }
 
-        if (expression.isCompound() == false) {
+        if (!expression.isCompound()) {
         	addSubExpressionWithOperator(expression, operator);
             return;
         }
@@ -610,8 +679,7 @@ public class Expression implements Cloneable, Serializable {
      * <p>Several conditions will be validated:
      * <ul>
      *   <li>The new sub-expression can not be {@code null}.
-     *   <li>If the sub-expression list is {@code null}, create an empty list 
-     *       for it.
+     *   <li>The expression itself can not be simple expression (needs to be compounded before adding a new sub-expression).
      *   <li>If the sub-expression list is not empty, the operator is 
      *       mandatory (can not be {@code null}) and can only be AND or OR.
      * </ul>
@@ -629,8 +697,9 @@ public class Expression implements Cloneable, Serializable {
             throw new NullPointerException("Expression cannot be null");
         }
         
-        if (subExpressionAndOperatorList == null) {
-            subExpressionAndOperatorList = new ArrayList<>();
+        if (!isCompound()) {
+            throw new IllegalArgumentException("This method is not valid for any simple expression. "
+            		+ "A simple expression needs to be compounded before adding a new sub-expression.");
         }
 
         if (!subExpressionAndOperatorList.isEmpty()) {
@@ -647,9 +716,16 @@ public class Expression implements Cloneable, Serializable {
     /**
      * Remove the sub-expression from the list of sub-expressions. 
      * 
-     * <p>Removing an expression will result in the left-size operator also 
-     * being removed. Note that if the first sub-expression is removed, then 
-     * the right-side operator will be removed.
+     * <p>If the current expression is a simple expression, so there is no 
+     * sub-expression, so this method will do nothing.
+     * 
+     * <p>If the current expression is a compound expression, so removing an 
+     * expression will result in the left-size operator also being removed. 
+     * Note that if the first sub-expression is removed, then the right-side 
+     * operator will be removed.
+     * 
+     * <p>If there is only one sub-expression left after removing, this 
+     * current expression will be simplified by the single sub-expression.
      *
      * @param  index
      *         The expression index indicates which sub-expression needs to be 
@@ -658,17 +734,45 @@ public class Expression implements Cloneable, Serializable {
      * @since   1.0 
      */
     protected void removeSubExpression(int index) {
-        if (index == 0) {
-            if (subExpressionAndOperatorList.size() > 1) {
-                subExpressionAndOperatorList.remove(0);
-                subExpressionAndOperatorList.remove(0);
-            } else {
-                subExpressionAndOperatorList.remove(0);
-            }
-        } else {
-            subExpressionAndOperatorList.remove(convertExpressionIndexToArrayIndex(index));
-            subExpressionAndOperatorList.remove(convertExpressionIndexToArrayIndex(index) - 1);
-        }
+    	if (!isCompound()) {
+    		return;
+    	} else {
+    		checkExpressionIndexOutOfBound(index);
+    		
+    		if (index == 0) {
+    			subExpressionAndOperatorList.remove(0);
+    	        subExpressionAndOperatorList.remove(0);
+    	    } else {
+    	        subExpressionAndOperatorList.remove(convertExpressionIndexToArrayIndex(index));
+    	        subExpressionAndOperatorList.remove(convertExpressionIndexToArrayIndex(index) - 1);
+    	    }
+    		
+    		// if only one sub-expression left, simplify to a simple expression
+    		if (getNumberOfSubExpression() == 1) {
+    			simplify(getSubExpression(0));
+    		}
+    	
+    	}
+    }
+    
+    /**
+     * Simplify the current expression.
+     * 
+     * <p>If there is only one sub-expression left after removing, this 
+     * current expression needs to be simplified by the unique sub-expression.
+     * 
+     * @param  subExpression
+     *         The sub-expression for simplifying the current expression.
+     *         
+     * @since   1.0 
+     */
+    private void simplify(Expression subExpression) {
+    	this.setSubject(subExpression.getSubject());
+    	this.setOperator(subExpression.getOperator());
+    	this.setValue(subExpression.getValue());
+    	this.setComplement(subExpression.isComplement());
+    	
+    	subExpressionAndOperatorList = null;
     }
 
     /**
@@ -1100,7 +1204,6 @@ public class Expression implements Cloneable, Serializable {
      *
      * @return  The new {@code Expression} representing the (sum-of-products) 
      * of the current {@code Expression}.
->>>>>>> e37bb64f166e075702b01ce1edf5ca95893b415a
      * 
      * @since   1.0
      */
