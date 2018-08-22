@@ -4,12 +4,22 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class ExpressionTest {
-	Expression sinExpr       = new Expression("firstName", Expression.EQUAL, "John");
-	Expression com2AndExpr   = new Expression("firstName", Expression.EQUAL, "John").and("age", Expression.EQUAL, 23);
-	Expression com2OrExpr    = new Expression("firstName", Expression.EQUAL, "John").or("firstName", Expression.EQUAL, "Johnson");
-	Expression com3AndExpr   = new Expression("firstName", Expression.EQUAL, "John").and("age", Expression.EQUAL, 23).and("score", Expression.EQUAL, 99);
-	Expression com3OrExpr    = new Expression("firstName", Expression.EQUAL, "John").or("firstName", Expression.EQUAL, "Johnson").or("firstName", Expression.EQUAL, "Johnny");
-	Expression com3AndOrExpr = new Expression("firstName", Expression.EQUAL, "John").and("age", Expression.EQUAL, 23).or("firstName", Expression.EQUAL, "Johnny");
+	Expression sinExpr           = new Expression("firstName", Expression.EQUAL, "John");
+	Expression com2AndExpr       = new Expression("firstName", Expression.EQUAL, "John").and("age", Expression.EQUAL, 23);
+	Expression com2OrExpr        = new Expression("firstName", Expression.EQUAL, "John").or("firstName", Expression.EQUAL, "Johnson");
+	Expression com3AndExpr       = new Expression("firstName", Expression.EQUAL, "John").and("age", Expression.EQUAL, 23).and("score", Expression.EQUAL, 99);
+	Expression com3OrExpr        = new Expression("firstName", Expression.EQUAL, "John").or("firstName", Expression.EQUAL, "Johnson").or("firstName", Expression.EQUAL, "Johnny");
+	Expression com3AndOrExpr     = new Expression("firstName", Expression.EQUAL, "John").and("age", Expression.EQUAL, 23).or("firstName", Expression.EQUAL, "Johnny");
+	Expression comMultiLevelExpr = new Expression(new Expression("firstName", Expression.EQUAL, "John").and("age", Expression.EQUAL, 23))
+										.or(new Expression("firstName", Expression.EQUAL, "Mary").and("age", Expression.EQUAL, 24).and("score", Expression.EQUAL, 99))
+										.or(new Expression("firstName", Expression.EQUAL, "Tony").and("age", Expression.EQUAL, 25).and("lastName", Expression.EQUAL, "Lee"));
+	                              // (firstName = 'John' and age = 23) or (firstName = 'Mary' and age = 24 and score = 99) or (firstName = 'Tony' and age = 25 and lastName = 'Lee')
+	
+	@Test 
+	public void constructorTest() {
+		Expression comMultiLevelExpr = new Expression(new Expression("firstName", Expression.EQUAL, "John").and("age", Expression.EQUAL, 23));
+		comMultiLevelExpr.getOperator();
+	}
 	
 	@Test
 	public void isCompoundTest() {		
@@ -234,5 +244,22 @@ public class ExpressionTest {
 	@Test(expected = IndexOutOfBoundsException.class)
 	public void removeSubExpressionTestException() {
 		com3AndOrExpr.removeSubExpression(200);
+	}
+	
+	@Test
+	public void findSubExpressionTest() {
+		// case for can find
+		Expression targetedExpr1 = comMultiLevelExpr.findSubExpression("score");
+		Assert.assertEquals(99, targetedExpr1.getValue());
+		
+		// case for can not find
+		Expression targetedExpr2 = comMultiLevelExpr.findSubExpression("school");
+		Assert.assertNull(targetedExpr2);
+	}
+	
+	@Test
+	public void toStringTest() {
+		// (firstName = 'John' and age = 23) or (firstName = 'Mary' and age = 24 and score = 99) or (firstName = 'Tony' and age = 25 and lastName = 'Lee')
+		System.out.println(comMultiLevelExpr.toString());
 	}
 }

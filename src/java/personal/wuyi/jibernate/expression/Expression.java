@@ -116,7 +116,7 @@ public class Expression implements Cloneable, Serializable {
      * @since   1.0
      */
     public Expression(Expression expression) {
-    	addSubExpressionWithOperator(expression, null);
+    	combineExpression(null, expression);
     }
     
     public Subject getSubject()                      { return subject;               }
@@ -139,7 +139,7 @@ public class Expression implements Cloneable, Serializable {
      * @since   1.0
      */
     public boolean isCompound() {
-        if (subExpressionAndOperatorList == null || subExpressionAndOperatorList.isEmpty()) {
+        if (subExpressionAndOperatorList == null) {
             return false;
         }
         return true;
@@ -331,6 +331,8 @@ public class Expression implements Cloneable, Serializable {
             reset();
             subExpressionAndOperatorList = new ArrayList<>();
             subExpressionAndOperatorList.add(subExpr);
+        } else {
+        	subExpressionAndOperatorList = new ArrayList<>();
         }
 
         return this;
