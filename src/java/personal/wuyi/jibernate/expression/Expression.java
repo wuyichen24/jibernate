@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Stack;
 import java.util.function.Consumer;
 
+import com.google.common.base.Preconditions;
+
 import personal.wuyi.jibernate.util.ReflectUtil2;
 import personal.wuyi.jibernate.util.StringUtil;
 
@@ -336,6 +338,8 @@ public class Expression implements Cloneable, Serializable {
      * Get the sub-expression by index.
      *
      * <p>Expressions are on even numbers starting at 0.
+     * 
+     * <p>For a simple expression, this method will return {@code null}.
      *
      * @param  index
      *         The expression index of the sub-expression.
@@ -345,11 +349,29 @@ public class Expression implements Cloneable, Serializable {
      * @since   1.0
      */
     public Expression getSubExpression(int index) {
-        return (Expression) subExpressionAndOperatorList.get(expressionIndexToArrayIndex(index));
+    	if (!isCompound()) {
+    		return null;
+    	} else {
+    		checkExpressionIndexOutOfBound(index);
+    		return (Expression) subExpressionAndOperatorList.get(convertExpressionIndexToArrayIndex(index));
+    	}
+    }
+    
+    private void checkExpressionIndexOutOfBound(int index) {
+    	int size = getNumberOfSubExpression();
+		if (index < 0 || index > size - 1) {
+			throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + size);
+		}
     }
     
     /**
      * Set an expression into the list of sub-expressions.
+     * 
+     * <p>For a simple expression, this method will do nothing.
+     * 
+     * <p>This method could only update the existing sub-expressions (because 
+     * of new sub-expression can be appended into an expression only with 
+     * operator).
      *
      * @param  index
      *         The expression index.
@@ -359,8 +381,12 @@ public class Expression implements Cloneable, Serializable {
      *         
      * @since   1.0
      */
-    protected void setSubExpression(int index, Expression expression) {
-        subExpressionAndOperatorList.set(expressionIndexToArrayIndex(index), expression);
+    protected void replaceSubExpression(int index, Expression expression) {
+    	if (isCompound()) {
+    		Preconditions.checkArgument(index >= 0,                         "index can not be negative.");
+    		Preconditions.checkArgument(index < getNumberOfSubExpression(), "this method can only replace an existing sub-expression.");
+    		subExpressionAndOperatorList.set(convertExpressionIndexToArrayIndex(index), expression);
+    	}
     }
 
     /**
@@ -388,6 +414,8 @@ public class Expression implements Cloneable, Serializable {
      * <p>The operator referenced by the specified expression index where side 
      * specifies the operator existing to the immediate left or right of the 
      * expression.
+     * 
+     * <p>If an expression is simple, this method will return {@code null}.
      *
      * @param  index
      *         The expression index of the sub-expression.
@@ -400,20 +428,25 @@ public class Expression implements Cloneable, Serializable {
      * @since   1.0
      */
     protected String getOperator(int index, int side) {
+    	if (!isCompound()) {
+    		return null;
+    	}
+    	
         if ((side != SIDE_LEFT) && (side != SIDE_RIGHT)) {
             throw new IllegalArgumentException("The side \"" + side + "\" is unknown");
         }
+        checkExpressionIndexOutOfBound(index);
 
         String operator = null;
 
         if (side == SIDE_LEFT) {
-            int realIndex = expressionIndexToArrayIndex(index) - 1;
+            int realIndex = convertExpressionIndexToArrayIndex(index) - 1;
             // There is no operator left of the first expression
             if (realIndex > 0) {
                 operator = (String) subExpressionAndOperatorList.get(realIndex);
             }
         } else {
-            int realIndex = expressionIndexToArrayIndex(index) + 1;
+            int realIndex = convertExpressionIndexToArrayIndex(index) + 1;
             // There is no operator right of the last expression.
             if (realIndex < subExpressionAndOperatorList.size()) {
                 operator = (String) subExpressionAndOperatorList.get(realIndex);
@@ -443,9 +476,9 @@ public class Expression implements Cloneable, Serializable {
         }
 
         if (side == SIDE_LEFT) {
-            subExpressionAndOperatorList.set(expressionIndexToArrayIndex(index) - 1, operator);
+            subExpressionAndOperatorList.set(convertExpressionIndexToArrayIndex(index) - 1, operator);
         } else {
-            subExpressionAndOperatorList.set(expressionIndexToArrayIndex(index) + 1, operator);
+            subExpressionAndOperatorList.set(convertExpressionIndexToArrayIndex(index) + 1, operator);
         }
     }
 
@@ -461,7 +494,7 @@ public class Expression implements Cloneable, Serializable {
      * @since   1.0
      */
     protected void addSubExpressionWithOperator(Expression expression, String operator) {
-    	    addSubExpressionWithOperator(getNumberOfSubExpression(), expression, operator);
+    	addSubExpressionWithOperator(getNumberOfSubExpression(), expression, operator);
     }
 
     /**
@@ -505,8 +538,8 @@ public class Expression implements Cloneable, Serializable {
                 subExpressionAndOperatorList.add(operator);
                 subExpressionAndOperatorList.add(expression);
             } else {                                             // add at the middle
-                subExpressionAndOperatorList.add(expressionIndexToArrayIndex(index) - 1, expression);
-                subExpressionAndOperatorList.add(expressionIndexToArrayIndex(index) - 1, operator);
+                subExpressionAndOperatorList.add(convertExpressionIndexToArrayIndex(index) - 1, expression);
+                subExpressionAndOperatorList.add(convertExpressionIndexToArrayIndex(index) - 1, operator);
             }
         } 
     }
@@ -537,8 +570,8 @@ public class Expression implements Cloneable, Serializable {
         validateConditionBeforeAddingSubExpression(expression, operator);
 
         // inserts <expr> <op> at specified index
-        subExpressionAndOperatorList.add(expressionIndexToArrayIndex(index), operator);
-        subExpressionAndOperatorList.add(expressionIndexToArrayIndex(index), expression);
+        subExpressionAndOperatorList.add(convertExpressionIndexToArrayIndex(index), operator);
+        subExpressionAndOperatorList.add(convertExpressionIndexToArrayIndex(index), expression);
     }
 
     /**
@@ -633,8 +666,8 @@ public class Expression implements Cloneable, Serializable {
                 subExpressionAndOperatorList.remove(0);
             }
         } else {
-            subExpressionAndOperatorList.remove(expressionIndexToArrayIndex(index));
-            subExpressionAndOperatorList.remove(expressionIndexToArrayIndex(index) - 1);
+            subExpressionAndOperatorList.remove(convertExpressionIndexToArrayIndex(index));
+            subExpressionAndOperatorList.remove(convertExpressionIndexToArrayIndex(index) - 1);
         }
     }
 
@@ -983,7 +1016,7 @@ public class Expression implements Cloneable, Serializable {
 
         sb.append("(");
 
-        int size = expr.getNumberOfSubExpression();
+        final int size = expr.getNumberOfSubExpression();
 
         for (int i = 0; i < size; i++) {
             Expression subExpr = expr.getSubExpression(i);
@@ -1007,31 +1040,37 @@ public class Expression implements Cloneable, Serializable {
     }
 
     /**
-     * Converts the expression index into the real index of combined 
-     * expressions and operators
+     * Converts a expression index into the index in the list of 
+     * sub-expressions which combines expressions and operators.
      * 
-     * <p>The expression index is pseudo indexing of sub-expressions contained by the current compound expression.
+     * <p>For the list of sub-expressions, it looks like:
+     * <pre>
+     *     [expr, optr, expr, optr, ......., optr, expr]
+     * </pre>
      * 
-     * <p>Expressions are on even numbers starting at zero.
+     * <p>You can see that expressions are on even numbers starting at zero.
      * 
-     * @param index
-     * @return
+     * @param  expressionIndex
+     *         The expression index.
+     *         
+     * @return  The index of in the list of sub-expressions which combines 
+     *          expressions and operators.
+     *          
+     * @since   1.0
      */
-    private int expressionIndexToArrayIndex(int index) {
-        return index * 2;
+    private int convertExpressionIndexToArrayIndex(int expressionIndex) {
+        return expressionIndex * 2;
     }
 
     /**
-     * Generate new expression representing minimized (sum-of-products) form 
-     * of current expression
-     * 
-     * <p>Does not modify current expression instance.
+     * Calculate the sum-of-products.
      *
-     * @return
+     * @return  The minimized form of the current expression.
+     * 
+     * @since   1.0
      */
     public Expression minimized() {
-        Expression minimized = ExpressionEngine.minimize(this);
-        return minimized;
+        return ExpressionEngine.minimize(this);
     }
 
     /**
