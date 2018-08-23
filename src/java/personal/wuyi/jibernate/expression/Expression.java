@@ -910,6 +910,8 @@ public class Expression implements Cloneable, Serializable {
 
                     applyDeMorganLaw(parentExpr, disjunctExpr, complementExpr, leftOptr, rightOptr);
 
+                    parentExpr = removeSingleNestedExpression(parentExpr);
+                    
                     // push parent
                     compStack.push(parentExpr);
                     compStack.push(disjunctExpr);
@@ -934,11 +936,20 @@ public class Expression implements Cloneable, Serializable {
                 }
 
             }
+            
+            complementExpr = removeSingleNestedExpression(complementExpr);
         }
 
         this.subExpressionAndOperatorList = complementExpr.subExpressionAndOperatorList;
 
         return this;
+    }
+    
+    public Expression removeSingleNestedExpression(Expression expression) {
+    	if (expression.getNumberOfSubExpression() == 1 && !expression.isComplement()) {
+    		return removeSingleNestedExpression(expression.getSubExpression(0));
+        }
+    	return expression;
     }
     
     /**

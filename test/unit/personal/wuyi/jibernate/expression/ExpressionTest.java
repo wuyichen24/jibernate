@@ -265,17 +265,31 @@ public class ExpressionTest {
 	
 	@Test
 	public void complement() {
-		//     !(firstName == John && age == 23)
-		// ==> (!firstName == John) || (!age == 23)
-		Assert.assertEquals(2, com2AndExpr.getNumberOfSubExpression());
-		Expression complementExpr1 = com2AndExpr.complement(true);
-		Assert.assertEquals(2, complementExpr1.getNumberOfSubExpression());
-		Assert.assertTrue(complementExpr1.getSubExpression(0).isComplement());
-		Assert.assertTrue(complementExpr1.getSubExpression(1).isComplement());
+		System.out.println(sinExpr.toString());
+		Expression sinExprComplement = sinExpr.complement(true);
+		System.out.println(sinExprComplement.toString());
+		System.out.println();
 		
+		System.out.println(com2AndExpr.toString());
+		Expression com2AndExprComplement = com2AndExpr.complement(true);
+		System.out.println(com2AndExprComplement.toString());
+		System.out.println();
+		
+		System.out.println(com2OrExpr.toString());
+		Expression com2OrExprComplement = com2OrExpr.complement(true);
+		System.out.println(com2OrExprComplement.toString());
+		System.out.println();
+		
+		System.out.println(com3AndExpr.toString());
+		Expression com3AndExprComplement = com3AndExpr.complement(true);
+		System.out.println(com3AndExprComplement.toString());
+		System.out.println();
+		
+		System.out.println(comMultiLevelExpr.toString());
 		Assert.assertEquals(3, comMultiLevelExpr.getNumberOfSubExpression());
 		Expression complementExpr2 = comMultiLevelExpr.complement(true);
 		Assert.assertEquals(3, complementExpr2.getNumberOfSubExpression());
+		System.out.println(complementExpr2.toString());
 //		System.out.println(complementExpr.toString());
 	}
 }
