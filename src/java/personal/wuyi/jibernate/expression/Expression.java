@@ -901,7 +901,7 @@ public class Expression implements Cloneable, Serializable {
                 String     rightOptr = i < expr.getNumberOfSubExpression() - 1 ? expr.getOperator(i, Expression.SIDE_RIGHT) : null; // the right operator
 
                 if (!subExpr.isCompound()) {                // simple expression
-                	complement(subExpr);
+                	subExpr = complement(subExpr);
                 	applyDeMorganLaw(complementExpr, disjunctExpr, subExpr, leftOptr, rightOptr); 
                 } else {                                    // compound expression
                     Expression parentExpr = complementExpr;                 // use parent expression to preserve the state of the complement expression
@@ -1007,6 +1007,10 @@ public class Expression implements Cloneable, Serializable {
      */
     public void applyDeMorganLaw(Expression complementExpr, Expression disjunctExpr, Expression subExpr, String leftOptr, String rightOptr) {
     	if (leftOptr == null || leftOptr.equals(Expression.OR)) {
+    		if (!complementExpr.isCompound()) {
+    			complementExpr.compound();
+    		}
+    		
             if (rightOptr == null || rightOptr.equals(Expression.OR)) {
                 // case 1
                 complementExpr.addSubExpressionWithOperator(subExpr, Expression.AND);
@@ -1015,11 +1019,18 @@ public class Expression implements Cloneable, Serializable {
                 if (disjunctExpr.getNumberOfSubExpression() > 0) {
                     disjunctExpr = new Expression();
                 }
+                if (!disjunctExpr.isCompound()) {
+            		disjunctExpr.compound();
+        		}
                 disjunctExpr.addSubExpressionWithOperator(subExpr, null);
                 complementExpr.addSubExpressionWithOperator(disjunctExpr, Expression.AND);
             }
         } else {
         	// case 3
+        	if (!disjunctExpr.isCompound()) {
+        		disjunctExpr.compound();
+    		}
+        	
             disjunctExpr.addSubExpressionWithOperator(subExpr, Expression.OR);
         }
     }
@@ -1060,7 +1071,7 @@ public class Expression implements Cloneable, Serializable {
      */
     private String toStringSimpleExpression() {
     	StringBuilder sb = new StringBuilder();
-    	if (isComplement() == true) {
+    	if (isComplement()) {
             sb.append("!");
         }
         sb.append("(");

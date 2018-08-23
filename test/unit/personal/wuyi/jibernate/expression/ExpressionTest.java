@@ -262,4 +262,20 @@ public class ExpressionTest {
 		// (firstName = 'John' and age = 23) or (firstName = 'Mary' and age = 24 and score = 99) or (firstName = 'Tony' and age = 25 and lastName = 'Lee')
 		System.out.println(comMultiLevelExpr.toString());
 	}
+	
+	@Test
+	public void complement() {
+		//     !(firstName == John && age == 23)
+		// ==> (!firstName == John) || (!age == 23)
+		Assert.assertEquals(2, com2AndExpr.getNumberOfSubExpression());
+		Expression complementExpr1 = com2AndExpr.complement(true);
+		Assert.assertEquals(2, complementExpr1.getNumberOfSubExpression());
+		Assert.assertTrue(complementExpr1.getSubExpression(0).isComplement());
+		Assert.assertTrue(complementExpr1.getSubExpression(1).isComplement());
+		
+		Assert.assertEquals(3, comMultiLevelExpr.getNumberOfSubExpression());
+		Expression complementExpr2 = comMultiLevelExpr.complement(true);
+		Assert.assertEquals(3, complementExpr2.getNumberOfSubExpression());
+//		System.out.println(complementExpr.toString());
+	}
 }
