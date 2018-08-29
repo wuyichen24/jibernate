@@ -13,7 +13,6 @@ public class ExpressionTest {
 	Expression comMultiLevelExpr = new Expression(new Expression("firstName", Expression.EQUAL, "John").and("age", Expression.EQUAL, 23))
 										.or(new Expression("firstName", Expression.EQUAL, "Mary").and("age", Expression.EQUAL, 24).and("score", Expression.EQUAL, 99))
 										.or(new Expression("firstName", Expression.EQUAL, "Tony").and("age", Expression.EQUAL, 25).and("lastName", Expression.EQUAL, "Lee"));
-	                              // (firstName = 'John' and age = 23) or (firstName = 'Mary' and age = 24 and score = 99) or (firstName = 'Tony' and age = 25 and lastName = 'Lee')
 	
 	@Test 
 	public void constructorTest() {
@@ -267,21 +266,25 @@ public class ExpressionTest {
 	public void complement() {
 		System.out.println(sinExpr.toString());
 		Expression sinExprComplement = sinExpr.complement(true);
+		Assert.assertEquals(0, sinExprComplement.getNumberOfSubExpression());
 		System.out.println(sinExprComplement.toString());
 		System.out.println();
 		
 		System.out.println(com2AndExpr.toString());
 		Expression com2AndExprComplement = com2AndExpr.complement(true);
+		Assert.assertEquals(2, com2AndExprComplement.getNumberOfSubExpression());
 		System.out.println(com2AndExprComplement.toString());
 		System.out.println();
 		
 		System.out.println(com2OrExpr.toString());
 		Expression com2OrExprComplement = com2OrExpr.complement(true);
+		Assert.assertEquals(2, com2OrExprComplement.getNumberOfSubExpression());
 		System.out.println(com2OrExprComplement.toString());
 		System.out.println();
 		
 		System.out.println(com3AndExpr.toString());
 		Expression com3AndExprComplement = com3AndExpr.complement(true);
+		Assert.assertEquals(3, com3AndExprComplement.getNumberOfSubExpression());
 		System.out.println(com3AndExprComplement.toString());
 		System.out.println();
 		
@@ -290,6 +293,33 @@ public class ExpressionTest {
 		Expression complementExpr2 = comMultiLevelExpr.complement(true);
 		Assert.assertEquals(3, complementExpr2.getNumberOfSubExpression());
 		System.out.println(complementExpr2.toString());
-//		System.out.println(complementExpr.toString());
+	}
+	
+	@Test
+	public void removeSingleNestedExpressionTest() {
+		// test 2-level nested
+		Expression expr = new Expression();
+		expr.combineCompoundExpression(null, sinExpr);
+		Assert.assertEquals(1, expr.getNumberOfSubExpression());
+		Assert.assertFalse(expr.equals(sinExpr));
+		System.out.println("Before simplify: " + expr.toString());
+		Expression newExpr = expr.removeSingleNestedExpression(expr);
+		System.out.println("After simplify:  " + newExpr.toString());
+		Assert.assertTrue(newExpr.equals(sinExpr));
+		System.out.println();
+		
+		// test multi-level nested
+		Expression exprA = new Expression();
+		exprA.combineCompoundExpression(null, sinExpr);
+		Expression exprB = new Expression();
+		exprB.combineExpression(null, exprA);
+		Expression exprC = new Expression();
+		exprC.combineExpression(null, exprB);
+		Assert.assertEquals(1, expr.getNumberOfSubExpression());
+		Assert.assertFalse(expr.equals(sinExpr));
+		System.out.println("Before simplify: " + exprC.toString());
+		Expression newExpr2 = expr.removeSingleNestedExpression(expr);
+		System.out.println("After simplify:  " + newExpr2.toString());
+		Assert.assertTrue(newExpr2.equals(sinExpr));
 	}
 }

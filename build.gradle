@@ -46,7 +46,7 @@ jar {
 
 dependencies {
     // General Denpendencies
-    testCompile 'junit:junit:4.12'
+    testCompile 'junit:junit:4.11'
     compile 'junit-addons:junit-addons:1.4'
     testCompile 'com.vmlens:concurrent-junit:1.0.0'
     compile 'org.testng:testng:6.5.2'

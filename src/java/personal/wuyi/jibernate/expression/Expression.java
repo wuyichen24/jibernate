@@ -889,6 +889,8 @@ public class Expression implements Cloneable, Serializable {
 
             Integer    exprIndex = (Integer)    exprStack.pop();   // get the expression index of the current expression
             Expression expr      = (Expression) exprStack.pop();   // get the current expression
+            
+            expr = removeSingleNestedExpression(expr);
 
             disjunctExpr    = (Expression) compStack.pop();
             complementExpr  = (Expression) compStack.pop();
@@ -902,7 +904,7 @@ public class Expression implements Cloneable, Serializable {
 
                 if (!subExpr.isCompound()) {                // simple expression
                 	subExpr = complement(subExpr);
-                	applyDeMorganLaw(complementExpr, disjunctExpr, subExpr, leftOptr, rightOptr); 
+                	applyDeMorganLaw(complementExpr, disjunctExpr, subExpr, leftOptr, rightOptr);
                 } else {                                    // compound expression
                     Expression parentExpr = complementExpr;                 // use parent expression to preserve the state of the complement expression
                     complementExpr = new Expression();                       
@@ -945,7 +947,25 @@ public class Expression implements Cloneable, Serializable {
         return this;
     }
     
-    public Expression removeSingleNestedExpression(Expression expression) {
+    /**
+     * Simply the single nested expression.
+     * 
+     * <p>If a compound expression only has one sub-expression and it is not 
+     * complement, this method will take out the sub-expression as a 
+     * standalone expression. For example, 
+     * 
+     * <pre>
+     * 		((E)) ==> E
+     * <pre>
+     * 
+     * @param  expression
+     *         The compound expression needs to be simplified.
+     *         
+     * @return  The new standalone expression.
+     * 
+     * @since   1.0 
+     */
+    protected Expression removeSingleNestedExpression(Expression expression) {
     	if (expression.getNumberOfSubExpression() == 1 && !expression.isComplement()) {
     		return removeSingleNestedExpression(expression.getSubExpression(0));
         }
@@ -1016,7 +1036,7 @@ public class Expression implements Cloneable, Serializable {
      *         
      * @since   1.0      
      */
-    public void applyDeMorganLaw(Expression complementExpr, Expression disjunctExpr, Expression subExpr, String leftOptr, String rightOptr) {
+    public static void applyDeMorganLaw(Expression complementExpr, Expression disjunctExpr, Expression subExpr, String leftOptr, String rightOptr) {
     	if (leftOptr == null || leftOptr.equals(Expression.OR)) {
     		if (!complementExpr.isCompound()) {
     			complementExpr.compound();
