@@ -20,40 +20,43 @@ public class ExpressionTest2 {
 	Expression expectB;
 	Expression expectC;
 	
-	public ExpressionTest2(String leftOperator, String rightOperator) {
+	public ExpressionTest2(String leftOperator, String rightOperator, Expression expectA, Expression expectB, Expression expectC) {
 	    this.leftOperator  = leftOperator;
 	    this.rightOperator = rightOperator;
+	    this.expectA       = expectA;
+	    this.expectB       = expectB;
+	    this.expectC       = expectC;
 	}
 	
 	@Parameters
 	public static Iterable<Object[]> data() {
 	    return Arrays.asList(new Object[][] {
-	        { null,           null,           new Expression("aaa", Expression.EQUAL, "111").and("ccc", Expression.EQUAL, "333"), new Expression("bbb", Expression.EQUAL, "222"), new Expression("ccc", Expression.EQUAL, "333")},
-	        { null,           Expression.AND, new Expression("aaa", Expression.EQUAL, "111"),   },
-	        { null,           Expression.OR,  new Expression("aaa", Expression.EQUAL, "111")            },
-	        { Expression.AND, null,           new Expression("aaa", Expression.EQUAL, "111")           },
-	        { Expression.AND, Expression.AND, new Expression("aaa", Expression.EQUAL, "111") },
-	        { Expression.AND, Expression.OR,  new Expression("aaa", Expression.EQUAL, "111")  },
-	        { Expression.OR,  null,           new Expression("aaa", Expression.EQUAL, "111")            },
-	        { Expression.OR,  Expression.AND, new Expression("aaa", Expression.EQUAL, "111")  }, 
-	        { Expression.OR,  Expression.OR,  new Expression("aaa", Expression.EQUAL, "111")   }
+	        { null,           null,           new Expression("aaa", Expression.EQUAL, "111").and("ccc", Expression.EQUAL, "333"), new Expression("bbb", Expression.EQUAL, "222"), new Expression("ccc", Expression.EQUAL, "333") },
+	        { null,           Expression.OR,  new Expression("aaa", Expression.EQUAL, "111").and("ccc", Expression.EQUAL, "333"), new Expression("bbb", Expression.EQUAL, "222"), new Expression("ccc", Expression.EQUAL, "333") },
+	        { Expression.AND, null,           new Expression("aaa", Expression.EQUAL, "111"), new Expression("bbb", Expression.EQUAL, "222").or("ccc", Expression.EQUAL, "333"), new Expression("ccc", Expression.EQUAL, "333") },
+	        { Expression.AND, Expression.AND, new Expression("aaa", Expression.EQUAL, "111"), new Expression("bbb", Expression.EQUAL, "222").or("ccc", Expression.EQUAL, "333"), new Expression("ccc", Expression.EQUAL, "333") },
+	        { Expression.AND, Expression.OR,  new Expression("aaa", Expression.EQUAL, "111"), new Expression("bbb", Expression.EQUAL, "222").or("ccc", Expression.EQUAL, "333"), new Expression("ccc", Expression.EQUAL, "333") },
+	        { Expression.OR,  null,           new Expression("aaa", Expression.EQUAL, "111").and("ccc", Expression.EQUAL, "333"), new Expression("bbb", Expression.EQUAL, "222"), new Expression("ccc", Expression.EQUAL, "333") },
+	        { Expression.OR,  Expression.OR,  new Expression("aaa", Expression.EQUAL, "111").and("ccc", Expression.EQUAL, "333"), new Expression("bbb", Expression.EQUAL, "222"), new Expression("ccc", Expression.EQUAL, "333") }
 	    });
 	}
 	
 	@Test
-	public void applyDeMorganLawTest() {	
+	public void applyDeMorganLawTest() {
 		Expression.applyDeMorganLaw(a, b, c, leftOperator, rightOperator);
 		
-		// case 1: null E null	
-		Assert.assertEquals(a, new Expression("aaa", Expression.EQUAL, "111").and("ccc", Expression.EQUAL, "333"));
+		Assert.assertEquals(a, expectA);
+		Assert.assertEquals(b, expectB);
+		Assert.assertEquals(c, expectC);
 		
-		// case 2: null E and
-		// case 3: null E or
-		// case 4: and  E null
-		// case 5: and  E and
-		// case 6: and  E or
-		// case 7: or   E null
-		// case 8: or   E and 
-		// case 9: or   E or
+		// case 1: null E null	 -- case 1
+		// case 2: null E and    -- not testable
+		// case 3: null E or     -- case 1
+		// case 4: and  E null   -- case 3
+		// case 5: and  E and    -- case 3
+		// case 6: and  E or     -- case 3
+		// case 7: or   E null   -- case 1
+		// case 8: or   E and    -- not testable
+		// case 9: or   E or     -- case 1
 	}
 }

@@ -322,4 +322,14 @@ public class ExpressionTest {
 		System.out.println("After simplify:  " + newExpr2.toString());
 		Assert.assertTrue(newExpr2.equals(sinExpr));
 	}
+	
+	@Test
+	public void resetTest() {
+		sinExpr.reset();
+		Assert.assertNull(sinExpr.getSubject());
+		Assert.assertNull(sinExpr.getOperator());
+		Assert.assertNull(sinExpr.getValue());
+		Assert.assertFalse(sinExpr.isComplement());
+		Assert.assertEquals(0, sinExpr.getNumberOfSubExpression());
+	}
 }
