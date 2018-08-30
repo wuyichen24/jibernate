@@ -3,6 +3,14 @@ package personal.wuyi.jibernate.entity;
 import org.junit.Assert;
 import org.junit.Test;
 
+/**
+ * Test class for Uri.
+ * 
+ * @author  Wuyi Chen
+ * @date    08/30/2018
+ * @version 1.0
+ * @since   1.0
+ */
 public class UriTest {
 	@Test
 	public void constructorTest() {

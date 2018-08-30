@@ -15,6 +15,20 @@ import personal.wuyi.jibernate.util.StringUtil;
 /**
  * The class for representing query expression.
  * 
+ * <p>This {@code Expression} could represent 2 types of expressions: 
+ * <ul>
+ *   <li>Simple expression - one subject, one operator and one value.
+ *   <li>Compound expression - consists of multiple simple expression.
+ * </ul>
+ * 
+ * <p>The {@code Expression} will maintain a list of sub-expressions and 
+ * operators internally and that list looks like: 
+ * <pre>
+ *   [ExprA, Optr, ExprB, Optr, ExprC, Optr, ExprD]
+ * </pre>
+ * <p>If an expression will have this list only if the expression is a 
+ * compound expression.
+ * 
  * @author  Wuyi Chen
  * @date    08/12/2018
  * @version 1.0
@@ -1118,7 +1132,6 @@ public class Expression implements Cloneable, Serializable {
         sb.append("]");
 
         sb.append(operator);
-        sb.append(" ");
 
         if (value instanceof String) {
             sb.append("\"").append(value).append("\"");

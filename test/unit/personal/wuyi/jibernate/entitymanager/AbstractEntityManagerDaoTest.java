@@ -7,7 +7,6 @@ import java.text.SimpleDateFormat;
 import java.util.List;
 
 import org.apache.log4j.PropertyConfigurator;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -20,6 +19,14 @@ import personal.wuyi.jibernate.exception.DatabaseOperationException;
 import personal.wuyi.jibernate.expression.Expression;
 import personal.wuyi.jibernate.query.EntityQuery;
 
+/**
+ * Test class for AbstractEntityManagerDao
+ * 
+ * @author  Wuyi Chen
+ * @date    08/30/2018
+ * @version 1.0
+ * @since   1.0
+ */
 public class AbstractEntityManagerDaoTest {
 	private static MysqlDbConfig          dbConfig;
 	private static MysqlEntityManagerDao  dao;

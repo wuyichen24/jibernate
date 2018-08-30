@@ -3,6 +3,14 @@ package personal.wuyi.jibernate.expression;
 import org.junit.Assert;
 import org.junit.Test;
 
+/**
+ * Test class for Expression.
+ * 
+ * @author  Wuyi Chen
+ * @date    08/30/2018
+ * @version 1.0
+ * @since   1.0
+ */
 public class ExpressionTest {
 	Expression sinExpr           = new Expression("firstName", Expression.EQUAL, "John");
 	Expression com2AndExpr       = new Expression("firstName", Expression.EQUAL, "John").and("age", Expression.EQUAL, 23);
@@ -257,12 +265,6 @@ public class ExpressionTest {
 	}
 	
 	@Test
-	public void toStringTest() {
-		// (firstName = 'John' and age = 23) or (firstName = 'Mary' and age = 24 and score = 99) or (firstName = 'Tony' and age = 25 and lastName = 'Lee')
-		System.out.println(comMultiLevelExpr.toString());
-	}
-	
-	@Test
 	public void complement() {
 		System.out.println(sinExpr.toString());
 		Expression sinExprComplement = sinExpr.complement(true);
@@ -325,11 +327,63 @@ public class ExpressionTest {
 	
 	@Test
 	public void resetTest() {
+		// test simple expression
 		sinExpr.reset();
 		Assert.assertNull(sinExpr.getSubject());
 		Assert.assertNull(sinExpr.getOperator());
 		Assert.assertNull(sinExpr.getValue());
 		Assert.assertFalse(sinExpr.isComplement());
 		Assert.assertEquals(0, sinExpr.getNumberOfSubExpression());
+		
+		// test compound expression
+		com3AndOrExpr.reset();
+		Assert.assertNull(com3AndOrExpr.getSubject());
+		Assert.assertNull(com3AndOrExpr.getOperator());
+		Assert.assertNull(com3AndOrExpr.getValue());
+		Assert.assertFalse(com3AndOrExpr.isComplement());
+		Assert.assertEquals(0, com3AndOrExpr.getNumberOfSubExpression());
+	}
+	
+	@Test
+	public void toStringTest() {
+		Assert.assertEquals("(([firstName]==\"John\") && ([age]==23) && ([score]==99))", com3AndExpr.toString());
+		Assert.assertEquals("((([firstName]==\"John\") && ([age]==23)) || (([firstName]==\"Mary\") && ([age]==24) && ([score]==99)) || (([firstName]==\"Tony\") && ([age]==25) && ([lastName]==\"Lee\")))", comMultiLevelExpr.toString());
+	}
+	
+	@Test
+	public void minimizedTest() {
+		// TODO need to fix the ExpressionEngine
+	}
+	
+	@Test
+	public void prefixTest() {
+		// TODO need to know how to use Consumer
+	}
+	
+	@Test
+	public void equalTest() {
+		Assert.assertTrue(sinExpr.equals(new Expression("firstName", Expression.EQUAL, "John")));
+		Assert.assertFalse(sinExpr.equals(new Expression("firstName", Expression.EQUAL, "Johnny")));
+		Assert.assertFalse(sinExpr.equals(new Expression("firstName", Expression.ENDS_WITH, "John")));
+		
+		Assert.assertTrue(comMultiLevelExpr.equals(new Expression(new Expression("firstName", Expression.EQUAL, "John").and("age", Expression.EQUAL, 23))
+				.or(new Expression("firstName", Expression.EQUAL, "Mary").and("age", Expression.EQUAL, 24).and("score", Expression.EQUAL, 99))
+				.or(new Expression("firstName", Expression.EQUAL, "Tony").and("age", Expression.EQUAL, 25).and("lastName", Expression.EQUAL, "Lee"))));
+		Assert.assertFalse(comMultiLevelExpr.equals(new Expression(new Expression("firstName", Expression.EQUAL, "John").and("age", Expression.EQUAL, 23))
+				.or(new Expression("firstName", Expression.EQUAL, "Mary").and("age", Expression.EQUAL, 29).and("score", Expression.EQUAL, 99))
+				.or(new Expression("firstName", Expression.EQUAL, "Tony").and("age", Expression.EQUAL, 25).and("lastName", Expression.EQUAL, "Lee"))));
+	}
+	
+	@Test 
+	public void cloneTest() {
+		Expression newSinExpr = (Expression) sinExpr.clone();
+		newSinExpr.and("age", Expression.EQUAL, 33);
+		Assert.assertTrue(!sinExpr.isCompound());
+		
+		Expression newComMultiLevelExpr = (Expression) comMultiLevelExpr.clone();
+		newComMultiLevelExpr.getSubExpression(1).setOperator(Expression.ENDS_WITH);
+		Assert.assertTrue(comMultiLevelExpr.equals(new Expression(new Expression("firstName", Expression.EQUAL, "John").and("age", Expression.EQUAL, 23))
+				.or(new Expression("firstName", Expression.EQUAL, "Mary").and("age", Expression.EQUAL, 24).and("score", Expression.EQUAL, 99))
+				.or(new Expression("firstName", Expression.EQUAL, "Tony").and("age", Expression.EQUAL, 25).and("lastName", Expression.EQUAL, "Lee"))));
 	}
 }

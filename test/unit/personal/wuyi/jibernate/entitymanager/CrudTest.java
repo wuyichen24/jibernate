@@ -19,6 +19,14 @@ import personal.wuyi.jibernate.exception.DatabaseOperationException;
 import personal.wuyi.jibernate.expression.Expression;
 import personal.wuyi.jibernate.query.EntityQuery;
 
+/**
+ * Test class for doing basic database operation.
+ * 
+ * @author  Wuyi Chen
+ * @date    08/30/2018
+ * @version 1.0
+ * @since   1.0
+ */
 public class CrudTest {
 	private static MysqlDbConfig          dbConfig;
 	private static MysqlEntityManagerDao  dao;

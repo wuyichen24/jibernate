@@ -8,7 +8,14 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
-
+/**
+ * Test class for Expression.
+ * 
+ * @author  Wuyi Chen
+ * @date    08/30/2018
+ * @version 1.0
+ * @since   1.0
+ */
 @RunWith(Parameterized.class)
 public class ExpressionTest2 {	
 	String leftOperator;
