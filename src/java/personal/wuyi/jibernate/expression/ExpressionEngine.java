@@ -26,8 +26,9 @@ public class ExpressionEngine {
 
 	
 	/**
+	 * Evaluate an expression.
 	 * 
-	 * @param expr
+	 * @param  expr
 	 * @return
 	 */
 	public static boolean evaluate(Expression expr) {
@@ -192,12 +193,9 @@ public class ExpressionEngine {
 
 
 	protected static Expression getSumOfProducts(Expression expr, int threshold) {
-
-		// base case
-		if(expr.isCompound() == false) {
+		if(!expr.isCompound()) {
 			return expr;
-		}
-		else {
+		} else {
 
 			Expression sop = null;
 
@@ -285,46 +283,42 @@ public class ExpressionEngine {
 
 
 	/**
-	 * Takes an expression and performs the logical sum of products expansion,
+	 * Performs the logical sum of products expansion
 	 * 
-	 * Given an expression of the form:
+	 * <p>Given an expression, it will return sum of products expansion:
 	 * 
-	 * ((A+B)*(C*(D+E)))
+	 * <pre>
+	 * ((A+B)*(C*(D+E))) ==> ACD + ACE + BCD + BCE
+	 * </pre>
 	 * 
-	 * will return sum of products expansion
+	 * @param  expr
+	 *         The expression needs to be performed the sum of products 
+	 *         expansion.
 	 * 
-	 * ACD + ACE + BCD + BCE
-	 * 
-	 * @param expr
-	 *            The expression to evaluate
-	 * 
-	 * @return An Expression excapsulating the sum of products expansion
+	 * @return  The expended sum of products expression.
 	 */
 	private static Expression _getSumOfProducts(Expression expr) {
-
-		Stack exprStack = new Stack(); // the expression tree stack
-		Stack pdaStack = new Stack(); // pda stack
-		Stack operStack = new Stack(); // operator stack
+		Stack<Object> exprStack = new Stack<>();  // the expression tree stack
+		Stack<Object> pdaStack  = new Stack<>();  // pda stack
+		Stack<Object> optrStack = new Stack<>();  // operator stack
 
 		// push initial expression onto the stack
 		exprStack.push(expr);
-		exprStack.push(new Integer(0));
+		exprStack.push(0);
 
 		// push compound complement
 		if(expr.isComplement()) {
-			operStack.push("!");
+			optrStack.push("!");
 		}
 
 		if(expr.isCompound()) {
-			operStack.push("_");
+			optrStack.push("_");
 		}
 		
-		// walk the parse tree
 		while(!exprStack.isEmpty()) {
 			boolean descend = false;
 
-			// store current expr index
-			int itr = ((Integer) exprStack.pop()).intValue();
+			int itr = ((Integer) exprStack.pop()).intValue();    // get the current expr index
 
 			// process stack expression
 			expr = (Expression) exprStack.pop();
@@ -360,32 +354,32 @@ public class ExpressionEngine {
 						}
 						else {
 							if(op != null)
-								operStack.push(op);
+								optrStack.push(op);
 							pdaStack.push(child);
 						}
 					}
 					else {
 						if(op != null)
-							operStack.push(op);
+							optrStack.push(op);
 
 						pdaStack.push(child);
 
-						reduce(operStack, pdaStack, false);
+						reduce(optrStack, pdaStack, false);
 					}
 				}
 				else {
 					// push the operator and stack separator
 					// to indicate compound expression reduction
 					if(op != null)
-						operStack.push(op);
+						optrStack.push(op);
 
 					// push compound complement
 					if(child.isComplement()) {
-						operStack.push("!");
+						optrStack.push("!");
 					}
 
 					// push stack seperator
-					operStack.push("_");
+					optrStack.push("_");
 
 					// save parent position
 					exprStack.push(expr);
@@ -405,7 +399,7 @@ public class ExpressionEngine {
 		}
 
 		// done traversing so start popping
-		reduce(operStack, pdaStack, true);
+		reduce(optrStack, pdaStack, true);
 		Expression sop = (Expression) pdaStack.pop();
 
 		if(sop.isCompound()) {
