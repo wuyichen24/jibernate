@@ -1,10 +1,11 @@
 package personal.wuyi.jibernate.expression;
 
 import java.io.Serializable;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Deque;
 import java.util.List;
-import java.util.Stack;
 import java.util.function.Consumer;
 
 import com.google.common.base.Preconditions;
@@ -62,11 +63,11 @@ public class Expression implements Cloneable, Serializable {
     // If the expression is a single expression, those 3 fields will be populated.
     private Subject subject  = null;
     private String  operator = null;
-    private Object  value    = null;
+    private transient Object  value    = null;
 
     // If the expression is a compound expression, this list will be populated.
     /** The list of sub-expressions and operators */
-    private List<Object> subExpressionAndOperatorList = null;
+    private transient List<Object> subExpressionAndOperatorList = null;
 
     /**
      * Constructs a {@code Expression}.
@@ -153,10 +154,7 @@ public class Expression implements Cloneable, Serializable {
      * @since   1.0
      */
     public boolean isCompound() {
-        if (subExpressionAndOperatorList == null) {
-            return false;
-        }
-        return true;
+        return subExpressionAndOperatorList != null;
     }
 
     /**
@@ -168,7 +166,7 @@ public class Expression implements Cloneable, Serializable {
      * @since   1.0
      */
     public int getNumberOfSubExpression() {
-        if (subExpressionAndOperatorList == null || subExpressionAndOperatorList.size() == 0) {
+        if (subExpressionAndOperatorList == null || subExpressionAndOperatorList.isEmpty()) {
             return 0;
         } else {
         	    // the list will look like  [Ex, Op, Ex, Op, Ex, Op, Ex]
@@ -463,23 +461,21 @@ public class Expression implements Cloneable, Serializable {
         }
         checkExpressionIndexOutOfBound(index);
 
-        String operator = null;
-
         if (side == SIDE_LEFT) {
             int realIndex = convertExpressionIndexToArrayIndex(index) - 1;
             // There is no operator left of the first expression
             if (realIndex > 0) {
-                operator = (String) subExpressionAndOperatorList.get(realIndex);
+                return (String) subExpressionAndOperatorList.get(realIndex);
             }
         } else {
             int realIndex = convertExpressionIndexToArrayIndex(index) + 1;
             // There is no operator right of the last expression.
             if (realIndex < subExpressionAndOperatorList.size()) {
-                operator = (String) subExpressionAndOperatorList.get(realIndex);
+                return (String) subExpressionAndOperatorList.get(realIndex);
             }
         }
 
-        return operator;
+        return null;
     }
     
     /**
@@ -871,7 +867,7 @@ public class Expression implements Cloneable, Serializable {
      */
     public Expression complement(boolean distribute) {
         // if not distributing then just change the sign
-        if (distribute == false || isCompound() == false) {
+        if (!distribute || !isCompound()) {
             complement();
             return this;
         }
@@ -888,11 +884,11 @@ public class Expression implements Cloneable, Serializable {
             return this;
         }
 
-        Stack<Serializable> exprStack      = new Stack<>();    // store the expression tree
+        Deque<Serializable> exprStack      = new ArrayDeque<>();    // store the expression tree
         exprStack.push(this);                                  // push the initial expression onto the stack
-        exprStack.push(new Integer(0));                        // push the expression index of the initial expression into the stack
+        exprStack.push(0);                        // push the expression index of the initial expression into the stack
         
-        Stack<Expression>   compStack      = new Stack<>();    // store the complement tree
+        Deque<Expression>   compStack      = new ArrayDeque<>();    // store the complement tree
         Expression          complementExpr = new Expression(); // stores the expression complement at each level of the tree
         Expression          disjunctExpr   = new Expression(); // group all the ORs together
         compStack.push(complementExpr);
@@ -906,8 +902,8 @@ public class Expression implements Cloneable, Serializable {
             
             expr = removeSingleNestedExpression(expr);
 
-            disjunctExpr    = (Expression) compStack.pop();
-            complementExpr  = (Expression) compStack.pop();
+            disjunctExpr    = compStack.pop();
+            complementExpr  = compStack.pop();
 
             // break out of loop if descending into child expression, otherwise
             // continue left to right evaluation parse
@@ -938,14 +934,14 @@ public class Expression implements Cloneable, Serializable {
 
                     // save parent position
                     exprStack.push(expr);
-                    exprStack.push(new Integer(i + 1));
+                    exprStack.push(i + 1);
 
                     // make the child the current expression
                     expr = subExpr;
 
                     // push child onto minimize stack
                     exprStack.push(subExpr);
-                    exprStack.push(new Integer(0));
+                    exprStack.push(0);
 
                     // descend branch to minimize child
                     descend = true;
@@ -1171,7 +1167,7 @@ public class Expression implements Cloneable, Serializable {
             return;
         }
 
-        if (expr.isComplement() == true) {
+        if (expr.isComplement()) {
             sb.append("!");
         }
 
@@ -1358,7 +1354,7 @@ public class Expression implements Cloneable, Serializable {
             return false;
         }
 
-        if (o instanceof Expression == false) {
+        if (!(o instanceof Expression)) {
             return false;
         }
 
@@ -1421,13 +1417,8 @@ public class Expression implements Cloneable, Serializable {
         } else if (expression.getValue() != null) {
             return false;
         }
-
-        // Complement
-        if (isComplement() != expression.isComplement()) {
-            return false;
-        }
         
-        return true;
+        return (isComplement() == expression.isComplement());
     }
     
     /**
@@ -1471,7 +1462,7 @@ public class Expression implements Cloneable, Serializable {
             String operatorB = expression.getOperator(i, SIDE_RIGHT);
             
             if (operatorA != null) {
-                if (operatorA.equals(operatorB) == false) {
+                if (!operatorA.equals(operatorB)) {
                     return false;
                 }
             } else {

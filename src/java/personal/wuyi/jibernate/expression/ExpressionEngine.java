@@ -10,11 +10,13 @@ import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-
-
 /**
- * The <code>ExpressionEngine</code> class. Defines a series of static methods for evaluating, minimizing, and
- * manipulating Expressions.
+ * The static class for evaluating, minimizing and manipulating expressions.
+ * 
+ * @author  Wuyi Chen
+ * @date    08/30/2018
+ * @version 1.0
+ * @since   1.0
  */
 public class ExpressionEngine {
 	protected final static String SIMPLE_EXPRESSION_REGEX = "\\[(.*?)\\]\\s*(={2}|[<>]=?|!=|IN|LIKE|CONTAINS)\\s*(.*)";
