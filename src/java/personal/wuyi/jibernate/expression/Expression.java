@@ -639,12 +639,12 @@ public class Expression implements Cloneable, Serializable {
 	 * @since   1.0
 	 */
     public void combineCompoundExpression(String operator, Expression expression) {
-    	// If current expression is a simple expression, it will compound 
+      	// If current expression is a simple expression, it will compound 
 	    // itself prior to doing AND/OR operation with another expression.
-    	if (!isCompound()) {
+    		if (!isCompound()) {
             compound();
         }
-    	addCompoundExpression(expression, operator);
+    		addCompoundExpression(expression, operator);
     }
 
     /**
@@ -672,7 +672,7 @@ public class Expression implements Cloneable, Serializable {
         }
 
         if (!expression.isCompound()) {
-        	addSubExpressionWithOperator(expression, operator);
+        		addSubExpressionWithOperator(expression, operator);
             return;
         }
 
@@ -746,25 +746,24 @@ public class Expression implements Cloneable, Serializable {
      * @since   1.0 
      */
     protected void removeSubExpression(int index) {
-    	if (!isCompound()) {
-    		return;
-    	} else {
-    		checkExpressionIndexOutOfBound(index);
+    		if (!isCompound()) {
+    			return;
+    		} else {
+    			checkExpressionIndexOutOfBound(index);
     		
-    		if (index == 0) {
-    			subExpressionAndOperatorList.remove(0);
-    	        subExpressionAndOperatorList.remove(0);
-    	    } else {
-    	        subExpressionAndOperatorList.remove(convertExpressionIndexToArrayIndex(index));
-    	        subExpressionAndOperatorList.remove(convertExpressionIndexToArrayIndex(index) - 1);
-    	    }
+    			if (index == 0) {
+    				subExpressionAndOperatorList.remove(0);
+    				subExpressionAndOperatorList.remove(0);
+    			} else {
+    				subExpressionAndOperatorList.remove(convertExpressionIndexToArrayIndex(index));
+    				subExpressionAndOperatorList.remove(convertExpressionIndexToArrayIndex(index) - 1);
+    			}
     		
-    		// if only one sub-expression left, simplify to a simple expression
-    		if (getNumberOfSubExpression() == 1) {
-    			simplify(getSubExpression(0));
+    			// if only one sub-expression left, simplify to a simple expression
+    			if (getNumberOfSubExpression() == 1) {
+    				simplify(getSubExpression(0));
+    			}
     		}
-    	
-    	}
     }
     
     /**
@@ -900,7 +899,7 @@ public class Expression implements Cloneable, Serializable {
             Integer    exprIndex = (Integer)    exprStack.pop();   // get the expression index of the current expression
             Expression expr      = (Expression) exprStack.pop();   // get the current expression
             
-            expr = removeSingleNestedExpression(expr);
+            expr = ExpressionEngine.simplifyNestedExpression(expr);
 
             disjunctExpr    = compStack.pop();
             complementExpr  = compStack.pop();
@@ -922,7 +921,7 @@ public class Expression implements Cloneable, Serializable {
 
                     applyDeMorganLaw(parentExpr, disjunctExpr, complementExpr, leftOptr, rightOptr);
 
-                    parentExpr = removeSingleNestedExpression(parentExpr);
+                    parentExpr = ExpressionEngine.simplifyNestedExpression(parentExpr);
                     
                     // push parent
                     compStack.push(parentExpr);
@@ -949,37 +948,12 @@ public class Expression implements Cloneable, Serializable {
 
             }
             
-            complementExpr = removeSingleNestedExpression(complementExpr);
+            complementExpr = ExpressionEngine.simplifyNestedExpression(complementExpr);
         }
 
         this.subExpressionAndOperatorList = complementExpr.subExpressionAndOperatorList;
 
         return this;
-    }
-    
-    /**
-     * Simply the single nested expression.
-     * 
-     * <p>If a compound expression only has one sub-expression and it is not 
-     * complement, this method will take out the sub-expression as a 
-     * standalone expression. For example, 
-     * 
-     * <pre>
-     * 		((E)) ==> E
-     * <pre>
-     * 
-     * @param  expression
-     *         The compound expression needs to be simplified.
-     *         
-     * @return  The new standalone expression.
-     * 
-     * @since   1.0 
-     */
-    protected Expression removeSingleNestedExpression(Expression expression) {
-    	if (expression.getNumberOfSubExpression() == 1 && !expression.isComplement()) {
-    		return removeSingleNestedExpression(expression.getSubExpression(0));
-        }
-    	return expression;
     }
     
     /**

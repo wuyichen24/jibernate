@@ -297,33 +297,7 @@ public class ExpressionTest {
 		System.out.println(complementExpr2.toString());
 	}
 	
-	@Test
-	public void removeSingleNestedExpressionTest() {
-		// test 2-level nested
-		Expression expr = new Expression();
-		expr.combineCompoundExpression(null, sinExpr);
-		Assert.assertEquals(1, expr.getNumberOfSubExpression());
-		Assert.assertFalse(expr.equals(sinExpr));
-		System.out.println("Before simplify: " + expr.toString());
-		Expression newExpr = expr.removeSingleNestedExpression(expr);
-		System.out.println("After simplify:  " + newExpr.toString());
-		Assert.assertTrue(newExpr.equals(sinExpr));
-		System.out.println();
-		
-		// test multi-level nested
-		Expression exprA = new Expression();
-		exprA.combineCompoundExpression(null, sinExpr);
-		Expression exprB = new Expression();
-		exprB.combineExpression(null, exprA);
-		Expression exprC = new Expression();
-		exprC.combineExpression(null, exprB);
-		Assert.assertEquals(1, expr.getNumberOfSubExpression());
-		Assert.assertFalse(expr.equals(sinExpr));
-		System.out.println("Before simplify: " + exprC.toString());
-		Expression newExpr2 = expr.removeSingleNestedExpression(expr);
-		System.out.println("After simplify:  " + newExpr2.toString());
-		Assert.assertTrue(newExpr2.equals(sinExpr));
-	}
+	
 	
 	@Test
 	public void resetTest() {

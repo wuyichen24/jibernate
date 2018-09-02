@@ -159,38 +159,9 @@ public class ExpressionEngine {
 			throw(new NullPointerException("Unable to minimize null expression!"));
 		}
 
-		return getSumOfProducts(expr);
-
-	}
-
-
-	/**
-	 * Minimizes a given expression by determining the sum of products expansion then reducing it to its Disjunctive
-	 * Normal Form. Accepts a flag indicating whether Attribute service substitutions should be performed prior to
-	 * minimization.
-	 * 
-	 * @param expr
-	 *            The expression to evaluate
-	 * @param substitute
-	 *            A boolean specifying whether to substitue terms
-	 * @return The evaluated expression
-	 */
-	public static Expression minimize(Expression expr, boolean substitute) {
-
-		if(expr == null) {
-			throw(new NullPointerException("Unable to minimize null expression!"));
-		}
-
-		return getSumOfProducts(expr);
-	}
-
-
-	protected static Expression getSumOfProducts(Expression expr) {
-
 		return getSumOfProducts(expr, THRESHOLD);
 
 	}
-
 
 	protected static Expression getSumOfProducts(Expression expr, int threshold) {
 		if(!expr.isCompound()) {
@@ -275,7 +246,7 @@ public class ExpressionEngine {
 
 			}
 			else {
-				sop = _getSumOfProducts(expr);
+				sop = getSumOfProducts(expr);
 			}
 			return sop;
 		}
@@ -296,8 +267,10 @@ public class ExpressionEngine {
 	 *         expansion.
 	 * 
 	 * @return  The expended sum of products expression.
+	 * 
+     * @since   1.0 
 	 */
-	private static Expression _getSumOfProducts(Expression expr) {
+	private static Expression getSumOfProducts(Expression expr) {
 		Stack<Object> exprStack = new Stack<>();  // the expression tree stack
 		Stack<Object> pdaStack  = new Stack<>();  // pda stack
 		Stack<Object> optrStack = new Stack<>();  // operator stack
@@ -318,60 +291,44 @@ public class ExpressionEngine {
 		while(!exprStack.isEmpty()) {
 			boolean descend = false;
 
-			int itr = ((Integer) exprStack.pop()).intValue();    // get the current expr index
+			int        currentIndex = ((Integer)   exprStack.pop()).intValue();    // get the current expression index
+			Expression currentExpr  = (Expression) exprStack.pop();                // get the current expression
 
-			// process stack expression
-			expr = (Expression) exprStack.pop();
+			for(int i = currentIndex; !descend && i < currentExpr.getNumberOfSubExpression(); i++) {
+				Expression child = currentExpr.getSubExpression(i);
 
-			// break out of loop if descending into child expression, otherwise
-			// continue left to right evaluation parse
-			for(int i = itr; !descend && i < expr.getNumberOfSubExpression(); i++) {
-				Expression child = expr.getSubExpression(i);
-
-				// attempt to reduce nested parens
-				if(child.isCompound()) {
-					child = simmer(child);
+				if(child.isCompound()) {         
+					child = simplifyNestedExpression(child);
 				}
 
-				String op = (i > 0 ? expr.getOperator(i, Expression.SIDE_LEFT) : null);
+				String leftOptr  = i > 0                                   ? expr.getOperator(i, Expression.SIDE_LEFT)  : null; // the left operator
+				String rightOptr = i < expr.getNumberOfSubExpression() - 1 ? expr.getOperator(i, Expression.SIDE_RIGHT) : null; // the right operator
 
-				String la = (i == (expr.getNumberOfSubExpression() - 1) ? null : expr.getOperator(i, Expression.SIDE_RIGHT));
-
-				// DEBUG
-				/*
-				 * System.out.println("\n op: " + op); System.out.println(" child: " + child);
-				 * System.out.println(" la: " + la + "\n"); System.out.println(operStack); System.out.println(pdaStack);
-				 */
-
-				if(child.isCompound() == false) {
-					if(la != null) {
+				if(!child.isCompound()) {
+					if(rightOptr != null) {
 						// give AND precedence
-						if(op != null && op.equals(Expression.AND)) {
-							// operStack.pop();
+						if(leftOptr != null && leftOptr.equals(Expression.AND)) {
 							Expression popExpr = (Expression) pdaStack.pop();
-
 							pdaStack.push(intersection(popExpr, child));
-						}
-						else {
-							if(op != null)
-								optrStack.push(op);
+						} else {
+							if(leftOptr != null) {
+								optrStack.push(leftOptr);
+							}
 							pdaStack.push(child);
 						}
-					}
-					else {
-						if(op != null)
-							optrStack.push(op);
-
+					} else {
+						if(leftOptr != null) {
+							optrStack.push(leftOptr);
+						}
 						pdaStack.push(child);
-
 						reduce(optrStack, pdaStack, false);
 					}
-				}
-				else {
+				} else {
 					// push the operator and stack separator
 					// to indicate compound expression reduction
-					if(op != null)
-						optrStack.push(op);
+					if(leftOptr != null) {
+						optrStack.push(leftOptr);
+					}
 
 					// push compound complement
 					if(child.isComplement()) {
@@ -382,15 +339,15 @@ public class ExpressionEngine {
 					optrStack.push("_");
 
 					// save parent position
-					exprStack.push(expr);
-					exprStack.push(new Integer(i + 1));
+					exprStack.push(currentExpr);
+					exprStack.push(i + 1);
 
 					// make the child the current expr
-					expr = child;
+					currentExpr = child;
 
 					// push child onto minimize stack
 					exprStack.push(child);
-					exprStack.push(new Integer(0));
+					exprStack.push(0);
 
 					// descend branch to minimize child
 					descend = true;
@@ -398,24 +355,14 @@ public class ExpressionEngine {
 			}
 		}
 
-		// done traversing so start popping
 		reduce(optrStack, pdaStack, true);
 		Expression sop = (Expression) pdaStack.pop();
 
 		if(sop.isCompound()) {
 			sop = simplify(sop);
-
-			if(sop.getNumberOfSubExpression() == 1) {
-				Expression temp = sop.getSubExpression(0);
-
-				if(sop.isComplement()) {
-					temp.complement();
-				}
-				sop = temp;
-			}
+			sop = ExpressionEngine.simplifyNestedExpression(sop);
 		}
 
-		// minimzed sum of products expression
 		return sop;
 	}
 
@@ -445,7 +392,7 @@ public class ExpressionEngine {
 								complementExpr.complement(true);
 
 								if(complementExpr.getNumberOfSubExpression() == 1) {
-									complementExpr = simmer(complementExpr);
+									complementExpr = simplifyNestedExpression(complementExpr);
 								}
 								else {
 									// complement operation turns SOP expr into POS
@@ -490,7 +437,7 @@ public class ExpressionEngine {
 				if(complementExpr.isCompound()) {
 					complementExpr.complement(true);
 					if(complementExpr.getNumberOfSubExpression() == 1) {
-						complementExpr = simmer(complementExpr);
+						complementExpr = simplifyNestedExpression(complementExpr);
 					}
 					else {
 						// complement operation turns SOP expr into POS
@@ -820,29 +767,43 @@ public class ExpressionEngine {
 
 
 	/**
-	 * Strip nested parens ((((E)))) --> E
-	 */
-	private static Expression simmer(Expression expr) {
+     * Simplify a nested expression.
+     * 
+     * <p>If a compound expression only has one sub-expression, this method 
+     * will take out the sub-expression as a standalone expression and also 
+     * preserve the complement. For example, 
+     * 
+     * <pre>
+     * 		((E))      ==> E
+     *      (((E)))    ==> E
+     *      (!(!E))    ==> E
+     *      (!(!(!E))) ==> !E
+     * <pre>
+     * 
+     * @param  expression
+     *         The compound expression needs to be simplified.
+     *         
+     * @return  The new standalone expression.
+     * 
+     * @since   1.0 
+     */
+    public static Expression simplifyNestedExpression(Expression expr) {    		
+    		if(!expr.isCompound()) {
+    			return expr;
+    		}
 
-		if(expr.isCompound() == false) {
-			return expr;
-		}
+    		Expression temp = expr;
 
-		Expression simmered = expr;
+    		while(temp.getNumberOfSubExpression() == 1) {
+    			boolean complement = temp.isComplement();   // preserve the complement
+    			temp = temp.getSubExpression(0);
+    			if(complement == true) {
+    				temp.complement();
+    			}
+    		}
 
-		while(simmered.getNumberOfSubExpression() == 1) {
-			// preserve the complement
-			boolean complement = simmered.isComplement();
-
-			simmered = simmered.getSubExpression(0);
-
-			if(complement == true) {
-				simmered.complement();
-			}
-		}
-
-		return simmered;
-	}
+    		return temp;
+    }
 
 
 
