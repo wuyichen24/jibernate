@@ -19,42 +19,41 @@ import java.util.regex.Pattern;
  * @since   1.0
  */
 public class ExpressionEngine {
-	protected final static String SIMPLE_EXPRESSION_REGEX = "\\[(.*?)\\]\\s*(={2}|[<>]=?|!=|IN|LIKE|CONTAINS)\\s*(.*)";
-
-	private final static int THRESHOLD = 500;
-	private final static Pattern simpleExpressionPattern = Pattern.compile(SIMPLE_EXPRESSION_REGEX, Pattern.CASE_INSENSITIVE);
+	protected final static String  SIMPLE_EXPRESSION_REGEX   = "\\[(.*?)\\]\\s*(={2}|[<>]=?|!=|IN|LIKE|CONTAINS)\\s*(.*)";	
+	protected final static Pattern SIMPLE_EXPRESSION_PATTERN = Pattern.compile(SIMPLE_EXPRESSION_REGEX, Pattern.CASE_INSENSITIVE);
+	
+	protected final static int     THRESHOLD = 500;
 
 	
 	/**
-	 * Evaluate an expression.
+	 * Evaluate the truth value of an expression.
+	 * 
+	 * <p>This method will get all the minterms from the expression and check 
+	 * at least one of the minterms is true.
 	 * 
 	 * @param  expr
-	 * @return
+	 *         The expression needs to be evaluated.
+	 *         
+	 * @return  {@code true} if at least one of minterms is true;
+	 *          {@code false} otherwise.
+	 *          
+     * @since   1.0 
 	 */
 	public static boolean evaluate(Expression expr) {
-		
-		// FIXME this implementation is sub-optimal, should be revised to use stack reduction implementation to avoid recursion and reduce number of evaluations
-		
-		// denormalize to flat Sum of Products expansion => (A) + (B * C * D) + (E * F)	
-		List<Expression> minterms = ExpressionEngine.getMinterms(expr);
+		List<Expression> mintermList = ExpressionEngine.getMinterms(expr);
 		
 		boolean truth = false;
-		for(Expression minterm : minterms) {
-			
-			if(minterm.isCompound()) {
-				
+		for(Expression minterm : mintermList) {
+			if(minterm.isCompound()) {        // if a minterm is compound, make sure all the sub-expression are true
 				boolean minTruth = true;
 				for (int i = 0; i < minterm.getNumberOfSubExpression(); i++) {
-					
 					Expression child = minterm.getSubExpression(i);
 					boolean eval = evaluate(child.getSubject().getValue(), child.getOperator(), child.getValue());
 					minTruth = minTruth && eval;
 				}
 				
 				truth = truth || minTruth;
-			}
-			else {
-				
+			} else {
 				boolean eval = evaluate(minterm.getSubject().getValue(), minterm.getOperator(), minterm.getValue());
 				truth = truth || eval;				
 			}
@@ -63,204 +62,251 @@ public class ExpressionEngine {
 		return truth;
 	}
 	
-	
-	/*
-	 * Compare A to B to determine truth value
-	 * ASSERT: A and B are of same type and implement java.lang.Comparable
+	/**
+	 * Evaluate the truth value by comparing 2 objects.
+	 * 
+	 * <p>This method will compare 2 values and verify the operator can 
+	 * reflect the relationship of 2 values truly.
+	 * 
+	 * <p>The 2 values can be {@code null}, but they should be in the same 
+	 * type and also implemented the {@code Comparable} interface.
+	 * 
+	 * @param  a
+	 *         The first operand.
+	 *     
+	 * @param  operator
+	 *         The operator.
+	 *         
+	 * @param  b
+	 *         The second operand.
+	 *         
+	 * @return  {@code true} if the operator can reflect the relationship of 
+	 *                       2 values truly;
+	 *          {@code false} otherwise.
+	 *          
+     * @since   1.0 
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private static boolean evaluate(Object a, String operator, Object b) {
-
-
-		// handle NULL comparisons
-		if(a == null) {
-
-			if(b == null) {
-
-				// only true for EQUAL
+	protected static boolean evaluate(Object a, String operator, Object b) {
+		// check null
+		if (a == null || b == null) {
+			if (a == null && b == null) {
 				return Expression.EQUAL.equals(operator);
-			}
-			else {
-
-				// only true for NOT EQUAL
-				return Expression.NOT_EQUAL.equals(operator);
-			}
-		}
-		else {
-
-			if(b == null) {
-
-				// only true for NOT EQUAL
+			} else {
 				return Expression.NOT_EQUAL.equals(operator);
 			}
 		}
 
 		// check same type
-		if(a.getClass().isAssignableFrom(b.getClass()) == false || b.getClass().isAssignableFrom(a.getClass()) == false) {
-
+		if(!a.getClass().isAssignableFrom(b.getClass()) || !b.getClass().isAssignableFrom(a.getClass())) {
 			throw(new IllegalArgumentException(a.getClass().getName() + " is not comparable to " + b.getClass().getName()));
 		}
 
 		// check comparable
-		if(a instanceof Comparable == false || b instanceof Comparable == false) {
-
-			throw(new IllegalArgumentException(a.getClass().getName() + " is not comparable to " + b.getClass().getName()));
+		if(!(a instanceof Comparable)) {
+			throw new IllegalArgumentException(a.getClass().getName() + " is not comparable");
+		}
+		if(!(b instanceof Comparable)) {
+			throw new IllegalArgumentException(b.getClass().getName() + " is not comparable");
 		}
 
 		Comparable p = (Comparable) a;
 		Comparable q = (Comparable) b;
 
-		int comparison = p.compareTo(q);
-
-
-		if(Expression.EQUAL.equals(operator)) {
-
-			return comparison == 0;
-		}
-		else if(Expression.NOT_EQUAL.equals(operator)) {
-
-			return comparison != 0;
-		}
-		else if(Expression.GREATER_THAN.equals(operator)) {
-
-			return comparison > 0;
-		}
-		else if(Expression.GREATER_THAN_EQUAL.equals(operator)) {
-
-			return comparison >= 0;
-		}
-		else if(Expression.LESS_THAN.equals(operator)) {
-
-			return comparison < 0;
-		}
-		else if(Expression.LESS_THAN_EQUAL.equals(operator)) {
-
-			return comparison <= 0;
-		}
-		else {
-
-			throw(new IllegalArgumentException("Comparison " + operator + " not supported."));
-		}
-		
+		switch (operator) {
+        		case Expression.EQUAL:              return p.compareTo(q) == 0;
+        		case Expression.NOT_EQUAL:          return p.compareTo(q) != 0;
+        		case Expression.GREATER_THAN:       return p.compareTo(q) > 0;
+        		case Expression.GREATER_THAN_EQUAL: return p.compareTo(q) >= 0;
+        		case Expression.LESS_THAN:          return p.compareTo(q) < 0;
+        		case Expression.LESS_THAN_EQUAL:    return p.compareTo(q) <= 0;
+        		case Expression.STARTS_WITH:        return ((String) a).startsWith((String) b);
+        		case Expression.ENDS_WITH:          return ((String) a).endsWith((String) b);
+        		default: throw new IllegalArgumentException("Comparison " + operator + " not supported.");
+		}		
 	}
 	
-
 	/**
-	 * Minimizes a given expression by determining the sum of products expansion then reducing it to its Disjunctive
-	 * Normal Form.
+	 * Generates a list of sum-of-product minterms for a given compound expression. 
 	 * 
-	 * @param expr
-	 *            The expression to evaluate
-	 * @return The evaluated expression
+	 * <p>Method will get the sum-of-product expression first and then collect 
+	 * all the minterms.
+	 *
+	 * <p>For example, an expression:
+	 * <pre>
+	 * a * b + c * d * e + f
+	 * </pre>
+	 * <p>produces the set of minterms:
+	 * <pre>
+	 * {ab}, {cde}, {f}
+	 * </pre>
+	 * 
+	 * @param  expression
+	 *         The expression needs to get minterms.
+	 *         
+	 * @return  List of minterm expressions.
+	 * 
+     * @since   1.0 
 	 */
-	public static Expression minimize(Expression expr) {
-
-		if(expr == null) {
-			throw(new NullPointerException("Unable to minimize null expression!"));
+	public static List<Expression> getMinterms(Expression expression) {
+		List<Expression> mintermList = new ArrayList<Expression>();
+		
+		if(expression == null) {
+			return mintermList;
 		}
 
-		return getSumOfProducts(expr, THRESHOLD);
+		Expression sumOfProductExpr = getSumOfProducts(expression, THRESHOLD);
 
+		if(!sumOfProductExpr.isCompound()) {                   // sumOfProductExpr is a simple expression
+			Expression minterm = new Expression();
+			minterm.combineExpression(null, sumOfProductExpr);
+			mintermList.add(minterm);
+		} else {
+			Expression minterm = new Expression();
+
+			for(int i = 0; i < sumOfProductExpr.getNumberOfSubExpression(); i++) {
+				Expression childExpr = sumOfProductExpr.getSubExpression(i);
+				String     rightOptr = i < sumOfProductExpr.getNumberOfSubExpression() - 1 ? sumOfProductExpr.getOperator(i, Expression.SIDE_RIGHT) : null;
+				minterm.addSubExpressionWithOperator(childExpr, Expression.AND);      // collect all the sub-expressions for this minterms, like c * d * e
+
+				if(rightOptr == null || rightOptr.equals(Expression.OR)) {            // if the next right operator is OR or null, add c * d * e into the mintermList
+					mintermList.add(minterm);
+					minterm = new Expression();
+				}
+			}
+		}
+
+		return mintermList;
 	}
 
+	/**
+	 * Get the sum of products from an expression.
+	 * 
+     * <p>Product term: Combine 2 or more variables only by AND operator, like
+     * <pre>
+     * x
+     * x * y
+     * !x * !y
+     * x * y * z
+     * </pre>
+     * 
+     * <p>Sum-of-products: Do OR operations on a set of product terms, like
+     * <pre>
+     * x + (x * y) + (!x * !y) + (x * y * z)
+     * </pre>
+     * 
+     * <p>If the number of sub-expressions is greater than the threshold, it 
+     * will use the divide-and-conquor strategy for avoiding stack overflow. 
+     * If not, it will use the stack solution.
+	 * 
+	 * @param  expr
+	 *         The expression needs to be evaluated.
+	 *         
+	 * @param  threshold
+	 *         The threshold for the size of one division in 
+	 *         divide-and-conquor strategy.
+	 *         
+	 * @return  The sum of products from an expression.
+	 * 
+     * @since   1.0 
+	 */
 	protected static Expression getSumOfProducts(Expression expr, int threshold) {
 		if(!expr.isCompound()) {
 			return expr;
 		} else {
-
-			Expression sop = null;
-
-			// use a divide-and-conquor strategy to avoid stack overflow
-			// for very large expressions
 			if(expr.getNumberOfSubExpression() > threshold) {
-				ArrayList<Expression> dividedList = new ArrayList<Expression>();
-				int p = 0;
-				int q = threshold - 1;
+				return getSumOfProductsByDivideAndConquor(expr, threshold);
+			} else {
+				return getSumOfProductsByStack(expr);
+			}
+		}
+	}
+	
+	/**
+	 * Performs the logical sum of products expansion by divide-and-conquor 
+	 * strategy.
+	 * 
+	 * <p>This method is fit for big expression for avoiding stack overflow.
+	 * 
+	 * @param  expr
+	 *         The expression needs to be performed the sum of products 
+	 *         expansion.
+	 * 
+	 * @param  threshold
+	 *         The threshold for the size of one division in 
+	 *         divide-and-conquor strategy.
+	 *         
+	 * @return  The expended sum of products expression.
+	 */
+	private static Expression getSumOfProductsByDivideAndConquor(Expression expr, int threshold) {
+		ArrayList<Expression> divisionList = new ArrayList<Expression>();
+		int p = 0;                // left bound
+		int q = threshold - 1;    // right bound
 
-				// Try to break the compound into discrete sub-expressions,
-				// and return the union of the minimized results
-				while(p <= q && q < expr.getNumberOfSubExpression()) {
-					// get the lookahead operator
-					String la = expr.getOperator(q, Expression.SIDE_RIGHT);
+		while(p <= q && q < expr.getNumberOfSubExpression()) {
+			String rightOptr = expr.getOperator(q, Expression.SIDE_RIGHT);    // the right operator of the right bound
 
-					// logical divisions may only occur between disjunctive
-					// sub-expressions or when we reach the end of the expression
-					if(la == null || la.equals(Expression.OR)) {
-						// create a sub-expression representing the divided chunk
-						Expression divided = new Expression();
-						for(int i = p; i <= q; i++) {
-							divided.addSubExpressionWithOperator(expr.getSubExpression(i), expr.getOperator(i, Expression.SIDE_LEFT));
-						}
-						dividedList.add(divided);
+			if(rightOptr == null || rightOptr.equals(Expression.OR)) {        // if the right operator is OR, so the current minterms has been finished.    
+				Expression division = new Expression();
+				for(int i = p; i <= q; i++) {
+					division.addSubExpressionWithOperator(expr.getSubExpression(i), expr.getOperator(i, Expression.SIDE_LEFT));
+				}
+				divisionList.add(division);
 
-						// determine if the end of the expression has been reached
-						if(la == null) {
-							break;
-						}
-
-						// advance the indices
-						p = q + 1;
-						q += threshold;
-						if(q >= expr.getNumberOfSubExpression()) {
-							q = expr.getNumberOfSubExpression() - 1;
-						}
-					}
-					else {
-						// if expression is not logically divisable at the current
-						// index then slowly grow until a suitable index is found
-						q++;
-					}
+				if(rightOptr == null) {         // if the right operator is null, it means the right bound hit the right end.
+					break;
 				}
 
-				// determine if a logical division could be made
-				if(dividedList.size() > 1) {
-					// recursively evaluate divided sub-expressions
-					Expression divideAndConquor = new Expression();
-					for(int i = 0; i < dividedList.size(); i++) {
-						Expression subExpression = (Expression) dividedList.get(i);
-						Expression normalized = getSumOfProducts(subExpression, THRESHOLD);
+				// advance the indices
+				p = q + 1;
+				q += threshold;
+				if(q >= expr.getNumberOfSubExpression()) {
+					q = expr.getNumberOfSubExpression() - 1;
+				}
+			} else {             // if the right operator is still AND, so move right bound to right by one expression.
+				q++;              
+			}
+		}
 
-						// Add the divided sub-expressions back into the normalized one
-						if(normalized.isCompound() == false) {
-							divideAndConquor.addSubExpressionWithOperator(normalized, Expression.OR);
-						}
-						else {
-							// concatenate with the main expression since they
-							// are logically the same expression and not really
-							// a nested sub-expression
-							divideAndConquor.addCompoundExpression(normalized, Expression.OR);
-						}
-					}
-					sop = divideAndConquor;
+		// determine if a logical division could be made
+		if(divisionList.size() > 1) {
+			// recursively evaluate divided sub-expressions
+			Expression divideAndConquor = new Expression();
+			for(int i = 0; i < divisionList.size(); i++) {
+				Expression subExpression = (Expression) divisionList.get(i);
+				Expression normalized = getSumOfProducts(subExpression, THRESHOLD);
+
+				// Add the divided sub-expressions back into the normalized one
+				if(normalized.isCompound() == false) {
+					divideAndConquor.addSubExpressionWithOperator(normalized, Expression.OR);
 				}
 				else {
-					// shrink the threshold until a divisable size can be found
-					if(threshold > 1) {
-						threshold = threshold / 2;
-						sop = getSumOfProducts(expr, threshold);
-					}
-					else {
-						// FIXME: deal with all AND expression
-					}
+					// concatenate with the main expression since they
+					// are logically the same expression and not really
+					// a nested sub-expression
+					divideAndConquor.addCompoundExpression(normalized, Expression.OR);
 				}
-
+			}
+			return divideAndConquor;
+		}
+		else {
+			// shrink the threshold until a divisable size can be found
+			if(threshold > 1) {
+				threshold = threshold / 2;
+				return getSumOfProducts(expr, threshold);
 			}
 			else {
-				sop = getSumOfProducts(expr);
+				return null;
+				// FIXME: deal with all AND expression
 			}
-			return sop;
 		}
 	}
 
 
 	/**
-	 * Performs the logical sum of products expansion
-	 * 
-	 * <p>Given an expression, it will return sum of products expansion:
-	 * 
-	 * <pre>
-	 * ((A+B)*(C*(D+E))) ==> ACD + ACE + BCD + BCE
-	 * </pre>
+	 * Performs the logical sum of products expansion by stack.
+	 *
+	 * <p>This method is fit for small expression for avoiding stack overflow.
 	 * 
 	 * @param  expr
 	 *         The expression needs to be performed the sum of products 
@@ -270,7 +316,7 @@ public class ExpressionEngine {
 	 * 
      * @since   1.0 
 	 */
-	private static Expression getSumOfProducts(Expression expr) {
+	private static Expression getSumOfProductsByStack(Expression expr) {
 		Stack<Object> exprStack = new Stack<>();  // the expression tree stack
 		Stack<Object> pdaStack  = new Stack<>();  // pda stack
 		Stack<Object> optrStack = new Stack<>();  // operator stack
@@ -804,64 +850,23 @@ public class ExpressionEngine {
 
     		return temp;
     }
-
-
-
+	
 	/**
-	 * Generates a list of sum-of-product minterms for a given compound expression. Method will minimize the input
-	 * expression to generate the normalized SOP expression whose minterms are the "anded" sub-expressions separated by
-	 * "or" operators.
+	 * Minimizes a given expression by determining the sum of products expansion then reducing it to its Disjunctive
+	 * Normal Form.
 	 * 
-	 * For example, the mimized expression:
-	 * 
-	 * a * b + c * d * e + f
-	 * 
-	 * produces the set of minterms:
-	 * 
-	 * {ab}, {cde}, {f}
-	 * 
-	 * @param expression
-	 * @return List of minterm sub-expressions.
+	 * @param expr
+	 *            The expression to evaluate
+	 * @return The evaluated expression
 	 */
-	public static List<Expression> getMinterms(Expression expression) {
+	public static Expression minimize(Expression expr) {
 
-		// make sure expression is valid
-		if(expression == null) {
-			return null;
+		if(expr == null) {
+			throw(new NullPointerException("Unable to minimize null expression!"));
 		}
 
-		Expression minimized = minimize(expression);
+		return getSumOfProducts(expr, THRESHOLD);
 
-		List<Expression> mintermList = new ArrayList<Expression>();
-
-		// handle simple expression
-		if(minimized.isCompound() == false) {
-			Expression minterm = new Expression();
-			minterm.addSubExpressionWithOperator(minimized, null);
-			mintermList.add(minterm);
-
-			return mintermList;
-		}
-
-		Expression minterm = new Expression();
-
-		// build list of minterm expressions
-		for(int i = 0; i < minimized.getNumberOfSubExpression(); i++) {
-			Expression child = minimized.getSubExpression(i);
-
-			String la = ((i + 1) == minimized.getNumberOfSubExpression()) ? null : minimized.getOperator(i, Expression.SIDE_RIGHT);
-
-			minterm.addSubExpressionWithOperator(child, Expression.AND);
-
-			// dump when the next or'd term or the end of the expression is reached
-			if(la == null || la.equals(Expression.OR)) {
-				mintermList.add(minterm);
-				minterm = new Expression();
-			}
-		}
-
-		// done
-		return mintermList;
 	}
 
 
@@ -897,7 +902,7 @@ public class ExpressionEngine {
 						String expr = sb.toString();
 						// System.out.println(expr);
 
-						Matcher matcher = simpleExpressionPattern.matcher(expr);
+						Matcher matcher = SIMPLE_EXPRESSION_PATTERN.matcher(expr);
 						if(matcher.find() && matcher.groupCount() == 3) {
 
 							String subject = matcher.group(1);

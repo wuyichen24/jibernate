@@ -7,6 +7,29 @@ public class ExpressionEngineTest {
 	Expression sinExpr = new Expression("firstName", Expression.EQUAL, "John");
 	
 	@Test
+	public void evaluateTest1() {
+		Assert.assertFalse(ExpressionEngine.evaluate(new Expression("firstName", Expression.EQUAL, "John")));    // subject.name = firstName, subject.value = null
+		Assert.assertTrue(ExpressionEngine.evaluate(new Expression(new Subject("firstName", "John"), Expression.EQUAL, "John")));
+	}
+	
+	@Test
+	public void evaluateTest2() {
+		Assert.assertTrue(ExpressionEngine.evaluate(null, Expression.EQUAL, null));
+		Assert.assertFalse(ExpressionEngine.evaluate(null, Expression.NOT_EQUAL, null));
+		Assert.assertTrue(ExpressionEngine.evaluate(123L, Expression.NOT_EQUAL, null));
+		Assert.assertTrue(ExpressionEngine.evaluate(null, Expression.NOT_EQUAL, 123L));
+		
+		Assert.assertTrue(ExpressionEngine.evaluate("abcdefg", Expression.STARTS_WITH, "abc"));
+		Assert.assertTrue(ExpressionEngine.evaluate("abcdefg", Expression.ENDS_WITH,   "efg"));
+	}
+	
+	@Test(expected = IllegalArgumentException.class)
+	public void evaluateTestException() {
+		ExpressionEngine.evaluate("123", Expression.EQUAL, 123L);
+		ExpressionEngine.evaluate('a', Expression.EQUAL, "a");
+	}
+	
+	@Test
 	public void simplifyNestedExpressionTest() {
 		// test 2-level nested ((E)) => E
 		Expression expr = new Expression();
