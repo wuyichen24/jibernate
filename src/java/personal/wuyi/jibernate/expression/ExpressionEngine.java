@@ -242,7 +242,10 @@ public class ExpressionEngine {
 		ArrayList<Expression> divisionList = new ArrayList<Expression>();
 		int p = 0;                // left bound
 		int q = threshold - 1;    // right bound
-
+		
+		/*
+		 * Divide the expression into divisions and add divisions into list
+		 * */
 		while(p <= q && q < expr.getNumberOfSubExpression()) {
 			String rightOptr = expr.getOperator(q, Expression.SIDE_RIGHT);    // the right operator of the right bound
 
@@ -268,40 +271,35 @@ public class ExpressionEngine {
 			}
 		}
 
-		// determine if a logical division could be made
+		/*
+		 * Conquor each division recursively.
+		 * */
 		if(divisionList.size() > 1) {
-			// recursively evaluate divided sub-expressions
-			Expression divideAndConquor = new Expression();
+			Expression sop = new Expression();
 			for(int i = 0; i < divisionList.size(); i++) {
 				Expression subExpression = (Expression) divisionList.get(i);
-				Expression normalized = getSumOfProducts(subExpression, THRESHOLD);
+				Expression subSop        = getSumOfProducts(subExpression, THRESHOLD);
 
-				// Add the divided sub-expressions back into the normalized one
-				if(normalized.isCompound() == false) {
-					divideAndConquor.addSubExpressionWithOperator(normalized, Expression.OR);
-				}
-				else {
-					// concatenate with the main expression since they
-					// are logically the same expression and not really
-					// a nested sub-expression
-					divideAndConquor.addCompoundExpression(normalized, Expression.OR);
+				if(!subSop.isCompound()) {
+					sop.combineExpression(Expression.OR, subSop);
+				} else {
+					sop.combineCompoundExpression(Expression.OR, subSop);
 				}
 			}
-			return divideAndConquor;
-		}
-		else {
-			// shrink the threshold until a divisable size can be found
+			return sop;
+		} else {
+			/*
+			 * if there is only one division, so shrink the threshold by half until there is more than one division.
+			 * */
 			if(threshold > 1) {
 				threshold = threshold / 2;
 				return getSumOfProducts(expr, threshold);
-			}
-			else {
-				return null;
+			} else {
 				// FIXME: deal with all AND expression
+				return null;
 			}
 		}
 	}
-
 
 	/**
 	 * Performs the logical sum of products expansion by stack.
