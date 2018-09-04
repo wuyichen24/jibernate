@@ -238,7 +238,7 @@ public class ExpressionEngine {
 	 *         
 	 * @return  The expended sum of products expression.
 	 */
-	private static Expression getSumOfProductsByDivideAndConquor(Expression expr, int threshold) {
+	protected static Expression getSumOfProductsByDivideAndConquor(Expression expr, int threshold) {
 		ArrayList<Expression> divisionList = new ArrayList<Expression>();
 		int p = 0;                // left bound
 		int q = threshold - 1;    // right bound
@@ -252,7 +252,7 @@ public class ExpressionEngine {
 			if(rightOptr == null || rightOptr.equals(Expression.OR)) {        // if the right operator is OR, so the current minterms has been finished.    
 				Expression division = new Expression();
 				for(int i = p; i <= q; i++) {
-					division.addSubExpressionWithOperator(expr.getSubExpression(i), expr.getOperator(i, Expression.SIDE_LEFT));
+					division.combineExpression(expr.getOperator(i, Expression.SIDE_LEFT), expr.getSubExpression(i));
 				}
 				divisionList.add(division);
 
@@ -296,7 +296,7 @@ public class ExpressionEngine {
 				return getSumOfProducts(expr, threshold);
 			} else {
 				// FIXME: deal with all AND expression
-				return null;
+				return divisionList.get(0);
 			}
 		}
 	}
@@ -314,7 +314,7 @@ public class ExpressionEngine {
 	 * 
      * @since   1.0 
 	 */
-	private static Expression getSumOfProductsByStack(Expression expr) {
+	protected static Expression getSumOfProductsByStack(Expression expr) {
 		Stack<Object> exprStack = new Stack<>();  // the expression tree stack
 		Stack<Object> pdaStack  = new Stack<>();  // pda stack
 		Stack<Object> optrStack = new Stack<>();  // operator stack
@@ -345,8 +345,8 @@ public class ExpressionEngine {
 					child = simplifyNestedExpression(child);
 				}
 
-				String leftOptr  = i > 0                                   ? expr.getOperator(i, Expression.SIDE_LEFT)  : null; // the left operator
-				String rightOptr = i < expr.getNumberOfSubExpression() - 1 ? expr.getOperator(i, Expression.SIDE_RIGHT) : null; // the right operator
+				String leftOptr  = i > 0                                   ? currentExpr.getOperator(i, Expression.SIDE_LEFT)  : null; // the left operator
+				String rightOptr = i < expr.getNumberOfSubExpression() - 1 ? currentExpr.getOperator(i, Expression.SIDE_RIGHT) : null; // the right operator
 
 				if(!child.isCompound()) {
 					if(rightOptr != null) {
@@ -615,12 +615,12 @@ public class ExpressionEngine {
 
 				if(n == 0) {
 
-					minimized.addSubExpressionWithOperator(minterm.get(n), Expression.OR);
+					minimized.combineExpression(Expression.OR, minterm.get(n));
 
 				}
 				else {
 
-					minimized.addSubExpressionWithOperator(minterm.get(n), Expression.AND);
+					minimized.combineExpression(Expression.AND, minterm.get(n));
 				}
 			}
 		}
@@ -659,8 +659,8 @@ public class ExpressionEngine {
 			if(e2.isCompound() == false) {
 
 				union = new Expression();
-				union.addSubExpressionWithOperator(e1, null);
-				union.addSubExpressionWithOperator(e2, Expression.OR);
+				union.combineExpression(null, e1);
+				union.combineExpression(Expression.OR, e2);
 			}
 			else {
 
@@ -697,8 +697,8 @@ public class ExpressionEngine {
 			if(e2.isCompound() == false) {
 
 				intersection = new Expression();
-				intersection.addSubExpressionWithOperator(e1, null);
-				intersection.addSubExpressionWithOperator(e2, Expression.AND);
+				intersection.combineExpression(null, e1);
+				intersection.combineExpression(Expression.AND, e2);
 
 			}
 			else {
@@ -711,13 +711,13 @@ public class ExpressionEngine {
 					String op = (i == 0 ? null : e2.getOperator(i, Expression.SIDE_LEFT));
 
 					if(op == null || op.equals(Expression.OR)) {
-						intersection.addSubExpressionWithOperator(e1, Expression.OR);
+						intersection.combineExpression(Expression.OR, e1);
 					}
 
 					// simplify redundant terms
 					// A * AB ==> AB
 					if(!child.equals(e1)) {
-						intersection.addSubExpressionWithOperator(child, Expression.AND);
+						intersection.combineExpression(Expression.AND, child);
 					}
 				}
 			}
@@ -736,7 +736,7 @@ public class ExpressionEngine {
 					String op = (i == 0 ? null : e1.getOperator(i, Expression.SIDE_LEFT));
 					String la = (i + 1 == e1.getNumberOfSubExpression() ? null : e1.getOperator(i, Expression.SIDE_RIGHT));
 
-					intersection.addSubExpressionWithOperator(child, op);
+					intersection.combineExpression(op, child);
 
 					// simplify redundant terms
 					// A * AB ==> AB
@@ -746,7 +746,7 @@ public class ExpressionEngine {
 
 					if(la == null || la.equals(Expression.OR)) {
 						if(matched == false) {
-							intersection.addSubExpressionWithOperator(e2, Expression.AND);
+							intersection.combineExpression(Expression.AND, e2);
 						}
 						matched = false;
 					}
@@ -781,15 +781,15 @@ public class ExpressionEngine {
 								for(int p = 0; p < minterm1.size(); p++) {
 									// "OR" in the fist "ANDED" minterm
 									if(p == 0) {
-										intersection.addSubExpressionWithOperator((Expression) minterm1.get(p), Expression.OR);
+										intersection.combineExpression(Expression.OR, (Expression) minterm1.get(p));
 									}
 									else {
-										intersection.addSubExpressionWithOperator((Expression) minterm1.get(p), Expression.AND);
+										intersection.combineExpression(Expression.AND, (Expression) minterm1.get(p));
 									}
 								}
 
 								for(int q = 0; q < minterm2.size(); q++) {
-									intersection.addSubExpressionWithOperator((Expression) minterm2.get(q), Expression.AND);
+									intersection.combineExpression(Expression.AND, (Expression) minterm2.get(q));
 								}
 
 								// clear for next minterm

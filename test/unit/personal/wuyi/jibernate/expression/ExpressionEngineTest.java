@@ -4,7 +4,17 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class ExpressionEngineTest {
-	Expression sinExpr = new Expression("firstName", Expression.EQUAL, "John");
+	Expression sinExpr           = new Expression("firstName", Expression.EQUAL, "John");
+	Expression com2AndExpr       = new Expression("firstName", Expression.EQUAL, "John").and("age", Expression.EQUAL, 23);
+	Expression com2OrExpr        = new Expression("firstName", Expression.EQUAL, "John").or("firstName", Expression.EQUAL, "Johnson");
+	Expression com3AndExpr       = new Expression("firstName", Expression.EQUAL, "John").and("age", Expression.EQUAL, 23).and("score", Expression.EQUAL, 99);
+	Expression com3OrExpr        = new Expression("firstName", Expression.EQUAL, "John").or("firstName", Expression.EQUAL, "Johnson").or("firstName", Expression.EQUAL, "Johnny");
+	Expression com3AndOrExpr     = new Expression("firstName", Expression.EQUAL, "John").and("age", Expression.EQUAL, 23).or("firstName", Expression.EQUAL, "Johnny");
+	Expression comMultiLevelExpr = new Expression(new Expression("firstName", Expression.EQUAL, "John").and("age", Expression.EQUAL, 23))
+										.or(new Expression("firstName", Expression.EQUAL, "Mary").and("age", Expression.EQUAL, 24).and("score", Expression.EQUAL, 99))
+										.or(new Expression("firstName", Expression.EQUAL, "Tony").and("age", Expression.EQUAL, 25).and("lastName", Expression.EQUAL, "Lee"));
+	Expression comSop1 = new Expression(new Expression("firstName", Expression.EQUAL, "John").and("age", Expression.EQUAL, 23))
+										.or(new Expression("firstName", Expression.EQUAL, "Mary").and("age", Expression.EQUAL, 24));
 	
 	@Test
 	public void evaluateTest1() {
@@ -27,6 +37,30 @@ public class ExpressionEngineTest {
 	public void evaluateTestException() {
 		ExpressionEngine.evaluate("123", Expression.EQUAL, 123L);
 		ExpressionEngine.evaluate('a', Expression.EQUAL, "a");
+	}
+	
+	@Test
+	public void getSumOfProductsTest() {
+		Assert.assertEquals(sinExpr, ExpressionEngine.getSumOfProducts(sinExpr, 1000));
+	}
+	
+	@Test
+	public void getSumOfProductsByDivideAndConquorTest() {
+		System.out.println(comMultiLevelExpr.toString());
+		System.out.println(ExpressionEngine.getSumOfProductsByDivideAndConquor(comMultiLevelExpr, 3));
+	}
+	
+	@Test
+	public void getSumOfProductsByStackTest() {
+		// simple expression is not valid for getSumOfProductsByStack().
+		// you should call getSumOfProducts() so that it will be returned directly.
+		Assert.assertEquals(com2AndExpr, ExpressionEngine.getSumOfProductsByStack(com2AndExpr));
+		Assert.assertEquals(com2OrExpr, ExpressionEngine.getSumOfProductsByStack(com2OrExpr));
+		
+		// result of by stack should be equal to result of by divide & conquor
+		System.out.println("" + comSop1);
+		System.out.println("By Stack:          " + ExpressionEngine.getSumOfProductsByStack(comSop1));
+		System.out.println("By Divide&Conquor: " + ExpressionEngine.getSumOfProductsByDivideAndConquor(comSop1, 3));
 	}
 	
 	@Test
