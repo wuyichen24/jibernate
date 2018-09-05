@@ -296,7 +296,7 @@ public class ExpressionEngine {
 				return getSumOfProducts(expr, threshold);
 			} else {
 				// FIXME: deal with all AND expression
-				return divisionList.get(0);
+				return getSumOfProductsByStack(divisionList.get(0));
 			}
 		}
 	}

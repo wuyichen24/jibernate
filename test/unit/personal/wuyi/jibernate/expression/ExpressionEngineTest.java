@@ -13,8 +13,6 @@ public class ExpressionEngineTest {
 	Expression comMultiLevelExpr = new Expression(new Expression("firstName", Expression.EQUAL, "John").and("age", Expression.EQUAL, 23))
 										.or(new Expression("firstName", Expression.EQUAL, "Mary").and("age", Expression.EQUAL, 24).and("score", Expression.EQUAL, 99))
 										.or(new Expression("firstName", Expression.EQUAL, "Tony").and("age", Expression.EQUAL, 25).and("lastName", Expression.EQUAL, "Lee"));
-	Expression comSop1 = new Expression(new Expression("firstName", Expression.EQUAL, "John").and("age", Expression.EQUAL, 23))
-										.or(new Expression("firstName", Expression.EQUAL, "Mary").and("age", Expression.EQUAL, 24));
 	
 	@Test
 	public void evaluateTest1() {
@@ -57,10 +55,40 @@ public class ExpressionEngineTest {
 		Assert.assertEquals(com2AndExpr, ExpressionEngine.getSumOfProductsByStack(com2AndExpr));
 		Assert.assertEquals(com2OrExpr, ExpressionEngine.getSumOfProductsByStack(com2OrExpr));
 		
-		// result of by stack should be equal to result of by divide & conquor
-		System.out.println("" + comSop1);
+		// Case 1: A * B + C * D 
+		// if an expression is already in sop format, so the expression should be no change
+		Expression comSop1 = new Expression(new Expression("A", Expression.EQUAL, "a").and("B", Expression.EQUAL, "b"))
+				.or(new Expression("C", Expression.EQUAL, "c").and("D", Expression.EQUAL, "d"));
+		
+		System.out.println("Original Expr:     " + comSop1);
 		System.out.println("By Stack:          " + ExpressionEngine.getSumOfProductsByStack(comSop1));
 		System.out.println("By Divide&Conquor: " + ExpressionEngine.getSumOfProductsByDivideAndConquor(comSop1, 3));
+		Assert.assertEquals(ExpressionEngine.getSumOfProductsByStack(comSop1), ExpressionEngine.getSumOfProductsByDivideAndConquor(comSop1, 3));
+		
+		// Case 2: (A + B)(C + D) ==> AC + AD + BC + BD
+		Expression comSop2 = new Expression(new Expression("A", Expression.EQUAL, "a").or("B", Expression.EQUAL, "b"))
+				.and(new Expression("C", Expression.EQUAL, "c").or("D", Expression.EQUAL, "d"));
+		System.out.println("Original Expr:     " + comSop2);
+		System.out.println("By Stack:          " + ExpressionEngine.getSumOfProductsByStack(comSop2));
+		System.out.println("By Divide&Conquor: " + ExpressionEngine.getSumOfProductsByDivideAndConquor(comSop2, 2));
+		Assert.assertEquals(ExpressionEngine.getSumOfProductsByStack(comSop2), ExpressionEngine.getSumOfProductsByDivideAndConquor(comSop2, 2));
+		
+		// Case 3: (A + B)(C + D)(E + F) ==> ACE + ADE + BCE + BDE + ACF + ADF + BCF + BDF
+		Expression comSop3 = new Expression(new Expression("A", Expression.EQUAL, "a").or("B", Expression.EQUAL, "b"))
+				.and(new Expression("C", Expression.EQUAL, "c").or("D", Expression.EQUAL, "d"))
+				.and(new Expression("E", Expression.EQUAL, "e").or("F", Expression.EQUAL, "f"));
+		System.out.println("Original Expr:     " + comSop3);
+		System.out.println("By Stack:          " + ExpressionEngine.getSumOfProductsByStack(comSop3));
+		System.out.println("By Divide&Conquor: " + ExpressionEngine.getSumOfProductsByDivideAndConquor(comSop3, 2));
+		Assert.assertEquals(ExpressionEngine.getSumOfProductsByStack(comSop3), ExpressionEngine.getSumOfProductsByDivideAndConquor(comSop3, 2));
+		
+		// Case 4: !(A + B)(C + D) ==> !A * !B (C + D) ==> !A!BC + !A!BD
+		Expression comSop4 = new Expression(new Expression("A", Expression.EQUAL, "a").or("B", Expression.EQUAL, "b").complement())
+				.and(new Expression("C", Expression.EQUAL, "c").or("D", Expression.EQUAL, "d"));
+		System.out.println("Original Expr:     " + comSop4);
+		System.out.println("By Stack:          " + ExpressionEngine.getSumOfProductsByStack(comSop4));
+		System.out.println("By Divide&Conquor: " + ExpressionEngine.getSumOfProductsByDivideAndConquor(comSop4, 2));
+		Assert.assertEquals(ExpressionEngine.getSumOfProductsByStack(comSop4), ExpressionEngine.getSumOfProductsByDivideAndConquor(comSop4, 2));
 	}
 	
 	@Test
