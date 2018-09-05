@@ -38,60 +38,6 @@ public class ExpressionEngineTest {
 	}
 	
 	@Test
-	public void getSumOfProductsTest() {
-		Assert.assertEquals(sinExpr, ExpressionEngine.getSumOfProducts(sinExpr, 1000));
-	}
-	
-	@Test
-	public void getSumOfProductsByDivideAndConquorTest() {
-		System.out.println(comMultiLevelExpr.toString());
-		System.out.println(ExpressionEngine.getSumOfProductsByDivideAndConquor(comMultiLevelExpr, 3));
-	}
-	
-	@Test
-	public void getSumOfProductsByStackTest() {
-		// simple expression is not valid for getSumOfProductsByStack().
-		// you should call getSumOfProducts() so that it will be returned directly.
-		Assert.assertEquals(com2AndExpr, ExpressionEngine.getSumOfProductsByStack(com2AndExpr));
-		Assert.assertEquals(com2OrExpr, ExpressionEngine.getSumOfProductsByStack(com2OrExpr));
-		
-		// Case 1: A * B + C * D 
-		// if an expression is already in sop format, so the expression should be no change
-		Expression comSop1 = new Expression(new Expression("A", Expression.EQUAL, "a").and("B", Expression.EQUAL, "b"))
-				.or(new Expression("C", Expression.EQUAL, "c").and("D", Expression.EQUAL, "d"));
-		
-		System.out.println("Original Expr:     " + comSop1);
-		System.out.println("By Stack:          " + ExpressionEngine.getSumOfProductsByStack(comSop1));
-		System.out.println("By Divide&Conquor: " + ExpressionEngine.getSumOfProductsByDivideAndConquor(comSop1, 3));
-		Assert.assertEquals(ExpressionEngine.getSumOfProductsByStack(comSop1), ExpressionEngine.getSumOfProductsByDivideAndConquor(comSop1, 3));
-		
-		// Case 2: (A + B)(C + D) ==> AC + AD + BC + BD
-		Expression comSop2 = new Expression(new Expression("A", Expression.EQUAL, "a").or("B", Expression.EQUAL, "b"))
-				.and(new Expression("C", Expression.EQUAL, "c").or("D", Expression.EQUAL, "d"));
-		System.out.println("Original Expr:     " + comSop2);
-		System.out.println("By Stack:          " + ExpressionEngine.getSumOfProductsByStack(comSop2));
-		System.out.println("By Divide&Conquor: " + ExpressionEngine.getSumOfProductsByDivideAndConquor(comSop2, 2));
-		Assert.assertEquals(ExpressionEngine.getSumOfProductsByStack(comSop2), ExpressionEngine.getSumOfProductsByDivideAndConquor(comSop2, 2));
-		
-		// Case 3: (A + B)(C + D)(E + F) ==> ACE + ADE + BCE + BDE + ACF + ADF + BCF + BDF
-		Expression comSop3 = new Expression(new Expression("A", Expression.EQUAL, "a").or("B", Expression.EQUAL, "b"))
-				.and(new Expression("C", Expression.EQUAL, "c").or("D", Expression.EQUAL, "d"))
-				.and(new Expression("E", Expression.EQUAL, "e").or("F", Expression.EQUAL, "f"));
-		System.out.println("Original Expr:     " + comSop3);
-		System.out.println("By Stack:          " + ExpressionEngine.getSumOfProductsByStack(comSop3));
-		System.out.println("By Divide&Conquor: " + ExpressionEngine.getSumOfProductsByDivideAndConquor(comSop3, 2));
-		Assert.assertEquals(ExpressionEngine.getSumOfProductsByStack(comSop3), ExpressionEngine.getSumOfProductsByDivideAndConquor(comSop3, 2));
-		
-		// Case 4: !(A + B)(C + D) ==> !A * !B (C + D) ==> !A!BC + !A!BD
-		Expression comSop4 = new Expression(new Expression("A", Expression.EQUAL, "a").or("B", Expression.EQUAL, "b").complement())
-				.and(new Expression("C", Expression.EQUAL, "c").or("D", Expression.EQUAL, "d"));
-		System.out.println("Original Expr:     " + comSop4);
-		System.out.println("By Stack:          " + ExpressionEngine.getSumOfProductsByStack(comSop4));
-		System.out.println("By Divide&Conquor: " + ExpressionEngine.getSumOfProductsByDivideAndConquor(comSop4, 2));
-		Assert.assertEquals(ExpressionEngine.getSumOfProductsByStack(comSop4), ExpressionEngine.getSumOfProductsByDivideAndConquor(comSop4, 2));
-	}
-	
-	@Test
 	public void simplifyNestedExpressionTest() {
 		// test 2-level nested ((E)) => E
 		Expression expr = new Expression();

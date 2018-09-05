@@ -157,7 +157,7 @@ public class ExpressionEngine {
 
 		Expression sumOfProductExpr = getSumOfProducts(expression, THRESHOLD);
 
-		if(!sumOfProductExpr.isCompound()) {                   // sumOfProductExpr is a simple expression
+		if(!sumOfProductExpr.isCompound()) {                                           // sumOfProductExpr is a simple expression
 			Expression minterm = new Expression();
 			minterm.combineExpression(null, sumOfProductExpr);
 			mintermList.add(minterm);
@@ -167,7 +167,7 @@ public class ExpressionEngine {
 			for(int i = 0; i < sumOfProductExpr.getNumberOfSubExpression(); i++) {
 				Expression childExpr = sumOfProductExpr.getSubExpression(i);
 				String     rightOptr = i < sumOfProductExpr.getNumberOfSubExpression() - 1 ? sumOfProductExpr.getOperator(i, Expression.SIDE_RIGHT) : null;
-				minterm.addSubExpressionWithOperator(childExpr, Expression.AND);      // collect all the sub-expressions for this minterms, like c * d * e
+				minterm.combineExpression(Expression.AND, childExpr);                 // collect all the sub-expressions for this minterms, like c * d * e
 
 				if(rightOptr == null || rightOptr.equals(Expression.OR)) {            // if the next right operator is OR or null, add c * d * e into the mintermList
 					mintermList.add(minterm);
