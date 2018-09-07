@@ -317,7 +317,7 @@ public class ExpressionEngine {
 	protected static Expression getSumOfProductsByStack(Expression expr) {
 		Stack<Object> exprStack = new Stack<>();  // the expression tree stack
 		Stack<Object> pdaStack  = new Stack<>();  // pda stack
-		Stack<Object> optrStack = new Stack<>();  // operator stack
+		Stack<Object> optrStack = new Stack<>();  // the operator stack
 
 		// push initial expression onto the stack
 		exprStack.push(expr);
@@ -410,137 +410,164 @@ public class ExpressionEngine {
 		return sop;
 	}
 
-
 	/**
-	 * Do the pda stack reduction. Applies shift/reduction rules.
+	 * Reduce the pda stack.
+	 * 
+	 * <p>This method will loop through the operator stack and use each 
+	 * operator to reduce the size of the pda stack.
+	 * 
+	 * @param  operStack
+	 *         The operator stack.
+	 *         
+	 * @param  pdaStack
+	 *         The pda stack.
+	 * 
+	 * @param  reduceAll
+	 *         The flag to indicate just reduce the current expression or all 
+	 *         the nested expressions.
+	 *         
+     * @since   1.0 
 	 */
-	private static void reduce(Stack operStack, Stack pdaStack, boolean reduceAll) {
-
+	private static void reduce(Stack<Object> operStack, Stack<Object> pdaStack, boolean reduceAll) {
 		while(!operStack.isEmpty()) {
 			String operator = (String) operStack.pop();
 
-			if(operator.equals("_")) {
-				// Hit the stack separator so try to see if we can reduce any ANDS,
-				// otherwise break out of reduction loop
-				if(reduceAll == false) {
-					while(!operStack.isEmpty() &&
-					// !((String)operStack.peek()).equals(Expression.OR) &&
-							!((String) operStack.peek()).equals("_")) {
-
-						String op = (String) operStack.pop();
-
-						if(op.equals("!")) {
-							Expression complementExpr = (Expression) pdaStack.pop();
-
-							if(complementExpr.isCompound()) {
-								complementExpr.complement(true);
-
-								if(complementExpr.getNumberOfSubExpression() == 1) {
-									complementExpr = simplifyNestedExpression(complementExpr);
-								}
-								else {
-									// complement operation turns SOP expr into POS
-									// !(AB + C + !DE) <==> (!A + !B) * !C * (D + !E)
-									// so we need to multiply out
-									// !A!CD + !A!C!E + !B!CD + !B!C!E
-									Expression temp = complementExpr.getSubExpression(0);
-									for(int i = 1; i < complementExpr.getNumberOfSubExpression(); i++) {
-										Expression blah = complementExpr.getSubExpression(i);
-										temp = intersection(temp, blah);
-									}
-									complementExpr = temp;
-								}
-							}
-							else {
-								Expression temp = (Expression) complementExpr.clone();
-								complementExpr = temp;
-								complementExpr.complement();
-							}
-							
-							pdaStack.push(complementExpr);
-						}
-						else if(op.equals(Expression.OR)) {
-							Expression expr2 = (Expression) pdaStack.pop();
-							Expression expr1 = (Expression) pdaStack.pop();
-
-							pdaStack.push(union(expr1, expr2));
-						}
-						else {
-							Expression expr2 = (Expression) pdaStack.pop();
-							Expression expr1 = (Expression) pdaStack.pop();
-
-							pdaStack.push(intersection(expr1, expr2));
-						}
-					}
-
-					break;
-				}
+			switch (operator) {
+            	case "_": reduceForStackOperator(operStack, pdaStack, reduceAll); break;
+            	case "!": reduceForComplementOperator(operStack, pdaStack);       break;
+            	default:  reduceForAndOrOperator(operator, pdaStack);             break;
 			}
-			else if(operator.equals("!")) {
-				Expression complementExpr = (Expression) pdaStack.pop();
-				if(complementExpr.isCompound()) {
-					complementExpr.complement(true);
-					if(complementExpr.getNumberOfSubExpression() == 1) {
-						complementExpr = simplifyNestedExpression(complementExpr);
-					}
-					else {
-						// complement operation turns SOP expr into POS
-						// !(AB + C + !DE) <==> (!A + !B) * !C * (D + !E)
-						// so we need to multiply out
-						// !A!CD + !A!C!E + !B!CD + !B!C!E
-						Expression temp = complementExpr.getSubExpression(0);
-						for(int i = 1; i < complementExpr.getNumberOfSubExpression(); i++) {
-							Expression blah = complementExpr.getSubExpression(i);
-							temp = intersection(temp, blah);
-						}
-						complementExpr = temp;
-					}
-				}
-				else {
-					Expression temp = (Expression) complementExpr.clone();
-					complementExpr = temp;
-					complementExpr.complement();
-				}
+		}
+	}
+	
+	/**
+	 * Reduce the pda stack on current stack operator.
+	 * 
+	 * @param  operStack
+	 *         The operator stack.
+	 *         
+	 * @param  pdaStack
+	 *         The pda stack.
+	 *         
+	 * @param  reduceAll
+	 *         The flag to indicate just reduce the current expression or all 
+	 *         the nested expressions.
+	 *         
+     * @since   1.0 
+	 */
+	private static void reduceForStackOperator(Stack<Object> operStack, Stack<Object> pdaStack, boolean reduceAll) {
+		if(!reduceAll) {
+			while(!operStack.isEmpty() && !((String) operStack.peek()).equals("_")) {
+				String op = (String) operStack.pop();
 
-				pdaStack.push(complementExpr);
-			}
-			else {
-				Expression expr2 = (Expression) pdaStack.pop();
-				Expression expr1 = (Expression) pdaStack.pop();
-
-				if(operator.equals(Expression.OR)) {
-					pdaStack.push(union(expr1, expr2));
-				}
-				else {
-					pdaStack.push(intersection(expr1, expr2));
+				if(op.equals("!")) {
+					reduceForComplementOperator(operStack, pdaStack);
+				} else {
+					reduceForAndOrOperator(op, pdaStack);
 				}
 			}
 		}
 	}
+	
+	/**
+	 * Reduce the pda stack on current complement operator.
+	 * 
+	 * <p>Complement operation turns SOP expr into POS, like:
+	 * <pre>
+	 *   !(AB + C + !DE) ==> (!A + !B) * !C * (D + !E)
+	 * </pre>
+	 * <p>so this method will multiply out, like:
+	 * <pre>
+	 *   (!A + !B) * !C * (D + !E) ==> !A!CD + !A!C!E + !B!CD + !B!C!E
+	 * </pre>
+	 * 
+	 * @param  operStack
+	 *         The operator stack.
+	 *         
+	 * @param  pdaStack
+	 *         The pda stack.
+	 *         
+     * @since   1.0 
+	 */
+	private static void reduceForComplementOperator(Stack<Object> operStack, Stack<Object> pdaStack) {
+		Expression complementExpr = (Expression) pdaStack.pop();
+		
+		if(complementExpr.isCompound()) {  // compound expression
+			complementExpr.complement(true);
+			if(complementExpr.getNumberOfSubExpression() == 1) {
+				complementExpr = simplifyNestedExpression(complementExpr);
+			} else {
+				Expression temp = complementExpr.getSubExpression(0);
+				for(int i = 1; i < complementExpr.getNumberOfSubExpression(); i++) {
+					Expression subExpr = complementExpr.getSubExpression(i);
+					temp = intersection(temp, subExpr);
+				}
+				complementExpr = temp;
+			}
+		} else {                            // simple expression
+			Expression temp = (Expression) complementExpr.clone();
+			complementExpr = temp;
+			complementExpr.complement();
+		}
 
+		pdaStack.push(complementExpr);
+	}
+	
+	/**
+	 * Reduce the pda stack on current AND / OR operator.
+	 * 
+	 * @param  operator
+	 *         The current operator.
+	 *        
+	 * @param  pdaStack
+	 *         The pda stack.
+	 * 
+     * @since   1.0
+	 */
+	private static void reduceForAndOrOperator(String operator, Stack<Object> pdaStack) {
+		Expression expr2 = (Expression) pdaStack.pop();
+		Expression expr1 = (Expression) pdaStack.pop();
+
+		if(operator.equals(Expression.OR)) {
+			pdaStack.push(union(expr1, expr2));
+		} else {
+			pdaStack.push(intersection(expr1, expr2));
+		}
+	}
 
 	/**
-	 * Takes an expanded expression and attempts to simplify. ASSERTION: The expression is compound and expanded (flat)
+	 * Simplify an expression by the Idempotence, Commutativity and 
+	 * Absorption in boolean algebra.
+	 * 
+	 * <ul>
+	 *   <li>Idempotence
+	 *     <pre>
+	 *       E * E ==> E
+	 *       E + E ==> E
+	 *     </pre>
+	 *   <li>Commutativity
+	 *     <pre>
+	 *       AB + BA + CD ==> AB + CD
+	 *     </pre>
+	 *   <li>Absorption
+	 *     <pre>
+	 *       A + AB      ==> A
+	 *       A * (A + B) ==> AA + AB ==> A + AB ==> A
+	 *     </pre>
+	 * </ul>
+	 * 
+	 * @param  expr
+	 *         The expression needs to be simplified.
+	 *         
+	 * @return  The simplified expression.
+	 * 
+     * @since   1.0
 	 */
 	private static Expression simplify(Expression expr) {
-
-		// /////////// IDEMPOTENCE, COMMUTATIVITY, SIMPLIFICATION \\\\\\\\\\\\\\\\\\
-		//
-		// Remove equivalent terms from disjunctive expression
-		//
-		// E * E == E (Idempotence)
-		// E + E = E (Idempotence)
-		// AB + CD + BA == AB + CD (Commutativity)
-		// E + EZ == E(true + Z) == E (Simplification)
-		//
-		// ASSERTION: expression consists only of flattened minterm
-		//
-		// //////////////////////////////////////////////////////////////////////////////
-
 		Expression minimized = expr;
 
 		List<List<Expression>> mintermList = new ArrayList<List<Expression>>();
-		List<Expression> minterm = new ArrayList<Expression>();
+		List<Expression>       minterm     = new ArrayList<Expression>();
 
 		// build Arraylist of minterms
 		for(int i = 0; i < minimized.getNumberOfSubExpression(); i++) {
@@ -647,9 +674,12 @@ public class ExpressionEngine {
 		}
 	}
 
-
 	/**
-	 * performs union of two minimized expressions
+	 * Apply the associative law (union / plus) for 2 expressions.
+	 * 
+	 * @param e1
+	 * @param e2
+	 * @return
 	 */
 	private static Expression union(Expression e1, Expression e2) {
 
@@ -685,9 +715,12 @@ public class ExpressionEngine {
 		return union;
 	}
 
-
 	/**
-	 * performs intersection of two minimized expressions
+	 * Apply the distributive law (intersect / multiply) for 2 expressions.
+	 * 
+	 * @param e1
+	 * @param e2
+	 * @return
 	 */
 	private static Expression intersection(Expression e1, Expression e2) {
 
