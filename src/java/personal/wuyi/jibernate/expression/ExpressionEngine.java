@@ -2,6 +2,8 @@ package personal.wuyi.jibernate.expression;
 
 import org.apache.commons.lang3.time.DateUtils;
 
+import com.google.common.base.Preconditions;
+
 import personal.wuyi.jibernate.util.StringUtil;
 
 import java.util.ArrayList;
@@ -755,6 +757,8 @@ public class ExpressionEngine {
 	 *         The second expression.
 	 *         
 	 * @return  The intersection of 2 expressions.
+	 * 
+     * @since   1.0
 	 */
 	private static Expression intersection(Expression e1, Expression e2) {
 		Expression intersection = new Expression();
@@ -763,102 +767,88 @@ public class ExpressionEngine {
 			if(!e2.isCompound()) {
 				intersection.combineExpression(null, e1);
 				intersection.combineExpression(Expression.AND, e2);
-			} else {    // Case 2: A * (B + C) ==> A * B + A * C
-				for(int i = 0; i < e2.getNumberOfSubExpression(); i++) {
-					Expression e2SubExpr = (Expression) e2.getSubExpression(i);
-					String     leftOptr  = i > 0 ? e2.getOperator(i, Expression.SIDE_LEFT) : null;
-
-					if(leftOptr == null || leftOptr.equals(Expression.OR)) {
-						intersection.combineExpression(Expression.OR, e1);
-					}
-
-					if(!e2SubExpr.equals(e1)) {
-						intersection.combineExpression(Expression.AND, e2SubExpr);
-					}
-				}
+				return intersection;
+			} else {                // Case 2: A * (B + C) ==> A * B + A * C
+				return intersectionSimpleExpressionWithCompoundExpression(e1, e2);
 			}
-
+		} else {        
+			if(!e2.isCompound()) {  // Case 3: (B + C) * A ==> A * B + A * C
+				return intersectionSimpleExpressionWithCompoundExpression(e2, e1);
+			} else {                // Case 4: (A + B) * (C + D) ==> AC + AD + BC + BD
+				return intersectionCompoundExpressionWithCompoundExpression(e1, e2);
+			}
 		}
-		else {
+	}
+	
+	private static Expression intersectionSimpleExpressionWithCompoundExpression(Expression simpleExpr, Expression compoundExpr) {
+		Preconditions.checkArgument(!simpleExpr.isCompound(), "The first expression should be simple, but currently it is " + simpleExpr.toString());
+		Preconditions.checkArgument(!simpleExpr.isCompound(), "The first expression should be compound, but currently it is " + compoundExpr.toString());
+		
+		Expression intersection = new Expression();
+		
+		for(int i = 0; i < compoundExpr.getNumberOfSubExpression(); i++) {
+			Expression subExpr = (Expression) compoundExpr.getSubExpression(i);
+			String     leftOptr  = i > 0 ? compoundExpr.getOperator(i, Expression.SIDE_LEFT) : null;
 
-			if(e2.isCompound() == false) {
-
-				boolean matched = false;
-				for(int i = 0; i < e1.getNumberOfSubExpression(); i++) {
-
-					Expression child = e1.getSubExpression(i);
-					String leftOptr  = i > 0                                   ? e1.getOperator(i, Expression.SIDE_LEFT)  : null; // the left operator
-					String rightOptr = i < e1.getNumberOfSubExpression() - 1 ? e1.getOperator(i, Expression.SIDE_RIGHT) : null; // the right operator
-
-					intersection.combineExpression(leftOptr, child);
-
-					// simplify redundant terms
-					// A * AB ==> AB
-					if(child.equals(e2)) {
-						matched = true;
-					}
-
-					if(rightOptr == null || rightOptr.equals(Expression.OR)) {
-						if(matched == false) {
-							intersection.combineExpression(Expression.AND, e2);
-						}
-						matched = false;
-					}
-
-				}
-
+			if(leftOptr == null || leftOptr.equals(Expression.OR)) {
+				intersection.combineExpression(Expression.OR, simpleExpr);
 			}
-			else {
 
-				List<Expression> minterm1 = new ArrayList<Expression>();
-				List<Expression> minterm2 = new ArrayList<Expression>();
+			if(!subExpr.equals(simpleExpr)) {
+				intersection.combineExpression(Expression.AND, subExpr);
+			}
+		}
+		
+		return intersection;
+	}
+	
+	private static Expression intersectionCompoundExpressionWithCompoundExpression(Expression comExpr1, Expression comExpr2) {
+		Expression intersection = new Expression();
+		
+		List<Expression> minterm1 = new ArrayList<Expression>();
+		List<Expression> minterm2 = new ArrayList<Expression>();
 
-				// calculate product minterms
-				for(int i = 0; i < e1.getNumberOfSubExpression(); i++) {
-					Expression alpha = e1.getSubExpression(i);
-					String op1 = (i + 1 == e1.getNumberOfSubExpression() ? null : e1.getOperator(i, Expression.SIDE_RIGHT));
+		for(int i = 0; i < comExpr1.getNumberOfSubExpression(); i++) {
+			Expression alpha = comExpr1.getSubExpression(i);
+			String op1 = (i + 1 == comExpr1.getNumberOfSubExpression() ? null : comExpr1.getOperator(i, Expression.SIDE_RIGHT));
 
-					minterm1.add(alpha);
+			minterm1.add(alpha);
 
-					if(null == op1 || op1.equals(Expression.OR)) {
-						for(int j = 0; j < e2.getNumberOfSubExpression(); j++) {
-							Expression beta = e2.getSubExpression(j);
-							String op2 = (j + 1 == e2.getNumberOfSubExpression() ? null : e2.getOperator(j, Expression.SIDE_RIGHT));
+			if(null == op1 || op1.equals(Expression.OR)) {
+				for(int j = 0; j < comExpr2.getNumberOfSubExpression(); j++) {
+					Expression beta = comExpr2.getSubExpression(j);
+					String op2 = (j + 1 == comExpr2.getNumberOfSubExpression() ? null : comExpr2.getOperator(j, Expression.SIDE_RIGHT));
 
-							minterm2.add(beta);
+					minterm2.add(beta);
 
-							if(null == op2 || op2.equals(Expression.OR)) {
-								// create "flat" intersection of "ANDED" minterms so:
-								// (A*B + C)*(D*E + F*G) = (A*B*D*E + A*B*F*G + C*D*E + C*F*G)
-								for(int p = 0; p < minterm1.size(); p++) {
-									// "OR" in the fist "ANDED" minterm
-									if(p == 0) {
-										intersection.combineExpression(Expression.OR, (Expression) minterm1.get(p));
-									}
-									else {
-										intersection.combineExpression(Expression.AND, (Expression) minterm1.get(p));
-									}
-								}
-
-								for(int q = 0; q < minterm2.size(); q++) {
-									intersection.combineExpression(Expression.AND, (Expression) minterm2.get(q));
-								}
-
-								// clear for next minterm
-								minterm2 = new ArrayList<Expression>();
+					if(null == op2 || op2.equals(Expression.OR)) {
+						// create "flat" intersection of "ANDED" minterms so:
+						// (A*B + C)*(D*E + F*G) = (A*B*D*E + A*B*F*G + C*D*E + C*F*G)
+						for(int p = 0; p < minterm1.size(); p++) {
+							// "OR" in the fist "ANDED" minterm
+							if(p == 0) {
+								intersection.combineExpression(Expression.OR, (Expression) minterm1.get(p));
+							}
+							else {
+								intersection.combineExpression(Expression.AND, (Expression) minterm1.get(p));
 							}
 						}
+
+						for(int q = 0; q < minterm2.size(); q++) {
+							intersection.combineExpression(Expression.AND, (Expression) minterm2.get(q));
+						}
+
 						// clear for next minterm
-						minterm1 = new ArrayList<Expression>();
+						minterm2 = new ArrayList<Expression>();
 					}
 				}
-
-				// try to simplify intersect expansion
-				intersection = simplify(intersection);
+				// clear for next minterm
+				minterm1 = new ArrayList<Expression>();
 			}
 		}
 
-		return intersection;
+		// try to simplify intersect expansion
+		return simplify(intersection);
 	}
 
 
