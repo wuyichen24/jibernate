@@ -2,6 +2,8 @@ package personal.wuyi.jibernate.expression;
 
 import org.apache.commons.lang3.time.DateUtils;
 
+import com.google.common.base.Preconditions;
+
 import personal.wuyi.jibernate.util.StringUtil;
 
 import java.util.ArrayList;
@@ -149,25 +151,73 @@ public class ExpressionEngine {
      * @since   1.0 
 	 */
 	public static List<Expression> getMinterms(Expression expression) {
-		List<Expression> mintermList = new ArrayList<Expression>();
-		
 		if(expression == null) {
-			return mintermList;
+			return new ArrayList<>();
 		}
 
 		Expression sumOfProductExpr = getSumOfProducts(expression, THRESHOLD);
+		return collectMintermAsExpression(sumOfProductExpr);
+	}
+	
+	/**
+	 * Collect minterms from an expression.
+	 * 
+	 * <p>Each minterm will be represented as {@code List<Expression>}.
+	 * 
+	 * @param  expr
+	 *         The expression needs to be collected.
+	 *         
+	 * @return  A list of minterms.
+	 * 
+     * @since   1.0 
+	 */
+	protected static List<List<Expression>> collectMintermAsList(Expression expr) {
+		List<List<Expression>> mintermList = new ArrayList<List<Expression>>();
+		List<Expression>       minterm     = new ArrayList<Expression>();
 
-		if(!sumOfProductExpr.isCompound()) {                   // sumOfProductExpr is a simple expression
+		for(int i = 0; i < expr.getNumberOfSubExpression(); i++) {
+			Expression child     = expr.getSubExpression(i);
+			String     rightOptr = i < expr.getNumberOfSubExpression() - 1 ? expr.getOperator(i, Expression.SIDE_RIGHT) : null;
+
+			if(!minterm.contains(child)) {
+				minterm.add(child);
+			}
+
+			if(rightOptr == null || !rightOptr.equals(Expression.AND)) {
+				mintermList.add(minterm);
+				minterm = new ArrayList<Expression>();
+			}
+		}
+		
+		return mintermList;
+	}
+	
+	/**
+	 * Collect minterms from an expression.
+	 * 
+	 * <p>Each minterm will be represented as {@code Expression}.
+	 * 
+	 * @param  expr
+	 *         The expression needs to be collected.
+	 *         
+	 * @return  A list of minterms.
+	 * 
+     * @since   1.0 
+	 */
+	protected static List<Expression> collectMintermAsExpression(Expression expr) {
+		List<Expression> mintermList = new ArrayList<Expression>();
+		
+		if(!expr.isCompound()) {                                           // sumOfProductExpr is a simple expression
 			Expression minterm = new Expression();
-			minterm.combineExpression(null, sumOfProductExpr);
+			minterm.combineExpression(null, expr);
 			mintermList.add(minterm);
 		} else {
 			Expression minterm = new Expression();
 
-			for(int i = 0; i < sumOfProductExpr.getNumberOfSubExpression(); i++) {
-				Expression childExpr = sumOfProductExpr.getSubExpression(i);
-				String     rightOptr = i < sumOfProductExpr.getNumberOfSubExpression() - 1 ? sumOfProductExpr.getOperator(i, Expression.SIDE_RIGHT) : null;
-				minterm.addSubExpressionWithOperator(childExpr, Expression.AND);      // collect all the sub-expressions for this minterms, like c * d * e
+			for(int i = 0; i < expr.getNumberOfSubExpression(); i++) {
+				Expression childExpr = expr.getSubExpression(i);
+				String     rightOptr = i < expr.getNumberOfSubExpression() - 1 ? expr.getOperator(i, Expression.SIDE_RIGHT) : null;
+				minterm.combineExpression(Expression.AND, childExpr);                 // collect all the sub-expressions for this minterms, like c * d * e
 
 				if(rightOptr == null || rightOptr.equals(Expression.OR)) {            // if the next right operator is OR or null, add c * d * e into the mintermList
 					mintermList.add(minterm);
@@ -175,7 +225,7 @@ public class ExpressionEngine {
 				}
 			}
 		}
-
+		
 		return mintermList;
 	}
 
@@ -240,7 +290,7 @@ public class ExpressionEngine {
 	 * 
      * @since   1.0
 	 */
-	private static Expression getSumOfProductsByDivideAndConquor(Expression expr, int threshold) {
+	protected static Expression getSumOfProductsByDivideAndConquor(Expression expr, int threshold) {
 		ArrayList<Expression> divisionList = new ArrayList<Expression>();
 		int p = 0;                // left bound
 		int q = threshold - 1;    // right bound
@@ -254,7 +304,7 @@ public class ExpressionEngine {
 			if(rightOptr == null || rightOptr.equals(Expression.OR)) {        // if the right operator is OR, so the current minterms has been finished.    
 				Expression division = new Expression();
 				for(int i = p; i <= q; i++) {
-					division.addSubExpressionWithOperator(expr.getSubExpression(i), expr.getOperator(i, Expression.SIDE_LEFT));
+					division.combineExpression(expr.getOperator(i, Expression.SIDE_LEFT), expr.getSubExpression(i));
 				}
 				divisionList.add(division);
 
@@ -298,7 +348,7 @@ public class ExpressionEngine {
 				return getSumOfProducts(expr, threshold);
 			} else {
 				// FIXME: deal with all AND expression
-				return null;
+				return getSumOfProductsByStack(divisionList.get(0));
 			}
 		}
 	}
@@ -316,10 +366,10 @@ public class ExpressionEngine {
 	 * 
      * @since   1.0 
 	 */
-	private static Expression getSumOfProductsByStack(Expression expr) {
+	protected static Expression getSumOfProductsByStack(Expression expr) {
 		Stack<Object> exprStack = new Stack<>();  // the expression tree stack
 		Stack<Object> pdaStack  = new Stack<>();  // pda stack
-		Stack<Object> optrStack = new Stack<>();  // operator stack
+		Stack<Object> optrStack = new Stack<>();  // the operator stack
 
 		// push initial expression onto the stack
 		exprStack.push(expr);
@@ -347,8 +397,8 @@ public class ExpressionEngine {
 					child = simplifyNestedExpression(child);
 				}
 
-				String leftOptr  = i > 0                                   ? expr.getOperator(i, Expression.SIDE_LEFT)  : null; // the left operator
-				String rightOptr = i < expr.getNumberOfSubExpression() - 1 ? expr.getOperator(i, Expression.SIDE_RIGHT) : null; // the right operator
+				String leftOptr  = i > 0                                   ? currentExpr.getOperator(i, Expression.SIDE_LEFT)  : null; // the left operator
+				String rightOptr = i < expr.getNumberOfSubExpression() - 1 ? currentExpr.getOperator(i, Expression.SIDE_RIGHT) : null; // the right operator
 
 				if(!child.isCompound()) {
 					if(rightOptr != null) {
@@ -412,190 +462,203 @@ public class ExpressionEngine {
 		return sop;
 	}
 
-
 	/**
-	 * Do the pda stack reduction. Applies shift/reduction rules.
+	 * Reduce the pda stack.
+	 * 
+	 * <p>This method will loop through the operator stack and use each 
+	 * operator to reduce the size of the pda stack.
+	 * 
+	 * @param  operStack
+	 *         The operator stack.
+	 *         
+	 * @param  pdaStack
+	 *         The pda stack.
+	 * 
+	 * @param  reduceAll
+	 *         The flag to indicate just reduce the current expression or all 
+	 *         the nested expressions.
+	 *         
+     * @since   1.0 
 	 */
-	private static void reduce(Stack operStack, Stack pdaStack, boolean reduceAll) {
-
+	private static void reduce(Stack<Object> operStack, Stack<Object> pdaStack, boolean reduceAll) {
 		while(!operStack.isEmpty()) {
 			String operator = (String) operStack.pop();
 
-			if(operator.equals("_")) {
-				// Hit the stack separator so try to see if we can reduce any ANDS,
-				// otherwise break out of reduction loop
-				if(reduceAll == false) {
-					while(!operStack.isEmpty() &&
-					// !((String)operStack.peek()).equals(Expression.OR) &&
-							!((String) operStack.peek()).equals("_")) {
-
-						String op = (String) operStack.pop();
-
-						if(op.equals("!")) {
-							Expression complementExpr = (Expression) pdaStack.pop();
-
-							if(complementExpr.isCompound()) {
-								complementExpr.complement(true);
-
-								if(complementExpr.getNumberOfSubExpression() == 1) {
-									complementExpr = simplifyNestedExpression(complementExpr);
-								}
-								else {
-									// complement operation turns SOP expr into POS
-									// !(AB + C + !DE) <==> (!A + !B) * !C * (D + !E)
-									// so we need to multiply out
-									// !A!CD + !A!C!E + !B!CD + !B!C!E
-									Expression temp = complementExpr.getSubExpression(0);
-									for(int i = 1; i < complementExpr.getNumberOfSubExpression(); i++) {
-										Expression blah = complementExpr.getSubExpression(i);
-										temp = intersection(temp, blah);
-									}
-									complementExpr = temp;
-								}
-							}
-							else {
-								Expression temp = (Expression) complementExpr.clone();
-								complementExpr = temp;
-								complementExpr.complement();
-							}
-							
-							pdaStack.push(complementExpr);
-						}
-						else if(op.equals(Expression.OR)) {
-							Expression expr2 = (Expression) pdaStack.pop();
-							Expression expr1 = (Expression) pdaStack.pop();
-
-							pdaStack.push(union(expr1, expr2));
-						}
-						else {
-							Expression expr2 = (Expression) pdaStack.pop();
-							Expression expr1 = (Expression) pdaStack.pop();
-
-							pdaStack.push(intersection(expr1, expr2));
-						}
-					}
-
-					break;
-				}
+			switch (operator) {
+            	case "_": reduceForStackOperator(operStack, pdaStack, reduceAll); break;
+            	case "!": reduceForComplementOperator(operStack, pdaStack);       break;
+            	default:  reduceForAndOrOperator(operator, pdaStack);             break;
 			}
-			else if(operator.equals("!")) {
-				Expression complementExpr = (Expression) pdaStack.pop();
-				if(complementExpr.isCompound()) {
-					complementExpr.complement(true);
-					if(complementExpr.getNumberOfSubExpression() == 1) {
-						complementExpr = simplifyNestedExpression(complementExpr);
-					}
-					else {
-						// complement operation turns SOP expr into POS
-						// !(AB + C + !DE) <==> (!A + !B) * !C * (D + !E)
-						// so we need to multiply out
-						// !A!CD + !A!C!E + !B!CD + !B!C!E
-						Expression temp = complementExpr.getSubExpression(0);
-						for(int i = 1; i < complementExpr.getNumberOfSubExpression(); i++) {
-							Expression blah = complementExpr.getSubExpression(i);
-							temp = intersection(temp, blah);
-						}
-						complementExpr = temp;
-					}
-				}
-				else {
-					Expression temp = (Expression) complementExpr.clone();
-					complementExpr = temp;
-					complementExpr.complement();
-				}
+		}
+	}
+	
+	/**
+	 * Reduce the pda stack on current stack operator.
+	 * 
+	 * @param  operStack
+	 *         The operator stack.
+	 *         
+	 * @param  pdaStack
+	 *         The pda stack.
+	 *         
+	 * @param  reduceAll
+	 *         The flag to indicate just reduce the current expression or all 
+	 *         the nested expressions.
+	 *         
+     * @since   1.0 
+	 */
+	private static void reduceForStackOperator(Stack<Object> operStack, Stack<Object> pdaStack, boolean reduceAll) {
+		if(!reduceAll) {
+			while(!operStack.isEmpty() && !((String) operStack.peek()).equals("_")) {
+				String op = (String) operStack.pop();
 
-				pdaStack.push(complementExpr);
-			}
-			else {
-				Expression expr2 = (Expression) pdaStack.pop();
-				Expression expr1 = (Expression) pdaStack.pop();
-
-				if(operator.equals(Expression.OR)) {
-					pdaStack.push(union(expr1, expr2));
-				}
-				else {
-					pdaStack.push(intersection(expr1, expr2));
+				if(op.equals("!")) {
+					reduceForComplementOperator(operStack, pdaStack);
+				} else {
+					reduceForAndOrOperator(op, pdaStack);
 				}
 			}
 		}
 	}
-
-
+	
 	/**
-	 * Takes an expanded expression and attempts to simplify. ASSERTION: The expression is compound and expanded (flat)
+	 * Reduce the pda stack on current complement operator.
+	 * 
+	 * <p>Complement operation turns SOP expr into POS, like:
+	 * <pre>
+	 *   !(AB + C + !DE) ==> (!A + !B) * !C * (D + !E)
+	 * </pre>
+	 * <p>so this method will multiply out, like:
+	 * <pre>
+	 *   (!A + !B) * !C * (D + !E) ==> !A!CD + !A!C!E + !B!CD + !B!C!E
+	 * </pre>
+	 * 
+	 * @param  operStack
+	 *         The operator stack.
+	 *         
+	 * @param  pdaStack
+	 *         The pda stack.
+	 *         
+     * @since   1.0 
 	 */
-	private static Expression simplify(Expression expr) {
-
-		// /////////// IDEMPOTENCE, COMMUTATIVITY, SIMPLIFICATION \\\\\\\\\\\\\\\\\\
-		//
-		// Remove equivalent terms from disjunctive expression
-		//
-		// E * E == E (Idempotence)
-		// E + E = E (Idempotence)
-		// AB + CD + BA == AB + CD (Commutativity)
-		// E + EZ == E(true + Z) == E (Simplification)
-		//
-		// ASSERTION: expression consists only of flattened minterm
-		//
-		// //////////////////////////////////////////////////////////////////////////////
-
-		Expression minimized = expr;
-
-		List<List<Expression>> mintermList = new ArrayList<List<Expression>>();
-		List<Expression> minterm = new ArrayList<Expression>();
-
-		// build Arraylist of minterms
-		for(int i = 0; i < minimized.getNumberOfSubExpression(); i++) {
-
-			Expression child = minimized.getSubExpression(i);
-			String la = (i + 1 == minimized.getNumberOfSubExpression() ? null : minimized.getOperator(i, Expression.SIDE_RIGHT));
-
-			if(!minterm.contains(child))
-				minterm.add(child);
-
-			// dump when the next or'd term or the end of the expression is reached
-			if(la == null || !la.equals(Expression.AND)) {
-
-				mintermList.add(minterm);
-				minterm = new ArrayList<Expression>();
+	private static void reduceForComplementOperator(Stack<Object> operStack, Stack<Object> pdaStack) {
+		Expression complementExpr = (Expression) pdaStack.pop();
+		
+		if(complementExpr.isCompound()) {  // compound expression
+			complementExpr.complement(true);
+			if(complementExpr.getNumberOfSubExpression() == 1) {
+				complementExpr = simplifyNestedExpression(complementExpr);
+			} else {
+				Expression temp = complementExpr.getSubExpression(0);
+				for(int i = 1; i < complementExpr.getNumberOfSubExpression(); i++) {
+					Expression subExpr = complementExpr.getSubExpression(i);
+					temp = intersection(temp, subExpr);
+				}
+				complementExpr = temp;
 			}
+		} else {                            // simple expression
+			Expression temp = (Expression) complementExpr.clone();
+			complementExpr = temp;
+			complementExpr.complement();
 		}
 
-		// simplify by removing redundant minterms
+		pdaStack.push(complementExpr);
+	}
+	
+	/**
+	 * Reduce the pda stack on current AND / OR operator.
+	 * 
+	 * @param  operator
+	 *         The current operator.
+	 *        
+	 * @param  pdaStack
+	 *         The pda stack.
+	 * 
+     * @since   1.0
+	 */
+	private static void reduceForAndOrOperator(String operator, Stack<Object> pdaStack) {
+		Expression expr2 = (Expression) pdaStack.pop();
+		Expression expr1 = (Expression) pdaStack.pop();
+
+		if(operator.equals(Expression.OR)) {
+			pdaStack.push(union(expr1, expr2));
+		} else {
+			pdaStack.push(intersection(expr1, expr2));
+		}
+	}
+
+	/**
+	 * Simplify an expression by the Idempotence, Commutativity and 
+	 * Absorption in boolean algebra.
+	 * 
+	 * <ul>
+	 *   <li>Idempotence
+	 *     <pre>
+	 *       E * E ==> E
+	 *       E + E ==> E
+	 *     </pre>
+	 *   <li>Commutativity
+	 *     <pre>
+	 *       AB + BA + CD ==> AB + CD
+	 *     </pre>
+	 *   <li>Absorption
+	 *     <pre>
+	 *       A + AB      ==> A
+	 *       A * (A + B) ==> AA + AB ==> A + AB ==> A
+	 *     </pre>
+	 * </ul>
+	 * 
+	 * @param  expr
+	 *         The expression needs to be simplified.
+	 *         
+	 * @return  The simplified expression.
+	 * 
+     * @since   1.0
+	 */
+	private static Expression simplify(Expression expr) {
+		Expression minimized = expr;
+
+		List<List<Expression>> mintermList = collectMintermAsList(minimized);
+		removeRedundantMinterms(mintermList);
+		return mergeMintermsAsOneExpression(mintermList);
+	}
+	
+	/**
+	 * Remove redundant minterms from the minterms list.
+	 * 
+	 * <p>This method uses fast-slow pointer strategy to remove redundant minterms.
+	 * 
+	 * @param  mintermList
+	 *         The list of minterms without redundant elements.
+	 *         
+     * @since   1.0
+	 */
+	private static void removeRedundantMinterms(List<List<Expression>> mintermList) {
 		int p = 0, q = 0;
 		while(p < mintermList.size()) {
-
 			List<Expression> current = mintermList.get(p);
 
 			while(q < mintermList.size()) {
-
 				if(p != q) {
-
 					List<Expression> next = mintermList.get(q);
 
 					if(current.containsAll(next)) {
-
 						mintermList.remove(p);
 						q = 0;
 						break;
 					}
 
 					if(next.containsAll(current)) {
-
 						mintermList.remove(q);
 
-						if(q < p)
+						if(q < p) {
 							p--;
-
-					}
-					else {
-
+						}
+					} else {
 						q++;
 					}
 
-				}
-				else {
-
+				} else {
 					q++;
 				}
 
@@ -605,210 +668,189 @@ public class ExpressionEngine {
 			}
 			q = 0;
 		}
+	}
+	
+	/**
+	 * Merge a list of minterms as one expression.
+	 * 
+	 * <p>For expressions in a minterm, they will be merged by AND. Between 
+	 * minterms, they will be merged by OR. For example:
+	 * <pre>
+	 *   {{A, B}, {C, D}, {E}} ==> A B + C D + E
+	 * <pre>
+	 * 
+	 * @param  mintermList
+	 *         The list of minterms.
+	 *         
+	 * @return  The merged expression.
+	 * 
+     * @since   1.0
+	 */
+	private static Expression mergeMintermsAsOneExpression(List<List<Expression>> mintermList) {
+		Expression expr = new Expression();
 
-		minimized = new Expression();
-
-		// recontruct the new minimized expression
 		for(int m = 0; m < mintermList.size(); m++) {
-
-			minterm = mintermList.get(m);
+			List<Expression> minterm = mintermList.get(m);
 
 			for(int n = 0; n < minterm.size(); n++) {
-
 				if(n == 0) {
-
-					minimized.addSubExpressionWithOperator(minterm.get(n), Expression.OR);
-
-				}
-				else {
-
-					minimized.addSubExpressionWithOperator(minterm.get(n), Expression.AND);
+					expr.combineExpression(Expression.OR, minterm.get(n));
+				} else {
+					expr.combineExpression(Expression.AND, minterm.get(n));
 				}
 			}
 		}
 
-		return minimized;
+		return expr;
 	}
 
-
 	/**
-	 * Apply the complement to evaluated result and do double negation if necessary.
+	 * Apply the associative law (union / plus) for 2 expressions.
 	 * 
+	 * <pre>
+	 *   Union(A, B) = A + B
+	 * </pre>
 	 * 
-	 */
-	private static boolean doUnaryOperation(Expression expr, boolean evaluation) {
-
-		if(expr.isComplement()) {
-
-			return(!evaluation);
-
-		}
-		else {
-
-			return(evaluation);
-		}
-	}
-
-
-	/**
-	 * performs union of two minimized expressions
+	 * @param  e1
+	 *         The first expression.
+	 *         
+	 * @param  e2
+	 *         The second expression.
+	 *         
+	 * @return  The union of 2 expressions.
+	 * 
+     * @since   1.0
 	 */
 	private static Expression union(Expression e1, Expression e2) {
-
 		Expression union = null;
-		if(e1.isCompound() == false) {
-
-			if(e2.isCompound() == false) {
-
+		
+		if(!e1.isCompound()) {
+			if(!e2.isCompound()) {
 				union = new Expression();
-				union.addSubExpressionWithOperator(e1, null);
-				union.addSubExpressionWithOperator(e2, Expression.OR);
-			}
-			else {
-
+				union.combineExpression(null, e1);
+				union.combineExpression(Expression.OR, e2);
+			} else {
 				union = e2;
 				union.addSubExpressionWithOperator(0, e1, Expression.OR);
 			}
-		}
-		else {
-
-			if(e2.isCompound() == false) {
-
-				union = e1;
-				union.addSubExpressionWithOperator(e2, Expression.OR);
-			}
-			else {
-
-				union = e1;
-				union.addCompoundExpression(e2, Expression.OR);
+		} else {
+			union = e1;
+			if(!e2.isCompound()) {
+				union.combineExpression(Expression.OR, e2);
+			} else {
+				union.combineCompoundExpression(Expression.OR, e2);
 			}
 		}
 
 		return union;
 	}
 
-
 	/**
-	 * performs intersection of two minimized expressions
+	 * Apply the distributive law (intersect / multiply) for 2 expressions.
+	 * 
+	 * <pre>
+	 *   Intersection(A, B) = A * B
+	 * </pre>
+	 * 
+	 * @param  e1
+	 *         The first expression.
+	 *         
+	 * @param  e2
+	 *         The second expression.
+	 *         
+	 * @return  The intersection of 2 expressions.
+	 * 
+     * @since   1.0
 	 */
 	private static Expression intersection(Expression e1, Expression e2) {
-
-		Expression intersection = null;
-		if(e1.isCompound() == false) {
-
-			if(e2.isCompound() == false) {
-
-				intersection = new Expression();
-				intersection.addSubExpressionWithOperator(e1, null);
-				intersection.addSubExpressionWithOperator(e2, Expression.AND);
-
+		Expression intersection = new Expression();
+		
+		if(!e1.isCompound()) {
+			if(!e2.isCompound()) {
+				intersection.combineExpression(null, e1);
+				intersection.combineExpression(Expression.AND, e2);
+				return intersection;
+			} else {                // Case 2: A * (B + C) ==> A * B + A * C
+				return intersectionSimpleExpressionWithCompoundExpression(e1, e2);
 			}
-			else {
-
-				intersection = new Expression();
-
-				for(int i = 0; i < e2.getNumberOfSubExpression(); i++) {
-
-					Expression child = (Expression) e2.getSubExpression(i);
-					String op = (i == 0 ? null : e2.getOperator(i, Expression.SIDE_LEFT));
-
-					if(op == null || op.equals(Expression.OR)) {
-						intersection.addSubExpressionWithOperator(e1, Expression.OR);
-					}
-
-					// simplify redundant terms
-					// A * AB ==> AB
-					if(!child.equals(e1)) {
-						intersection.addSubExpressionWithOperator(child, Expression.AND);
-					}
-				}
+		} else {        
+			if(!e2.isCompound()) {  // Case 3: (B + C) * A ==> A * B + A * C
+				return intersectionSimpleExpressionWithCompoundExpression(e2, e1);
+			} else {                // Case 4: (A + B) * (C + D) ==> AC + AD + BC + BD
+				return intersectionCompoundExpressionWithCompoundExpression(e1, e2);
 			}
-
 		}
-		else {
+	}
+	
+	private static Expression intersectionSimpleExpressionWithCompoundExpression(Expression simpleExpr, Expression compoundExpr) {
+		Preconditions.checkArgument(!simpleExpr.isCompound(), "The first expression should be simple, but currently it is " + simpleExpr.toString());
+		Preconditions.checkArgument(!simpleExpr.isCompound(), "The first expression should be compound, but currently it is " + compoundExpr.toString());
+		
+		Expression intersection = new Expression();
+		
+		for(int i = 0; i < compoundExpr.getNumberOfSubExpression(); i++) {
+			Expression subExpr = (Expression) compoundExpr.getSubExpression(i);
+			String     leftOptr  = i > 0 ? compoundExpr.getOperator(i, Expression.SIDE_LEFT) : null;
 
-			if(e2.isCompound() == false) {
-
-				intersection = new Expression();
-
-				boolean matched = false;
-				for(int i = 0; i < e1.getNumberOfSubExpression(); i++) {
-
-					Expression child = e1.getSubExpression(i);
-					String op = (i == 0 ? null : e1.getOperator(i, Expression.SIDE_LEFT));
-					String la = (i + 1 == e1.getNumberOfSubExpression() ? null : e1.getOperator(i, Expression.SIDE_RIGHT));
-
-					intersection.addSubExpressionWithOperator(child, op);
-
-					// simplify redundant terms
-					// A * AB ==> AB
-					if(child.equals(e2)) {
-						matched = true;
-					}
-
-					if(la == null || la.equals(Expression.OR)) {
-						if(matched == false) {
-							intersection.addSubExpressionWithOperator(e2, Expression.AND);
-						}
-						matched = false;
-					}
-
-				}
-
+			if(leftOptr == null || leftOptr.equals(Expression.OR)) {
+				intersection.combineExpression(Expression.OR, simpleExpr);
 			}
-			else {
 
-				intersection = new Expression();
+			if(!subExpr.equals(simpleExpr)) {
+				intersection.combineExpression(Expression.AND, subExpr);
+			}
+		}
+		
+		return intersection;
+	}
+	
+	private static Expression intersectionCompoundExpressionWithCompoundExpression(Expression comExpr1, Expression comExpr2) {
+		Expression intersection = new Expression();
+		
+		List<Expression> minterm1 = new ArrayList<Expression>();
+		List<Expression> minterm2 = new ArrayList<Expression>();
 
-				List<Expression> minterm1 = new ArrayList<Expression>();
-				List<Expression> minterm2 = new ArrayList<Expression>();
+		for(int i = 0; i < comExpr1.getNumberOfSubExpression(); i++) {
+			Expression alpha = comExpr1.getSubExpression(i);
+			String op1 = (i + 1 == comExpr1.getNumberOfSubExpression() ? null : comExpr1.getOperator(i, Expression.SIDE_RIGHT));
 
-				// calculate product minterms
-				for(int i = 0; i < e1.getNumberOfSubExpression(); i++) {
-					Expression alpha = e1.getSubExpression(i);
-					String op1 = (i + 1 == e1.getNumberOfSubExpression() ? null : e1.getOperator(i, Expression.SIDE_RIGHT));
+			minterm1.add(alpha);
 
-					minterm1.add(alpha);
+			if(null == op1 || op1.equals(Expression.OR)) {
+				for(int j = 0; j < comExpr2.getNumberOfSubExpression(); j++) {
+					Expression beta = comExpr2.getSubExpression(j);
+					String op2 = (j + 1 == comExpr2.getNumberOfSubExpression() ? null : comExpr2.getOperator(j, Expression.SIDE_RIGHT));
 
-					if(null == op1 || op1.equals(Expression.OR)) {
-						for(int j = 0; j < e2.getNumberOfSubExpression(); j++) {
-							Expression beta = e2.getSubExpression(j);
-							String op2 = (j + 1 == e2.getNumberOfSubExpression() ? null : e2.getOperator(j, Expression.SIDE_RIGHT));
+					minterm2.add(beta);
 
-							minterm2.add(beta);
-
-							if(null == op2 || op2.equals(Expression.OR)) {
-								// create "flat" intersection of "ANDED" minterms so:
-								// (A*B + C)*(D*E + F*G) = (A*B*D*E + A*B*F*G + C*D*E + C*F*G)
-								for(int p = 0; p < minterm1.size(); p++) {
-									// "OR" in the fist "ANDED" minterm
-									if(p == 0) {
-										intersection.addSubExpressionWithOperator((Expression) minterm1.get(p), Expression.OR);
-									}
-									else {
-										intersection.addSubExpressionWithOperator((Expression) minterm1.get(p), Expression.AND);
-									}
-								}
-
-								for(int q = 0; q < minterm2.size(); q++) {
-									intersection.addSubExpressionWithOperator((Expression) minterm2.get(q), Expression.AND);
-								}
-
-								// clear for next minterm
-								minterm2 = new ArrayList<Expression>();
+					if(null == op2 || op2.equals(Expression.OR)) {
+						// create "flat" intersection of "ANDED" minterms so:
+						// (A*B + C)*(D*E + F*G) = (A*B*D*E + A*B*F*G + C*D*E + C*F*G)
+						for(int p = 0; p < minterm1.size(); p++) {
+							// "OR" in the fist "ANDED" minterm
+							if(p == 0) {
+								intersection.combineExpression(Expression.OR, (Expression) minterm1.get(p));
+							}
+							else {
+								intersection.combineExpression(Expression.AND, (Expression) minterm1.get(p));
 							}
 						}
+
+						for(int q = 0; q < minterm2.size(); q++) {
+							intersection.combineExpression(Expression.AND, (Expression) minterm2.get(q));
+						}
+
 						// clear for next minterm
-						minterm1 = new ArrayList<Expression>();
+						minterm2 = new ArrayList<Expression>();
 					}
 				}
-
-				// try to simplify intersect expansion
-				intersection = simplify(intersection);
+				// clear for next minterm
+				minterm1 = new ArrayList<Expression>();
 			}
 		}
 
-		return intersection;
+		// try to simplify intersect expansion
+		return simplify(intersection);
 	}
 
 
