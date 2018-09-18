@@ -38,11 +38,6 @@ public class ExpressionEngineTest {
 	}
 	
 	@Test
-	public void getSumOfProductsTest() {
-		
-	}
-	
-	@Test
 	public void simplifyNestedExpressionTest() {
 		// test 2-level nested ((E)) => E
 		Expression expr = new Expression();
@@ -80,5 +75,64 @@ public class ExpressionEngineTest {
 		Expression newExpr3 = ExpressionEngine.simplifyNestedExpression(expr);
 		System.out.println("After simplify:  " + newExpr3.toString());
 		Assert.assertTrue(newExpr3.equals(sinExpr));
+	}
+	
+	public void unionTest() {
+		
+	}
+	
+	@Test
+	public void intersectionTest() {
+		Expression exprA = new Expression("A", Expression.EQUAL, "a");
+		Expression exprB = new Expression("B", Expression.EQUAL, "b");
+		Expression exprAOrB = new Expression("A", Expression.EQUAL, "a").or("B", Expression.EQUAL, "b");
+		Expression exprCOrD = new Expression("C", Expression.EQUAL, "c").or("D", Expression.EQUAL, "d");
+		
+		Assert.assertEquals(new Expression("A", Expression.EQUAL, "a").and("B", Expression.EQUAL, "b"), ExpressionEngine.intersection(exprA, exprB));
+		Assert.assertEquals(new Expression("A", Expression.EQUAL, "a")
+				.and("C", Expression.EQUAL, "c")
+				.or("A", Expression.EQUAL, "a")
+				.and("D", Expression.EQUAL, "d"), ExpressionEngine.intersection(exprA, exprCOrD));
+		Assert.assertEquals(new Expression("A", Expression.EQUAL, "a")
+				.and("C", Expression.EQUAL, "c")
+				.or("A", Expression.EQUAL, "a")
+				.and("D", Expression.EQUAL, "d")
+				.or("B", Expression.EQUAL, "b")
+				.and("C", Expression.EQUAL, "c")
+				.or("B", Expression.EQUAL, "b")
+				.and("D", Expression.EQUAL, "d"), ExpressionEngine.intersection(exprAOrB, exprCOrD));
+	}
+	
+	@Test
+	public void parseTest() {	
+		Assert.assertEquals(null,              ExpressionEngine.parse(null));
+		Assert.assertEquals(null,              ExpressionEngine.parse(""));
+		Assert.assertEquals(null,              ExpressionEngine.parse("     "));
+		Assert.assertEquals(null,              ExpressionEngine.parse("abc"));
+		Assert.assertEquals(sinExpr,           ExpressionEngine.parse("([firstName]==\"John\")"));
+		Assert.assertEquals(com2AndExpr,       ExpressionEngine.parse("(([firstName]==\"John\") && ([age]==23))"));
+		Assert.assertEquals(com2OrExpr,        ExpressionEngine.parse("(([firstName]==\"John\") || ([firstName]==\"Johnson\"))"));
+		Assert.assertEquals(com3AndExpr,       ExpressionEngine.parse("(([firstName]==\"John\") && ([age]==23) && ([score]==99))"));
+		Assert.assertEquals(com3OrExpr,        ExpressionEngine.parse("(([firstName]==\"John\") || ([firstName]==\"Johnson\") || ([firstName]==\"Johnny\"))"));
+		Assert.assertEquals(com3AndOrExpr,     ExpressionEngine.parse("(([firstName]==\"John\") && ([age]==23) || ([firstName]==\"Johnny\"))"));
+		Assert.assertEquals(comMultiLevelExpr, ExpressionEngine.parse("((([firstName]==\"John\") && ([age]==23)) || (([firstName]==\"Mary\") && ([age]==24) && ([score]==99)) || (([firstName]==\"Tony\") && ([age]==25) && ([lastName]==\"Lee\")))"));
+	}
+	
+	@Test
+	public void isComparisonOperatorTest() {
+		Assert.assertFalse(ExpressionEngine.isComparisonOperator('a'));
+		Assert.assertFalse(ExpressionEngine.isComparisonOperator(' '));
+		Assert.assertTrue(ExpressionEngine.isComparisonOperator('='));
+		Assert.assertTrue(ExpressionEngine.isComparisonOperator('>'));
+		Assert.assertTrue(ExpressionEngine.isComparisonOperator('<'));
+		Assert.assertTrue(ExpressionEngine.isComparisonOperator('!'));
+	}
+	
+	@Test
+	public void isLogicalOperatorTest() {
+		Assert.assertFalse(ExpressionEngine.isLogicalOperator('a'));
+		Assert.assertFalse(ExpressionEngine.isLogicalOperator(' '));
+		Assert.assertTrue(ExpressionEngine.isLogicalOperator('&'));
+		Assert.assertTrue(ExpressionEngine.isLogicalOperator('|'));
 	}
 }

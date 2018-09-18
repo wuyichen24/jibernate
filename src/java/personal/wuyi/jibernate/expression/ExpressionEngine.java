@@ -1,14 +1,16 @@
 package personal.wuyi.jibernate.expression;
 
 import org.apache.commons.lang3.time.DateUtils;
+import org.testng.util.Strings;
 
 import com.google.common.base.Preconditions;
 
 import personal.wuyi.jibernate.util.StringUtil;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.List;
-import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -21,11 +23,12 @@ import java.util.regex.Pattern;
  * @since   1.0
  */
 public class ExpressionEngine {
-	protected final static String  SIMPLE_EXPRESSION_REGEX   = "\\[(.*?)\\]\\s*(={2}|[<>]=?|!=|IN|LIKE|CONTAINS)\\s*(.*)";	
-	protected final static Pattern SIMPLE_EXPRESSION_PATTERN = Pattern.compile(SIMPLE_EXPRESSION_REGEX, Pattern.CASE_INSENSITIVE);
+	protected static final String  SIMPLE_EXPRESSION_REGEX   = "\\[(.*?)\\]\\s*(={2}|[<>]=?|!=|IN|LIKE|CONTAINS)\\s*(.*)";	
+	protected static final Pattern SIMPLE_EXPRESSION_PATTERN = Pattern.compile(SIMPLE_EXPRESSION_REGEX, Pattern.CASE_INSENSITIVE);
 	
-	protected final static int     THRESHOLD = 500;
+	protected static final int     THRESHOLD = 500;
 
+	private ExpressionEngine() {}
 	
 	/**
 	 * Evaluate the truth value of an expression.
@@ -172,8 +175,8 @@ public class ExpressionEngine {
      * @since   1.0 
 	 */
 	protected static List<List<Expression>> collectMintermAsList(Expression expr) {
-		List<List<Expression>> mintermList = new ArrayList<List<Expression>>();
-		List<Expression>       minterm     = new ArrayList<Expression>();
+		List<List<Expression>> mintermList = new ArrayList<>();
+		List<Expression>       minterm     = new ArrayList<>();
 
 		for(int i = 0; i < expr.getNumberOfSubExpression(); i++) {
 			Expression child     = expr.getSubExpression(i);
@@ -185,7 +188,7 @@ public class ExpressionEngine {
 
 			if(rightOptr == null || !rightOptr.equals(Expression.AND)) {
 				mintermList.add(minterm);
-				minterm = new ArrayList<Expression>();
+				minterm = new ArrayList<>();
 			}
 		}
 		
@@ -205,7 +208,7 @@ public class ExpressionEngine {
      * @since   1.0 
 	 */
 	protected static List<Expression> collectMintermAsExpression(Expression expr) {
-		List<Expression> mintermList = new ArrayList<Expression>();
+		List<Expression> mintermList = new ArrayList<>();
 		
 		if(!expr.isCompound()) {                                           // sumOfProductExpr is a simple expression
 			Expression minterm = new Expression();
@@ -230,7 +233,7 @@ public class ExpressionEngine {
 	}
 
 	/**
-	 * Get the sum of products from an expression.
+	 * Get the sum of products from an expression with threshold.
 	 * 
      * <p>Product term: Combine 2 or more variables only by AND operator, like
      * <pre>
@@ -291,7 +294,7 @@ public class ExpressionEngine {
      * @since   1.0
 	 */
 	protected static Expression getSumOfProductsByDivideAndConquor(Expression expr, int threshold) {
-		ArrayList<Expression> divisionList = new ArrayList<Expression>();
+		ArrayList<Expression> divisionList = new ArrayList<>();
 		int p = 0;                // left bound
 		int q = threshold - 1;    // right bound
 		
@@ -329,7 +332,7 @@ public class ExpressionEngine {
 		if(divisionList.size() > 1) {
 			Expression sop = new Expression();
 			for(int i = 0; i < divisionList.size(); i++) {
-				Expression subExpression = (Expression) divisionList.get(i);
+				Expression subExpression = divisionList.get(i);
 				Expression subSop        = getSumOfProducts(subExpression, THRESHOLD);
 
 				if(!subSop.isCompound()) {
@@ -367,9 +370,9 @@ public class ExpressionEngine {
      * @since   1.0 
 	 */
 	protected static Expression getSumOfProductsByStack(Expression expr) {
-		Stack<Object> exprStack = new Stack<>();  // the expression tree stack
-		Stack<Object> pdaStack  = new Stack<>();  // pda stack
-		Stack<Object> optrStack = new Stack<>();  // the operator stack
+		Deque<Object> exprStack = new ArrayDeque<>();  // the expression tree stack
+		Deque<Object> pdaStack  = new ArrayDeque<>();  // pda stack
+		Deque<Object> optrStack = new ArrayDeque<>();  // the operator stack
 
 		// push initial expression onto the stack
 		exprStack.push(expr);
@@ -480,7 +483,7 @@ public class ExpressionEngine {
 	 *         
      * @since   1.0 
 	 */
-	private static void reduce(Stack<Object> operStack, Stack<Object> pdaStack, boolean reduceAll) {
+	protected static void reduce(Deque<Object> operStack, Deque<Object> pdaStack, boolean reduceAll) {
 		while(!operStack.isEmpty()) {
 			String operator = (String) operStack.pop();
 
@@ -507,7 +510,7 @@ public class ExpressionEngine {
 	 *         
      * @since   1.0 
 	 */
-	private static void reduceForStackOperator(Stack<Object> operStack, Stack<Object> pdaStack, boolean reduceAll) {
+	protected static void reduceForStackOperator(Deque<Object> operStack, Deque<Object> pdaStack, boolean reduceAll) {
 		if(!reduceAll) {
 			while(!operStack.isEmpty() && !((String) operStack.peek()).equals("_")) {
 				String op = (String) operStack.pop();
@@ -541,7 +544,7 @@ public class ExpressionEngine {
 	 *         
      * @since   1.0 
 	 */
-	private static void reduceForComplementOperator(Stack<Object> operStack, Stack<Object> pdaStack) {
+	protected static void reduceForComplementOperator(Deque<Object> operStack, Deque<Object> pdaStack) {
 		Expression complementExpr = (Expression) pdaStack.pop();
 		
 		if(complementExpr.isCompound()) {  // compound expression
@@ -576,7 +579,7 @@ public class ExpressionEngine {
 	 * 
      * @since   1.0
 	 */
-	private static void reduceForAndOrOperator(String operator, Stack<Object> pdaStack) {
+	protected static void reduceForAndOrOperator(String operator, Deque<Object> pdaStack) {
 		Expression expr2 = (Expression) pdaStack.pop();
 		Expression expr1 = (Expression) pdaStack.pop();
 
@@ -615,7 +618,7 @@ public class ExpressionEngine {
 	 * 
      * @since   1.0
 	 */
-	private static Expression simplify(Expression expr) {
+	protected static Expression simplify(Expression expr) {
 		Expression minimized = expr;
 
 		List<List<Expression>> mintermList = collectMintermAsList(minimized);
@@ -633,8 +636,9 @@ public class ExpressionEngine {
 	 *         
      * @since   1.0
 	 */
-	private static void removeRedundantMinterms(List<List<Expression>> mintermList) {
-		int p = 0, q = 0;
+	protected static void removeRedundantMinterms(List<List<Expression>> mintermList) {
+		int p = 0;
+		int q = 0;
 		while(p < mintermList.size()) {
 			List<Expression> current = mintermList.get(p);
 
@@ -686,7 +690,7 @@ public class ExpressionEngine {
 	 * 
      * @since   1.0
 	 */
-	private static Expression mergeMintermsAsOneExpression(List<List<Expression>> mintermList) {
+	protected static Expression mergeMintermsAsOneExpression(List<List<Expression>> mintermList) {
 		Expression expr = new Expression();
 
 		for(int m = 0; m < mintermList.size(); m++) {
@@ -721,7 +725,7 @@ public class ExpressionEngine {
 	 * 
      * @since   1.0
 	 */
-	private static Expression union(Expression e1, Expression e2) {
+	protected static Expression union(Expression e1, Expression e2) {
 		Expression union = null;
 		
 		if(!e1.isCompound()) {
@@ -762,7 +766,7 @@ public class ExpressionEngine {
 	 * 
      * @since   1.0
 	 */
-	private static Expression intersection(Expression e1, Expression e2) {
+	protected static Expression intersection(Expression e1, Expression e2) {
 		Expression intersection = new Expression();
 		
 		if(!e1.isCompound()) {
@@ -782,14 +786,33 @@ public class ExpressionEngine {
 		}
 	}
 	
-	private static Expression intersectionSimpleExpressionWithCompoundExpression(Expression simpleExpr, Expression compoundExpr) {
+	/**
+	 * Apply the distributive law (intersect / multiply) for one simple 
+	 * expression and one compound expression.
+	 * 
+	 * <p>This method works as:
+	 * <pre>
+	 *    A * (B + C) ==> A * B + A * C
+	 * </pre>
+	 * 
+	 * @param  simpleExpr
+	 *         The simple expression.
+	 *         
+	 * @param  compoundExpr
+	 *         The compound expression.
+	 *         
+	 * @return  The intersection of 2 expressions.
+	 * 
+     * @since   1.0
+	 */
+	protected static Expression intersectionSimpleExpressionWithCompoundExpression(Expression simpleExpr, Expression compoundExpr) {
 		Preconditions.checkArgument(!simpleExpr.isCompound(), "The first expression should be simple, but currently it is " + simpleExpr.toString());
 		Preconditions.checkArgument(!simpleExpr.isCompound(), "The first expression should be compound, but currently it is " + compoundExpr.toString());
 		
 		Expression intersection = new Expression();
 		
 		for(int i = 0; i < compoundExpr.getNumberOfSubExpression(); i++) {
-			Expression subExpr = (Expression) compoundExpr.getSubExpression(i);
+			Expression subExpr = compoundExpr.getSubExpression(i);
 			String     leftOptr  = i > 0 ? compoundExpr.getOperator(i, Expression.SIDE_LEFT) : null;
 
 			if(leftOptr == null || leftOptr.equals(Expression.OR)) {
@@ -804,34 +827,47 @@ public class ExpressionEngine {
 		return intersection;
 	}
 	
-	private static Expression intersectionCompoundExpressionWithCompoundExpression(Expression comExpr1, Expression comExpr2) {
+	/**
+	 * Apply the distributive law (intersect / multiply) for one compound 
+	 * expression and one compound expression.
+	 * 
+	 * <p>This method works as:
+	 * <pre>
+	 *    (A + B) * (C + D) ==> AC + AD + BC + BD
+	 * </pre>
+	 * 
+	 * @param  comExpr1
+	 *         The first compound expression.
+	 *         
+	 * @param  comExpr2
+	 *         The second compound expression.
+	 *         
+	 * @return  The intersection of 2 expressions.
+	 * 
+     * @since   1.0
+	 */
+	protected static Expression intersectionCompoundExpressionWithCompoundExpression(Expression comExpr1, Expression comExpr2) {
 		Expression intersection = new Expression();
 		
-		List<Expression> minterm1 = new ArrayList<Expression>();
-		List<Expression> minterm2 = new ArrayList<Expression>();
+		List<Expression> minterm1 = new ArrayList<>();
+		List<Expression> minterm2 = new ArrayList<>();
 
 		for(int i = 0; i < comExpr1.getNumberOfSubExpression(); i++) {
-			Expression alpha = comExpr1.getSubExpression(i);
-			String op1 = (i + 1 == comExpr1.getNumberOfSubExpression() ? null : comExpr1.getOperator(i, Expression.SIDE_RIGHT));
+			Expression subExpr1  = comExpr1.getSubExpression(i);
+			String     rightOptr = i < comExpr1.getNumberOfSubExpression() - 1 ? comExpr1.getOperator(i, Expression.SIDE_RIGHT) : null;
+			minterm1.add(subExpr1);
 
-			minterm1.add(alpha);
-
-			if(null == op1 || op1.equals(Expression.OR)) {
+			if(rightOptr == null || rightOptr.equals(Expression.OR)) {
 				for(int j = 0; j < comExpr2.getNumberOfSubExpression(); j++) {
-					Expression beta = comExpr2.getSubExpression(j);
-					String op2 = (j + 1 == comExpr2.getNumberOfSubExpression() ? null : comExpr2.getOperator(j, Expression.SIDE_RIGHT));
+					Expression subExpr2 = comExpr2.getSubExpression(j);
+					String     rightOptr2 = i < comExpr2.getNumberOfSubExpression() - 1 ? comExpr2.getOperator(i, Expression.SIDE_RIGHT) : null;
+					minterm2.add(subExpr2);
 
-					minterm2.add(beta);
-
-					if(null == op2 || op2.equals(Expression.OR)) {
-						// create "flat" intersection of "ANDED" minterms so:
-						// (A*B + C)*(D*E + F*G) = (A*B*D*E + A*B*F*G + C*D*E + C*F*G)
+					if(rightOptr2 == null || rightOptr2.equals(Expression.OR)) {
 						for(int p = 0; p < minterm1.size(); p++) {
-							// "OR" in the fist "ANDED" minterm
 							if(p == 0) {
 								intersection.combineExpression(Expression.OR, (Expression) minterm1.get(p));
-							}
-							else {
+							} else {
 								intersection.combineExpression(Expression.AND, (Expression) minterm1.get(p));
 							}
 						}
@@ -840,19 +876,15 @@ public class ExpressionEngine {
 							intersection.combineExpression(Expression.AND, (Expression) minterm2.get(q));
 						}
 
-						// clear for next minterm
-						minterm2 = new ArrayList<Expression>();
+						minterm2 = new ArrayList<>();
 					}
 				}
-				// clear for next minterm
-				minterm1 = new ArrayList<Expression>();
+				minterm1 = new ArrayList<>();
 			}
 		}
 
-		// try to simplify intersect expansion
 		return simplify(intersection);
 	}
-
 
 	/**
      * Simplify a nested expression.
@@ -885,7 +917,7 @@ public class ExpressionEngine {
     		while(temp.getNumberOfSubExpression() == 1) {
     			boolean complement = temp.isComplement();   // preserve the complement
     			temp = temp.getSubExpression(0);
-    			if(complement == true) {
+    			if(complement) {
     				temp.complement();
     			}
     		}
@@ -894,212 +926,235 @@ public class ExpressionEngine {
     }
 	
 	/**
-	 * Minimizes a given expression by determining the sum of products expansion then reducing it to its Disjunctive
-	 * Normal Form.
+	 * Get the sum of products from an expression.
 	 * 
-	 * @param expr
-	 *            The expression to evaluate
-	 * @return The evaluated expression
+     * <p>Product term: Combine 2 or more variables only by AND operator, like
+     * <pre>
+     *   x
+     *   x * y
+     *   !x * !y
+     *   x * y * z
+     * </pre>
+     * 
+     * <p>Sum-of-products: Do OR operations on a set of product terms, like
+     * <pre>
+     *   x + (x * y) + (!x * !y) + (x * y * z)
+     * </pre>
+	 * 
+	 * @param  expr
+	 *         The expression needs to be evaluated.
+	 *         
+	 * @return  The sum of products from an expression.
+	 * 
+     * @since   1.0 
 	 */
-	public static Expression minimize(Expression expr) {
-
-		if(expr == null) {
-			throw(new NullPointerException("Unable to minimize null expression!"));
-		}
-
+	public static Expression getSumOfProducts(Expression expr) {
+		Preconditions.checkNotNull(expr, "The input expression is null");
 		return getSumOfProducts(expr, THRESHOLD);
-
 	}
 
 
+	/**
+	 * Parse the string into an expression
+	 * 
+	 * @param  input
+	 *         The input string.
+	 * 
+	 * @return  The expression by parsing
+	 * 
+     * @since   1.0
+	 */
 	public static Expression parse(String input) {
-
-		if(input == null || input.trim().length() == 0) {
+		if(Strings.isNullOrEmpty(input)) {
 			return null;
 		}
 
-		// normalize "AND"/"OR" to "&&"/"||"
+		// normalize logical operators
 		input = StringUtil.replace(input, "AND", "&&", true, true);
 		input = StringUtil.replace(input, "OR", "||", true, true);
 
 		int length = input.length();
-		Stack<Character> stack = new Stack<Character>();
-		Stack<Expression> expressionStack = new Stack<Expression>();
+		Deque<Character>  stack           = new ArrayDeque<>();   // store the current expression string by parenthesis
+		Deque<Expression> expressionStack = new ArrayDeque<>();   // store the expressions has been parsed.
 
-		int position = 0;
-		while(position < length) {
+		int index = 0;
+		while(index < length) {
+			char currentChar = input.charAt(index);
 
-			char current = input.charAt(position);
-
-			// push onto stack until a balanced parenthesis is encountered
-			if(current == ')') {
-
-				StringBuffer sb = new StringBuffer();
-				while(stack.isEmpty() == false) {
-
-					current = stack.pop();
-
-					if(current == '(') {
-
+			if(currentChar == ')') {    // when meet balanced parenthesis, evaluate the values in stack
+				StringBuilder sb = new StringBuilder();
+				
+				while(!stack.isEmpty()) {
+					currentChar = stack.pop();
+					if(currentChar == '(') {
 						String expr = sb.toString();
-						// System.out.println(expr);
 
 						Matcher matcher = SIMPLE_EXPRESSION_PATTERN.matcher(expr);
 						if(matcher.find() && matcher.groupCount() == 3) {
+							String subject  = matcher.group(1);
+							String operator = matcher.group(2);
+							String value    = matcher.group(3);
 
-							String subject = matcher.group(1);
-							String predicate = matcher.group(2);
-							String value = matcher.group(3);
+							Object obj = parseValue(value);
 
-							// determine if value is String, Integer, or Double
-							Object o = null;
-							if(value.startsWith("\"") && value.endsWith("\"")) {
-
-								o = value.substring(1, value.length() - 1);
-							}
-							else if(value.startsWith("[") && value.endsWith("]")) {
-								
-								// value is a list
-								value = value.substring(1, value.length() - 1);
-								
-								String[] values = value.split(",");
-								
-								o = new ArrayList();
-								
-								for(String s : values) {
-
-								    // NOTE - only strings and integers currently supported for lists, in future may use more introspection to infer type (maybe library for this)
-								    if(s.startsWith("\"")) {
-                                        s = s.replaceAll("^\"|\"$", "");
-                                        ((List)o).add(s);
-                                    }
-                                    else {
-                                        Object v = Integer.valueOf(s.trim());
-                                        ((List) o).add(v);
-                                    }
-								}
-
-							}
-							else if("null".equalsIgnoreCase(value)) {
-								o = null;
-							}
-							else if("true".equalsIgnoreCase(value) || "false".equalsIgnoreCase(value)) {
-								
-								o = Boolean.valueOf(value);
-							}
-							else {
-
-								// attempt to parse date, then int, then double
-								try {
-									o = DateUtils.parseDate(value, new String[] { "MM/dd/yy","MM/dd/yy HH:mm:ss", "E MMM d HH:mm:ss z yyyy" });
-								}
-								catch(Exception e) {
-
-									boolean isInteger = Pattern.matches("^\\d*$", value);
-									if(isInteger == true) {
-										o = Integer.valueOf(value);
-									}
-									else {
-										o = Double.valueOf(value);
-									}
-								}
-							}
-
-							Expression simple = new Expression(subject, predicate, o);
-							// System.out.println(simple);
-
-							expressionStack.push(simple);
+							Expression simpleExpr = new Expression(subject, operator, obj);
+							expressionStack.push(simpleExpr);
 							break;
-						}
-						else {
-
+						} else {
 							reduceExpression(stack, expressionStack);
 							break;
 						}
-					}
-					else if(current == '&' || current == '|') {
-
-						// any subexpression should already have been popped off the stack, so if a logical operator
-						// is encountered then we know we have a compound expression and should start reducing
-						stack.push(current);
+					} else if(currentChar == '&' || currentChar == '|') {
+						stack.push(currentChar);
 						reduceExpression(stack, expressionStack);
 						break;
-
-					}
-					else {
-						sb.insert(0, current);
+					} else {
+						sb.insert(0, currentChar);
 					}
 				}
-
-			}
-			else {
-
-				stack.push(current);
+			} else {
+				stack.push(currentChar);
 			}
 
-			position++;
+			index++;
 		}
 
-		// a root compound expression is not required to be surrounded by parentheses so do a final reduction
-		if(stack.isEmpty() == false) {
-
+		if(!stack.isEmpty()) {
 			reduceExpression(stack, expressionStack);
 		}
 
-		Expression expression = expressionStack.pop();
-
-		return expression;
+		if (expressionStack.isEmpty()) {
+			return null;
+		} else {
+			return expressionStack.pop();
+		}
+	}
+	
+	/**
+	 * Parse the value in an expression.
+	 * 
+	 * <p>Currently this method supports different types of values:
+	 * <ul>
+	 *   <li>null
+	 *   <li>String
+	 *   <li>Boolean
+	 *   <li>Date
+	 *   <li>Integer
+	 *   <li>Double
+	 *   <li>List
+	 * </ul>
+	 * 
+	 * @param  value
+	 *         The value needs to be parsed.
+	 *         
+	 * @return  The {@code Object} represents the value.
+	 * 
+     * @since   1.0
+	 */
+	protected static Object parseValue(String value) {
+		if(value.startsWith("\"") && value.endsWith("\"")) {     // string
+			return value.substring(1, value.length() - 1);
+		} else if(value.startsWith("[") && value.endsWith("]")) {  // list
+			value = value.substring(1, value.length() - 1);
+			String[] values = value.split(",");
+			List<Object> list = new ArrayList<>();
+			
+			for(String s : values) {
+			    if(s.startsWith("\"")) {
+                    s = s.replaceAll("^\"|\"$", "");
+                    list.add(s);
+                } else {
+                    Object v = Integer.valueOf(s.trim());
+                    list.add(v);
+                }
+			}
+			
+			return list;
+		} else if("null".equalsIgnoreCase(value)) {
+			return null;
+		} else if("true".equalsIgnoreCase(value) || "false".equalsIgnoreCase(value)) {
+			return Boolean.valueOf(value);
+		} else {
+			try {
+				return DateUtils.parseDate(value, new String[] { "MM/dd/yy","MM/dd/yy HH:mm:ss", "E MMM d HH:mm:ss z yyyy" });
+			} catch(Exception e) {
+				boolean isInteger = Pattern.matches("^\\d*$", value);
+				if(isInteger) {
+					return Integer.valueOf(value);
+				} else {
+					return Double.valueOf(value);
+				}
+			}
+		}
 	}
 
+	/**
+	 * Reduce the complexity of the expression stack.
+	 * 
+	 * @param  stack
+	 *         The character stack.
+	 *         
+	 * @param  expressionStack
+	 *         The expression stack.
+	 *        
+     * @since   1.0  
+	 */
+	protected static void reduceExpression(Deque<Character> stack, Deque<Expression> expressionStack) {
+		if(!stack.isEmpty() && !expressionStack.isEmpty()) {
+			Expression compoundExpr = new Expression();
 
-	private static void reduceExpression(Stack<Character> stack, Stack<Expression> expressionStack) {
-
-		// try to reduce stack
-		if(stack.isEmpty() == false) {
-
-			Expression compound = new Expression();
-
-			// there should always be at least one subexpression in a valid compound
-			Expression subExpression = expressionStack.pop();
-			compound.addSubExpressionWithOperator(subExpression, null);
-
-			while(stack.isEmpty() == false) {
-
+			Expression subExpr = expressionStack.pop();
+			compoundExpr.combineExpression(null, subExpr);
+			
+			while(!stack.isEmpty()) {
 				char current = stack.pop();
 
 				if(current == '(') {
 					break;
-				}
-				else if(current == ' ') {
-					// skip over whitespace surrounding logical operators
+				} else if(current == ' ') {    // skip white space
 					continue;
 				}
 
 				if(isLogicalOperator(current)) {
-
-					StringBuffer sb = new StringBuffer();
+					StringBuilder sb = new StringBuilder();
 					sb.append(current).append(stack.pop());
 
-					subExpression = expressionStack.pop();
-					compound.addSubExpressionWithOperator(0, subExpression, sb.toString()); // insert at front of expresison
+					subExpr = expressionStack.pop();
+					compoundExpr.addSubExpressionWithOperator(0, subExpr, sb.toString());
 				}
 			}
 
-			// System.out.println(compound);
-			expressionStack.push(compound);
+			expressionStack.push(compoundExpr);
 		}
 	}
 
-
-	private static boolean isComparisonOperator(char c) {
-
-		return(c == '=' || c == '<' || c == '>' || c == '!');
+	/**
+	 * Check a character is a comparison operator or not.
+	 * 
+	 * @param  ch
+	 *         The char needs to be checked.
+	 *         
+	 * @return  {@code true} if the char is a comparison operator;
+	 *          {@code false} otherwise.
+	 * 
+     * @since   1.0
+	 */
+	protected static boolean isComparisonOperator(char ch) {
+		return (ch == '=' || ch == '<' || ch == '>' || ch == '!');
 	}
 
-
-	private static boolean isLogicalOperator(char c) {
-
-		return(c == '&' || c == '|');
+	/**
+	 * Check a character is a logical operator or not.
+	 * 
+	 * @param  ch
+	 *         The char needs to be checked.
+	 *         
+	 * @return  {@code true} if the char is a logical operator;
+	 *          {@code false} otherwise.
+	 *          
+     * @since   1.0
+	 */
+	protected static boolean isLogicalOperator(char ch) {
+		return(ch == '&' || ch == '|');
 	}
-
 }

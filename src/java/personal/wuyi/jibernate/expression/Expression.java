@@ -1235,7 +1235,7 @@ public class Expression implements Cloneable, Serializable {
      * @since   1.0
      */
     public Expression minimized() {
-        return ExpressionEngine.minimize(this);
+        return ExpressionEngine.getSumOfProducts(this);
     }
 
     /**
