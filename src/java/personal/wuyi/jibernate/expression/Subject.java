@@ -3,37 +3,48 @@ package personal.wuyi.jibernate.expression;
 import java.io.Serializable;
 
 /**
- * Subject
+ * The class represents the subject of an expression.
  * 
- * <p>This class represents the subject of an expression
+ * @author  Wuyi Chen
+ * @date    09/17/2018
+ * @version 1.0
+ * @since   1.0
  */
 public class Subject implements Cloneable, Serializable {
 	private static final long serialVersionUID = 1248241253649789268L;
 
-	private String name = null;
-	private Object value = null;
+	private           String name;
+	private transient Object value;
 
 	/**
-	 * Constructs a {@code Subject}
+	 * Constructs a {@code Subject}.
+	 * 
+     * @since   1.0 
 	 */
 	public Subject() {
 
 	}
 
 	/**
-	 * Constructs a {@code Subject}
+	 * Constructs a {@code Subject}.
 	 * 
-	 * @param name
+	 * @param  name
+	 *         The name of a subject.
+	 *         
+     * @since   1.0 
 	 */
 	public Subject(String name) {
 		this.name = name;
 	}
 
 	/**
-	 * Constructs a {@code Subject}
+	 * Constructs a {@code Subject}.
 	 * 
-	 * @param name
-	 * @param value
+	 * @param  name
+	 *         The name of a subject.
+	 *         
+	 * @param  value
+	 *         The value of a subject.
 	 */
 	public Subject(String name, Object value) {
 		this.name  = name;
@@ -67,14 +78,14 @@ public class Subject implements Cloneable, Serializable {
 			return false;
 		}
 
-		if(o instanceof Subject == false) {
+		if(!(o instanceof Subject)) {
 			return false;
 		}
 
 		Subject attribute = (Subject) o;
 
 		if(getName() != null) {
-			if(getName().equals(attribute.getName()) == false) {
+			if(!getName().equals(attribute.getName())) {
 				return(false);
 			}
 		} else if(attribute.getName() != null) {
@@ -82,7 +93,7 @@ public class Subject implements Cloneable, Serializable {
 		}
 
 		if(getValue() != null) {
-			if(getValue().equals(attribute.getValue()) == false) {
+			if(!getValue().equals(attribute.getValue())) {
 				return(false);
 			}
 		} else if(attribute.getValue() != null) {
