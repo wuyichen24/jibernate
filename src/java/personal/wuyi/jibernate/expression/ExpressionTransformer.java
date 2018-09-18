@@ -3,62 +3,45 @@ package personal.wuyi.jibernate.expression;
 import personal.wuyi.jibernate.transformer.AbstractTransformer;
 
 /**
- * AbstractExpressionTransformer.java
+ * The abstract class for transforming an expression.
  *
- * @author zzarate
+ * @author  Wuyi Chen
+ * @date    09/17/2018
+ * @version 1.0
+ * @since   1.0
  */
 public abstract class ExpressionTransformer extends AbstractTransformer<Expression,Expression> {
-
-	
-	/**
-	 * Transform the argument expression.
-	 * 
-	 * Default implementation will walk expression hierarchy and attempt to individually transform "simple" expressions,
-	 * resulting in a new/cloned expression, and leaving the original object unmodified.
-	 * 
-	 * @param source 
-	 * @return The transformed expression
-	 * 
-	 */
 	@Override
-	public Expression transform( Expression expression, Object... context ) {
-
-		if( expression == null ) {
+	public Expression transform(Expression expression, Object... context) {
+		if(expression == null) {
 			return null;
 		}
 
-		if ( expression.isCompound() == false ) {
-
-			Expression transformed = transform( expression.getSubject(), expression.getOperator(), expression.getValue() );
-			return super.transform( transformed, context );
-		}
-		else {
-			
+		if (!expression.isCompound()) {
+			Expression transformed = transform(expression.getSubject(), expression.getOperator(), expression.getValue());
+			return super.transform(transformed, context);
+		} else {
 			Expression transformed = new Expression();
-
-			for ( int i = 0; i < expression.getNumberOfSubExpression(); i++ ) {
+			for (int i = 0; i < expression.getNumberOfSubExpression(); i++) {
 				
-				Expression child = expression.getSubExpression( i );
-				child = transform( child );
+				Expression subExpr = expression.getSubExpression(i);
+				subExpr = transform(subExpr);
 
-				if ( child != null ) {
-					
-					if( Expression.AND.equals( expression.getOperator( i ) ) ) {
-						transformed.and( child );
-					}
-					else {
-						transformed.or( child );
+				if (subExpr != null) {
+					if(Expression.AND.equals(expression.getOperator(i))) {
+						transformed.and(subExpr);
+					} else {
+						transformed.or(subExpr);
 					}
 				}
 			}
 			
-			if ( transformed.getNumberOfSubExpression() == 0 ) {
+			if (transformed.getNumberOfSubExpression() == 0) {
 				return null;
 			}
 			
-			return super.transform( transformed );
+			return super.transform(transformed);
 		}
-	
 	}
 	
 	
@@ -70,12 +53,11 @@ public abstract class ExpressionTransformer extends AbstractTransformer<Expressi
 	 * ASSERT: The expression argument is a "simple" expression
 	 * 
 	 * @param subject
-	 * @param predicate
+	 * @param operator
 	 * @param value
 	 * @return
 	 */
-	public Expression transform( Subject subject, String predicate, Object value ) {
-		
-		return( new Expression( subject, predicate, value ) );
+	public Expression transform(Subject subject, String operator, Object value) {
+		return(new Expression(subject, operator, value));
 	}
 }
