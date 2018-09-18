@@ -287,6 +287,8 @@ public class ExpressionEngine {
 	 *         divide-and-conquor strategy.
 	 *         
 	 * @return  The expended sum of products expression.
+	 * 
+     * @since   1.0
 	 */
 	protected static Expression getSumOfProductsByDivideAndConquor(Expression expr, int threshold) {
 		ArrayList<Expression> divisionList = new ArrayList<Expression>();

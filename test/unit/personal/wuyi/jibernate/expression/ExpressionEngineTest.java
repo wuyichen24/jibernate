@@ -38,6 +38,11 @@ public class ExpressionEngineTest {
 	}
 	
 	@Test
+	public void getSumOfProductsTest() {
+		
+	}
+	
+	@Test
 	public void simplifyNestedExpressionTest() {
 		// test 2-level nested ((E)) => E
 		Expression expr = new Expression();
