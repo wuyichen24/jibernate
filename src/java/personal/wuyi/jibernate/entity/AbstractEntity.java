@@ -23,6 +23,6 @@ abstract class AbstractEntity implements ManagedEntity {
 
     @Override
     public boolean isPersisted() {
-        return ( getId() != null );
+        return (getId() != null);
     }
 }

@@ -46,7 +46,7 @@ public class AbstractEntityManagerDaoTest {
 	    student.setFirstName("John");
 	    student.setLastName("Doe");
 	    student.setDob(df.parse("07/16/1993"));
-	    student.setGpa(3.45);
+	    student.setGpa(3.22);
 	    student.setRace(Ethnicity.ASIAN);
 		
 		dao.write(student);

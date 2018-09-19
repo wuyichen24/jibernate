@@ -25,7 +25,7 @@ public class MysqlEntityManagerDao extends AbstractEntityManagerDao {
 	 * 
      * @since   1.0
 	 */
-	protected MysqlEntityManagerDao(MysqlDbConfig config) {
+	public MysqlEntityManagerDao(MysqlDbConfig config) {
 		this.config = config;
 	}
 	
