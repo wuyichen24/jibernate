@@ -6,6 +6,14 @@ import org.junit.Test;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
 
+/**
+ * Test class for {@code ExpressionEngine}.
+ * 
+ * @author  Wuyi Chen
+ * @date    09/18/2018
+ * @version 1.0
+ * @since   1.0
+ */
 public class ExpressionEngineTest2 {
 	// AB + CD
 	Expression comSop1 = new Expression(new Expression("A", Expression.EQUAL, "a").and("B", Expression.EQUAL, "b"))

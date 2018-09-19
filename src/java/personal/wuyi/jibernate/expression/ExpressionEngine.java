@@ -489,7 +489,7 @@ public class ExpressionEngine {
 
 			switch (operator) {
             	case "_": reduceForStackOperator(operStack, pdaStack, reduceAll); break;
-            	case "!": reduceForComplementOperator(operStack, pdaStack);       break;
+            	case "!": reduceForComplementOperator(pdaStack);                  break;
             	default:  reduceForAndOrOperator(operator, pdaStack);             break;
 			}
 		}
@@ -516,7 +516,7 @@ public class ExpressionEngine {
 				String op = (String) operStack.pop();
 
 				if(op.equals("!")) {
-					reduceForComplementOperator(operStack, pdaStack);
+					reduceForComplementOperator(pdaStack);
 				} else {
 					reduceForAndOrOperator(op, pdaStack);
 				}
@@ -535,16 +535,13 @@ public class ExpressionEngine {
 	 * <pre>
 	 *   (!A + !B) * !C * (D + !E) ==> !A!CD + !A!C!E + !B!CD + !B!C!E
 	 * </pre>
-	 * 
-	 * @param  operStack
-	 *         The operator stack.
 	 *         
 	 * @param  pdaStack
 	 *         The pda stack.
 	 *         
      * @since   1.0 
 	 */
-	protected static void reduceForComplementOperator(Deque<Object> operStack, Deque<Object> pdaStack) {
+	protected static void reduceForComplementOperator(Deque<Object> pdaStack) {
 		Expression complementExpr = (Expression) pdaStack.pop();
 		
 		if(complementExpr.isCompound()) {  // compound expression
@@ -1076,7 +1073,7 @@ public class ExpressionEngine {
 			return Boolean.valueOf(value);
 		} else {
 			try {
-				return DateUtils.parseDate(value, new String[] { "MM/dd/yy","MM/dd/yy HH:mm:ss", "E MMM d HH:mm:ss z yyyy" });
+				return DateUtils.parseDate(value, new String[] {"MM/dd/yy","MM/dd/yy HH:mm:ss", "E MMM d HH:mm:ss z yyyy"});
 			} catch(Exception e) {
 				boolean isInteger = Pattern.matches("^\\d*$", value);
 				if(isInteger) {

@@ -4,10 +4,10 @@ import org.junit.Assert;
 import org.junit.Test;
 
 /**
- * Test class for Expression.
+ * Test class for {@code Expression}.
  * 
  * @author  Wuyi Chen
- * @date    08/30/2018
+ * @date    09/18/2018
  * @version 1.0
  * @since   1.0
  */

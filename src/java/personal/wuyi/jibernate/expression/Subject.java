@@ -45,6 +45,8 @@ public class Subject implements Cloneable, Serializable {
 	 *         
 	 * @param  value
 	 *         The value of a subject.
+	 *         
+     * @since   1.0 
 	 */
 	public Subject(String name, Object value) {
 		this.name  = name;

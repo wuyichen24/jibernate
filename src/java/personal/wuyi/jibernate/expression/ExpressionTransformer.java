@@ -46,16 +46,20 @@ public abstract class ExpressionTransformer extends AbstractTransformer<Expressi
 	
 	
 	/**
-	 * Selective transformation of expression.
+	 * Clone a new simple expression.
 	 * 
-	 * Default method will create new simple expression, effectively resulting in a clone.
+	 * @param  subject
+	 *         The subject of an expression.
+	 *         
+	 * @param  operator
+	 *         The operator of an expression.
 	 * 
-	 * ASSERT: The expression argument is a "simple" expression
+	 * @param  value
+	 *         The value of an expression.
+	 *         
+	 * @return  The cloned expression.
 	 * 
-	 * @param subject
-	 * @param operator
-	 * @param value
-	 * @return
+     * @since   1.0 
 	 */
 	public Expression transform(Subject subject, String operator, Object value) {
 		return(new Expression(subject, operator, value));

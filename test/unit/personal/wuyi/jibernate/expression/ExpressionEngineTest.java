@@ -3,6 +3,14 @@ package personal.wuyi.jibernate.expression;
 import org.junit.Assert;
 import org.junit.Test;
 
+/**
+ * Test class for {@code ExpressionEngine}.
+ * 
+ * @author  Wuyi Chen
+ * @date    09/18/2018
+ * @version 1.0
+ * @since   1.0
+ */
 public class ExpressionEngineTest {
 	Expression sinExpr           = new Expression("firstName", Expression.EQUAL, "John");
 	Expression com2AndExpr       = new Expression("firstName", Expression.EQUAL, "John").and("age", Expression.EQUAL, 23);
