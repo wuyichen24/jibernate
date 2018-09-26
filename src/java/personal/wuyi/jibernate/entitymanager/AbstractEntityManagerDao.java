@@ -8,6 +8,7 @@ import java.util.Map;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.Query;
 import javax.persistence.spi.PersistenceUnitInfo;
 import javax.sql.DataSource;
 
@@ -20,7 +21,7 @@ import personal.wuyi.jibernate.entity.ManagedEntity;
 import personal.wuyi.jibernate.entity.Persisted;
 import personal.wuyi.jibernate.entity.Uri;
 import personal.wuyi.jibernate.exception.DatabaseOperationException;
-import personal.wuyi.jibernate.query.Query;
+import personal.wuyi.jibernate.query.JQuery;
 import personal.wuyi.jibernate.query.QueryConverter;
 import personal.wuyi.reflect.ReflectUtil;
 
@@ -94,11 +95,11 @@ abstract class AbstractEntityManagerDao implements Dao {
 	 */
 	@Override
     @SuppressWarnings("unchecked")
-    public <T extends Persisted> List<T> read(Query<T> query) {
+    public <T extends Persisted> List<T> read(JQuery<T> query) {
         final EntityManager entityManager = getEntityManager();
 
         try {
-            final javax.persistence.Query jpaQuery = QueryConverter.getJpaQuery(entityManager, query);
+            final Query jpaQuery = QueryConverter.getJpaQuery(entityManager, query);
             List<T> results = jpaQuery.getResultList();
             if(results == null) {
                 results = new ArrayList<>(0);
@@ -113,11 +114,11 @@ abstract class AbstractEntityManagerDao implements Dao {
      * @see personal.wuyi.jibernate.core.Dao#read(personal.wuyi.jibernate.query.Query, java.lang.String[])
      */
     @Override
-    public List<List<?>> read(Query<? extends Persisted> query, String... fieldNames) {
+    public List<List<?>> read(JQuery<? extends Persisted> query, String... fieldNames) {
         final EntityManager entityManager = getEntityManager();
 
         try {
-            final javax.persistence.Query jpaQuery = QueryConverter.getJpaQuery(entityManager, query, fieldNames);
+            final Query jpaQuery = QueryConverter.getJpaQuery(entityManager, query, fieldNames);
             List<?> results = jpaQuery.getResultList();
             
             if(results == null) {
@@ -146,13 +147,13 @@ abstract class AbstractEntityManagerDao implements Dao {
      * @see personal.wuyi.jibernate.core.Dao#count(personal.wuyi.jibernate.query.Query)
      */
     @Override
-    public <T extends Persisted> long count(Query<T> query) {
+    public <T extends Persisted> long count(JQuery<T> query) {
         final EntityManager entityManager = getEntityManager();
 
         try {
             // make a copy since we are going to modify query
             query = ReflectUtil.copy(query);
-            final javax.persistence.Query jpaQuery = QueryConverter.getJpaQuery(entityManager, query, "COUNT(*)");
+            final Query jpaQuery = QueryConverter.getJpaQuery(entityManager, query, "COUNT(*)");
             return (Long) jpaQuery.getSingleResult();
         } finally {
             entityManager.close();

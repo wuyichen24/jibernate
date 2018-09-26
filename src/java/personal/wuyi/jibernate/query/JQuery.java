@@ -11,7 +11,7 @@ import personal.wuyi.jibernate.expression.Expression;
  * @version 1.0
  * @since   1.0
  */
-public class Query<E extends Persisted> {
+public class JQuery<E extends Persisted> {
     public static final String IN   = "IN";
     public static final String LIKE = "LIKE";
 
@@ -24,7 +24,7 @@ public class Query<E extends Persisted> {
     protected boolean    distinct      = false; // only applicable in conjunction with "select"
     protected boolean    history       = false; // only applicable to versioned objects, by default persist service will filter historical versions and only retrieve current/head version unless history explicitly set to true
 
-    protected Query() {}
+    protected JQuery() {}
 
     /**
      * Constructs a {@code Query}.
@@ -34,7 +34,7 @@ public class Query<E extends Persisted> {
      *         
      * @since   1.0
      */
-    public Query(Class<E> clazz) {
+    public JQuery(Class<E> clazz) {
         this.clazz = clazz;
     }
 

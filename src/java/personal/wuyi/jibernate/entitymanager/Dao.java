@@ -5,7 +5,7 @@ import java.util.List;
 import personal.wuyi.jibernate.entity.Persisted;
 import personal.wuyi.jibernate.entity.Uri;
 import personal.wuyi.jibernate.exception.DatabaseOperationException;
-import personal.wuyi.jibernate.query.Query;
+import personal.wuyi.jibernate.query.JQuery;
 
 /**
  * The interface to provides some specific data operations without exposing 
@@ -47,7 +47,7 @@ public interface Dao extends Plugin {
      * 
      * @since   1.0
      */
-    public <T extends Persisted> List<T> read(Query<T> query);
+    public <T extends Persisted> List<T> read(JQuery<T> query);
     
     /**
      * Query a list of records from database for only selected field(s).
@@ -82,7 +82,7 @@ public interface Dao extends Plugin {
      *          
      * @since   1.0
      */
-    public List<List<?>> read(Query<? extends Persisted> query, String... fieldNames);
+    public List<List<?>> read(JQuery<? extends Persisted> query, String... fieldNames);
     
     /**
      * Count the number of matched records for a certain criteria.
@@ -94,7 +94,7 @@ public interface Dao extends Plugin {
      * 
      * @since   1.0
      */
-    public <T extends Persisted> long count(Query<T> query);
+    public <T extends Persisted> long count(JQuery<T> query);
     
     /**
      * Insert a new record or update a existing record to database.

@@ -10,7 +10,7 @@ import personal.wuyi.jibernate.entity.Persisted;
  * @version 1.0
  * @since   1.0
  */
-public class EntityQuery<E extends Persisted> extends Query<E> {
+public class EntityQuery<E extends Persisted> extends JQuery<E> {
     protected String jpql;
 
     /**

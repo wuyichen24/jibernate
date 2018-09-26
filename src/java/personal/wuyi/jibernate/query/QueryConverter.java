@@ -4,8 +4,10 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.persistence.EntityManager;
+import javax.persistence.Query;
 
 import personal.wuyi.jibernate.entity.Versioned;
 import personal.wuyi.jibernate.expression.Expression;
@@ -16,46 +18,50 @@ import personal.wuyi.jibernate.util.Md5;
 import personal.wuyi.reflect.ReflectUtil;
 
 /**
- * Converter for converting the our query to JPQL query
- *
+ * The static converter class for converting {@code JQuery} (project query 
+ * object) to JPQL query.
+ * 
+ * @author  Wuyi Chen
+ * @date    09/25/2018
+ * @version 1.0
+ * @since   1.0
  */
 public class QueryConverter {
 	/**
-     * Convert our query to JPA query
+     * Convert {@code JQuery} (project query object) to JPQL query.
      *
-     * @param entityManager
-     * @param transformedQuery
-     * @return
+     * @param  entityManager
+     *         The entity manager object.
+     *         
+     * @param  query
+     *         The project-level query object.
+     *         
+     * @param  fields
+     *         The fields needs to be queried from database.
+     *   
+     * @return  The JPQL query.
+     * 
+     * @since   1.0
      */
-    public static javax.persistence.Query getJpaQuery(EntityManager entityManager, Query<?> query, String... selects) {
-    	Query<?> transformedQuery = transform(query);
+    public static Query getJpaQuery(EntityManager entityManager, JQuery<?> query, String... fields) {
+    	JQuery<?> transformedQuery = transform(query);
 
-        Class<?> persistedClass = transformedQuery.getPersistedClass();
-        Expression criteria     = transformedQuery.getCriteria();
-        Sort sort               = transformedQuery.getSort();
-        boolean caseSensitive   = transformedQuery.isCaseSensitive();
-        boolean distinct        = transformedQuery.isDistinct();
-        Integer limit           = transformedQuery.getLimit();
-        Integer offset          = transformedQuery.getOffset();
+        Class<?>   clazz         = transformedQuery.getPersistedClass();
+        Expression criteria      = transformedQuery.getCriteria();
+        boolean    caseSensitive = transformedQuery.isCaseSensitive();
+        Integer    limit         = transformedQuery.getLimit();
+        Integer    offset        = transformedQuery.getOffset();
 
-        // explicit JPQL is given precedent, otherwise convert query to JPQL
-        String jpql = (transformedQuery instanceof EntityQuery) ? ((EntityQuery<?>)transformedQuery).getJpql() : null;
-        if(jpql == null) {
-            jpql = getJpql(persistedClass, criteria, sort, caseSensitive, distinct, selects);
-        }
+        String jpqlStatement = getJpqlStatement(transformedQuery, fields);
+        Query  jpaQuery      = entityManager.createQuery(jpqlStatement);
 
-        // create JPA query
-        javax.persistence.Query jpaQuery = entityManager.createQuery(jpql);
-
-        // set parameters
         if(criteria != null) {
-            Map<String,Object> parameterMap = getParameterMap(persistedClass, criteria, caseSensitive);
-            for(Map.Entry<String,Object> entry : parameterMap.entrySet()) {
+            Map<String,Object> parameterMap = getParameterMap(clazz, criteria, caseSensitive);
+            for(Entry<String,Object> entry : parameterMap.entrySet()) {
                 jpaQuery.setParameter(entry.getKey(), entry.getValue());
             }
         }
 
-        // limit
         if(limit != null) {
             jpaQuery.setMaxResults(limit);
             if(offset != null) {
@@ -72,8 +78,8 @@ public class QueryConverter {
      * @param copiedQuery
      * @return
      */
-    protected static Query<?> transform(Query<?> query) {
-    	Query<?> copiedQuery = ReflectUtil.copy(query);
+    protected static JQuery<?> transform(JQuery<?> query) {
+    	JQuery<?> copiedQuery = ReflectUtil.copy(query);
 
         // transform to vanilla SQL criteria
         Expression criteria = transform(copiedQuery.getCriteria());
@@ -93,21 +99,112 @@ public class QueryConverter {
     }
     
     /**
-     * Transform any GH specific expression values into vanilla SQL
-     * Example:
-     *   ([A]STARTS_WITH "foo") => ([A] LIKE "%foo")
+     * Transform an expression in this project-specific grammar into the 
+     * vanilla SQL grammar.
+     * 
+     * <p>This method will do 2 transforming works:
+     * <ul>
+     *   <li>Transform URI expression:
+     *     <pre>
+     *       Expression("uri","=","/personal/wuyi/jibernate/entity/Student/27") ==> Expression("id", "=", "27")
+     *     </pre>
+     *   <li>Transform wild-card search:
+     *     <pre>
+     *       START_WITH 'ABC' ==> LIKE 'ABC%'
+     *       END_WITH 'ABC'   ==> LIKE '%ABC'
+     *       CONTAINS 'ABC'   ==> LIKE '%ABC%'
+     *     </pre>
+     * </ul>
      *
-     * @param expression
-     * @return
+     * @param  expression
+     *         The expression needs to be transformed.
+     *         
+     * @return  The transformed expression.
+     * 
+     * @since   1.0
      */
     protected static Expression transform(Expression expression) {
-        UriExpressionTransformer uriExpressionTransformer = new UriExpressionTransformer();
-        expression = uriExpressionTransformer.transform(expression);
-
-        SearchExpressionTransformer searchExpressionTransformer = new SearchExpressionTransformer();
-        expression =  searchExpressionTransformer.transform(expression);
-
+        expression = (new UriExpressionTransformer()).transform(expression);
+        expression = (new SearchExpressionTransformer()).transform(expression);
         return expression;
+    }
+    
+    /**
+     * Get JPQL query statement.
+     * 
+     * <p>If the query object is already an instance of {@code EntityQuery}, 
+     * so get the JPQL statement directly; Otherwise, manually build the JPQL 
+     * statement.
+     * 
+     * @param  transformedQuery
+     * @param  fields
+     * @return
+     */
+    protected static String getJpqlStatement(JQuery<?> transformedQuery, String... fields) {
+    	Class<?>   clazz         = transformedQuery.getPersistedClass();
+        Expression criteria      = transformedQuery.getCriteria();
+        Sort       sort          = transformedQuery.getSort();
+        boolean    caseSensitive = transformedQuery.isCaseSensitive();
+        boolean    distinct      = transformedQuery.isDistinct();
+    	
+        if (transformedQuery instanceof EntityQuery) {
+        	return ((EntityQuery<?>)transformedQuery).getJpql();
+        } else {
+        	return buildJpqlStatement(clazz, criteria, sort, caseSensitive, distinct, fields);
+        }
+    }
+    
+    /**
+     * Generate JPA JPQL string from query values
+     *
+     * @param persistedClass
+     * @param selects
+     * @param criteria
+     * @param sort
+     * @param caseSensitive
+     * @param distinct
+     *
+     * @return
+     */
+    protected static String buildJpqlStatement(Class<?> persistedClass, Expression criteria, Sort sort, boolean caseSensitive, boolean distinct, String... selects) {
+        String jpqlName = persistedClass.getSimpleName();
+        String jpqlAlias = getAlias( persistedClass );
+
+        // SELECT -> * or columns
+        String jpqlSelect = getSelect(persistedClass, distinct, selects);
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("SELECT ").append( jpqlSelect ).append(" FROM ").append( jpqlName ).append(" ").append(jpqlAlias);
+
+        // CRITERIA -> WHERE
+        if (criteria != null) {
+            // convert criteria to minimized form for ease of conversion
+            criteria = criteria.minimized();
+            String jpqlCriteria = generateJpqlWhereClause(persistedClass, criteria, caseSensitive);
+            sb.append(" WHERE ").append(jpqlCriteria);
+        }
+
+        // SORT -> ORDER BY
+        if(sort != null) {
+            sb.append(" ORDER BY");
+
+            List<Sort> sorts = sort.toList();
+            int i = 0;
+            for(Sort s : sorts) {
+                sb.append(" ").append(jpqlAlias).append(".").append(s.getValue());
+                if(!s.isAscending()) {
+                     sb.append(" DESC");
+                }
+
+                if(i + 1 < sorts.size()) {
+                    sb.append(",");
+                }
+
+                i++;
+            }
+        }
+
+        return sb.toString();
     }
     
     /**
@@ -154,58 +251,7 @@ public class QueryConverter {
         return paramMap;
     }
     
-    /**
-     * Generate JPA JPQL string from query values
-     *
-     * @param persistedClass
-     * @param selects
-     * @param criteria
-     * @param sort
-     * @param caseSensitive
-     * @param distinct
-     *
-     * @return
-     */
-    protected static String getJpql(Class<?> persistedClass, Expression criteria, Sort sort, boolean caseSensitive, boolean distinct, String... selects) {
-        String jpqlName = persistedClass.getSimpleName();
-        String jpqlAlias = getAlias( persistedClass );
-
-        // SELECT -> * or columns
-        String jpqlSelect = getSelect(persistedClass, distinct, selects);
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("SELECT ").append( jpqlSelect ).append(" FROM ").append( jpqlName ).append(" ").append(jpqlAlias);
-
-        // CRITERIA -> WHERE
-        if (criteria != null) {
-            // convert criteria to minimized form for ease of conversion
-            criteria = criteria.minimized();
-            String jpqlCriteria = generateJpqlWhereClause(persistedClass, criteria, caseSensitive);
-            sb.append(" WHERE ").append(jpqlCriteria);
-        }
-
-        // SORT -> ORDER BY
-        if(sort != null) {
-            sb.append(" ORDER BY");
-
-            List<Sort> sorts = sort.toList();
-            int i = 0;
-            for(Sort s : sorts) {
-                sb.append(" ").append(jpqlAlias).append(".").append(s.getValue());
-                if(!s.isAscending()) {
-                     sb.append(" DESC");
-                }
-
-                if(i + 1 < sorts.size()) {
-                    sb.append(",");
-                }
-
-                i++;
-            }
-        }
-
-        return sb.toString();
-    }
+    
     
     /**
      * Build the select clause.
