@@ -9,6 +9,8 @@ import java.util.Map.Entry;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
+import com.google.common.base.Joiner;
+
 import personal.wuyi.jibernate.entity.Versioned;
 import personal.wuyi.jibernate.expression.Expression;
 import personal.wuyi.jibernate.expression.Subject;
@@ -73,29 +75,34 @@ public class QueryConverter {
     }
     
     /**
-     * Handle any query conversion, normalization, etc., prior to evaluation.
+     * Normalize the query.
+     * 
+     * <p>First, this method will transform the criteria (expression) of the 
+     * query from the project-specific grammar into the vanilla SQL grammar. 
+     * Second for versioned objects, it implicitly filter and only retrieve 
+     * head.
      *
-     * @param copiedQuery
-     * @return
+     * @param  query
+     *         The query needs to be normalized.
+     * 
+     * @return  The normalized query.
+     * 
+     * @since   1.0
      */
     protected static JQuery<?> transform(JQuery<?> query) {
-    	JQuery<?> copiedQuery = ReflectUtil.copy(query);
+    	JQuery<?> copy = ReflectUtil.copy(query);
 
-        // transform to vanilla SQL criteria
-        Expression criteria = transform(copiedQuery.getCriteria());
-        copiedQuery.setCriteria(criteria);
+        copy.setCriteria(transform(copy.getCriteria()));
 
-        // when querying for versioned objects, we implicitly filter and only retrieve head UNLESS query.history=true
-        if(Versioned.class.isAssignableFrom(copiedQuery.getPersistedClass()) && !copiedQuery.isHistory()) {
-        	// filter any historical revisions by adding "head" criteria
+        if(Versioned.class.isAssignableFrom(copy.getPersistedClass()) && !copy.isHistory()) {
         	Expression headCriteria = new Expression("head", Expression.EQUAL, true);
-        	if(criteria == null) {
-        		copiedQuery.setCriteria(headCriteria);
+        	if(copy.getCriteria() == null) {
+        		copy.setCriteria(headCriteria);
         	} else {
-        		copiedQuery.setCriteria(Expression.and(criteria, headCriteria));
+        		copy.setCriteria(Expression.and(copy.getCriteria(), headCriteria));
             }
         }
-        return copiedQuery;
+        return copy;
     }
     
     /**
@@ -136,100 +143,104 @@ public class QueryConverter {
      * so get the JPQL statement directly; Otherwise, manually build the JPQL 
      * statement.
      * 
-     * @param  transformedQuery
+     * @param  query
+     *         The query needs to be processed.
+     * 
      * @param  fields
-     * @return
+     *         The fields need to be populated.
+     *         
+     * @return  The JPQL statement.
+     * 
+     * @since   1.0
      */
-    protected static String getJpqlStatement(JQuery<?> transformedQuery, String... fields) {
-    	Class<?>   clazz         = transformedQuery.getPersistedClass();
-        Expression criteria      = transformedQuery.getCriteria();
-        Sort       sort          = transformedQuery.getSort();
-        boolean    caseSensitive = transformedQuery.isCaseSensitive();
-        boolean    distinct      = transformedQuery.isDistinct();
+    protected static String getJpqlStatement(JQuery<?> query, String... fields) {
+    	Class<?>   clazz         = query.getPersistedClass();
+        Expression criteria      = query.getCriteria();
+        Sort       sort          = query.getSort();
+        boolean    caseSensitive = query.isCaseSensitive();
+        boolean    distinct      = query.isDistinct();
     	
-        if (transformedQuery instanceof EntityQuery) {
-        	return ((EntityQuery<?>)transformedQuery).getJpql();
+        if (query instanceof EntityQuery && ((EntityQuery<?>)query).getJpql() != null) {
+        	return ((EntityQuery<?>)query).getJpql();
         } else {
         	return buildJpqlStatement(clazz, criteria, sort, caseSensitive, distinct, fields);
         }
     }
     
     /**
-     * Generate JPA JPQL string from query values
+     * Build JPQL statement.
      *
-     * @param persistedClass
-     * @param selects
-     * @param criteria
-     * @param sort
-     * @param caseSensitive
-     * @param distinct
+     * @param  clazz
+     *         The persisted class.
+     *         
+     * @param  fields
+     *         The fields need to be queried.
+     *         
+     * @param  criteria
+     *         The criteria (expression) of the query.
+     * 
+     * @param  sort
+     *         The sorting option.
+     * 
+     * @param  caseSensitive
+     *         Is case sensitive or not.
+     *         
+     * @param  distinct
+     *         Need to see distinct values of a certain field.
      *
-     * @return
+     * @return  The JPQL statement.
+     * 
+     * @since   1.0
      */
-    protected static String buildJpqlStatement(Class<?> persistedClass, Expression criteria, Sort sort, boolean caseSensitive, boolean distinct, String... selects) {
-        String jpqlName = persistedClass.getSimpleName();
-        String jpqlAlias = getAlias( persistedClass );
-
-        // SELECT -> * or columns
-        String jpqlSelect = getSelect(persistedClass, distinct, selects);
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("SELECT ").append( jpqlSelect ).append(" FROM ").append( jpqlName ).append(" ").append(jpqlAlias);
-
-        // CRITERIA -> WHERE
+    protected static String buildJpqlStatement(Class<?> clazz, Expression criteria, Sort sort, boolean caseSensitive, boolean distinct, String... fields) {        
+        String select = buildBasicSelectStatement(clazz, distinct, fields);
+        
+        String where = null;
         if (criteria != null) {
-            // convert criteria to minimized form for ease of conversion
-            criteria = criteria.minimized();
-            String jpqlCriteria = generateJpqlWhereClause(persistedClass, criteria, caseSensitive);
-            sb.append(" WHERE ").append(jpqlCriteria);
+            where = buildWhereClause(clazz, criteria, caseSensitive);
         }
 
-        // SORT -> ORDER BY
+        String orderBy = null;
         if(sort != null) {
-            sb.append(" ORDER BY");
-
-            List<Sort> sorts = sort.toList();
-            int i = 0;
-            for(Sort s : sorts) {
-                sb.append(" ").append(jpqlAlias).append(".").append(s.getValue());
-                if(!s.isAscending()) {
-                     sb.append(" DESC");
-                }
-
-                if(i + 1 < sorts.size()) {
-                    sb.append(",");
-                }
-
-                i++;
-            }
+        	orderBy = buildOrderByClause(clazz, sort);
         }
-
-        return sb.toString();
+        
+        return Joiner.on(" ").skipNulls().join(Arrays.asList(select, where, orderBy));
     }
     
     /**
-     * Generate parameter map from query criteria (this will be used to populate prepared statement)
+     * Generate the parameter map from the criteria of the query.
+     * 
+     * <p>This method will traverse the expression tree of the criteria and 
+     * add the key-value pair of each node into the map.
+     * 
+     * <p>This key will be the unique parameter based on the persisted class, 
+     * subject and value of the query. The value will be the value of the 
+     * query.
      *
-     * @param persistedClass
-     * @param criteria
-     * @return
+     * @param  clazz
+     *         The persisted class.
+     *         
+     * @param  criteria
+     *         The criteria of the query.
+     * 
+     * @return  The map of parameters.
+     * 
+     * @since   1.0
      */
-    protected static Map<String,Object> getParameterMap(Class<?> persistedClass, Expression criteria, boolean caseSensitive) {
-        if( criteria== null ) {
+    protected static Map<String,Object> getParameterMap(Class<?> clazz, Expression criteria, boolean caseSensitive) {
+        if(criteria == null) {
             return null;
         }
 
         Map<String,Object> paramMap = new HashMap<>();
 
-        // prefix will do a logical walk or tree, in this case order doesn't really matter though we just want to
-        // grab unique subject/params and build param map from that
         criteria.prefix((node) -> {
-            // should always be simple when doing prefix walk
             if(node instanceof Expression) {
                 Expression subExpr = (Expression) node;
-                String subject = subExpr.getSubject().getName();
-                Object value = subExpr.getValue();
-                String param = getJpqlParameter( persistedClass, subject, value );
+                String     subject = subExpr.getSubject().getName();
+                Object     value   = subExpr.getValue();
+                String     param   = getJpqlParameter(clazz, subject, value);
 
                 if(value != null) {
                     if(value instanceof String) {
@@ -239,42 +250,70 @@ public class QueryConverter {
                     } else if(value instanceof Object[]) {
                         value = Arrays.asList((Object[]) value);
                     }
-                }
-
-                // NULL values are not parameterized, they will be handled explicitly (e.g. IS NULL, IS NOT NULL)
-                if( value != null ) {
+                
                     paramMap.put(param, value);
                 }
             }
-        } );
+        });
 
         return paramMap;
     }
     
-    
+    /**
+     * Build a basic select statement.
+     * 
+     * <p>This basic select statement only has "SELECT" and "FROM" keywords.
+     * 
+     * @param  clazz
+     *         The persisted class.
+     *         
+     * @param  distinct
+     *         Need distinct values or not.
+     *         
+     * @param  fields
+     *         The fields need to be queried.
+     *         
+     * @return  The basic select statement.
+     * 
+     * @since   1.0
+     */
+    protected static String buildBasicSelectStatement(Class<?> clazz, boolean distinct, String... fields) {
+    	String tableName  = clazz.getSimpleName();
+        String tableAlias = getAlias(clazz);
+        
+    	String selectClause = buildSelectClause(clazz, distinct, fields);
+    	return Joiner.on(" ").join(Arrays.asList("SELECT", selectClause, "FROM", tableName, tableAlias));
+    }
     
     /**
-     * Build the select clause.
+     * Build a select clause.
      *
-     * For most queries this is just the "alias" (class short name), but for "count" queries, or cases where we have
-     * specified an explicit select clause we need to modify with explicit alias.
+     * For most queries this is just the "alias" (class short name), but for 
+     * "count" queries, or cases where we have specified an explicit select 
+     * clause we need to modify with explicit alias.
      *
-     * @param persistedClass
-     * @param selects
-     * @param distinct
+     * @param  clazz
+     *         The persisted class.
+     *         
+     * @param  distinct
+     *         Need distinct values or not.
+     *         
+     * @param  fields
+     *         The fields need to be queried.
      *
-     * @return
+     * @return  The select clause.
+     * 
+     * @since   1.0
      */
-    protected static String getSelect(Class<?> persistedClass, boolean distinct, String... selects) {
-        String alias = getAlias(persistedClass);
+    protected static String buildSelectClause(Class<?> clazz, boolean distinct, String... fields) {
+        String alias = getAlias(clazz);
 
-        if(selects == null || selects.length == 0) {
+        if(fields == null || fields.length == 0) {
             return alias;
         } else {
-            // qualify the select clause with the JPQL table alias
             boolean first = true;
             StringBuilder sb = new StringBuilder();
-            for(String prop : selects) {
+            for(String prop : fields) {
                 if(!first) {
                     sb.append(",");
                 }
@@ -282,12 +321,11 @@ public class QueryConverter {
                 if(prop.equalsIgnoreCase("COUNT(*)")) {
                     sb.append("COUNT(").append(alias).append(")");
                 } else {
-                    // select DISTINCT(c.name) from Customer c
                     if(distinct) {
                         sb.append("DISTINCT(");
                     }
 
-                    sb.append( alias ).append(".").append( prop );
+                    sb.append(alias).append(".").append(prop);
 
                     if(distinct) {
                         sb.append(")");
@@ -300,64 +338,79 @@ public class QueryConverter {
     }
     
     /**
-     * Convert the expression into JPQL where clause
-     *
-     * @param persistedClass
-     * @param expression
-     * @return
+     * Build where clause.
+     * 
+     * <p>This method will concatenate the "WHERE" keyword with the where expression. 
+     * 
+     * @param  clazz
+     *         The persisted class.
+     * 
+     * @param  criteria
+     *         The criteria of the query.
+     * 
+     * @param  caseSensitive
+     *         Is case sensitive or not.
+     *         
+     * @return  The where clause.
+     * 
+     * @since   1.0
      */
-    protected static String generateJpqlWhereClause(Class<?> persistedClass, Expression expression, boolean caseSensitive) {
-        if( expression == null ) {
-            return null;
-        }
-
+    protected static String buildWhereClause(Class<?> clazz, Expression criteria, boolean caseSensitive) {
+    	criteria = criteria.minimized();
+    	String whereExpression = buildWhereExpression(clazz, criteria, caseSensitive);
+    	return Joiner.on(" ").join("WHERE", whereExpression);
+    }
+    
+    /**
+     * Build a where expression (by the criteria of the query).
+     * 
+     * <p>This method will loop through the current expression and its 
+     * sub-expressions recursively and generate the where expression.
+     *
+     * @param  clazz
+     *         The persisted class.
+     *         
+     * @param  expression
+     *         The criteria of the query.
+     * 
+     * @return  The where expression.
+     * 
+     * @since   1.0
+     */
+    protected static String buildWhereExpression(Class<?> clazz, Expression expression, boolean caseSensitive) {        
         if (!expression.isCompound()) {
-            return generateJpqlWhereClauseSingleCondition(persistedClass, expression.getSubject(), expression.getOperator(), expression.getValue(), caseSensitive);
+        	return buildWhereExpressionForSimpleExpression(clazz, expression.getSubject(), expression.getOperator(), expression.getValue(), caseSensitive);
         } else {
-            StringBuilder c = new StringBuilder();
-
-            for (int i = 0; i < expression.getNumberOfSubExpression(); i++) {
-                Expression child = expression.getSubExpression(i);
-                if (child != null) {
-                    String childClause = generateJpqlWhereClause(persistedClass, child, caseSensitive);
-                    String op = expression.getOperator(i);
-                    if (Expression.AND.equals(op)) {
-                        c.append(" AND ");
-                    } else if(Expression.OR.equals(op)){
-                        c.append(" OR ");
-                    }
-                    c.append(childClause);
-                }
-            }
-
-            if (c.length() == 0) {
-                return null;
-            }
-
-            return c.toString();
+            return buildWhereExpressionForCompoundExpression(clazz, expression, caseSensitive);
         }
     }
     
     /**
-     * Generate one condition in the JPQL where clause
+     * Build a where expression for a simple expression.
      *
-     * @param c
-     * @param subject
-     * @param predicate
-     * @param value
-     * @param caseSensitive
-     * @return
+     * @param  clazz
+     *         The persisted class.
+     * 
+     * @param  subject
+     *         The subject of the expression.
+     * 
+     * @param  operator
+     *         The operator of the expression.
+     * 
+     * @param  value
+     *         The value of the expression.
+     * 
+     * @param  caseSensitive
+     *         Is case sensitive or not.
+     * 
+     * @return  The where expression.
+     * 
+     * @since   1.0
      */
-    protected static String generateJpqlWhereClauseSingleCondition(Class<?> c, Subject subject, String predicate, Object value, boolean caseSensitive)  {
+    protected static String buildWhereExpressionForSimpleExpression(Class<?> clazz, Subject subject, String operator, Object value, boolean caseSensitive)  {
     	StringBuilder sb = new StringBuilder();
 
-    	// for criteria purposes, we should only ever care about subject name (value is for evaluation purposes only)
-    	String name = getAlias(c) + "." + subject.getName();
-
-    	// generate unique, value specific parameter name
-    	String parameter = ":" + getJpqlParameter(c, subject.getName(), value);
-
-    	// only ignore case if non-case sensitive and non-null text value
+    	String name = getAlias(clazz) + "." + subject.getName();
     	boolean ignoreCase = !caseSensitive && value != null && value instanceof String;
     	if(ignoreCase) {
     		name = "UPPER(" + name + ")";
@@ -365,16 +418,17 @@ public class QueryConverter {
     	sb.append(name);
 
     	if(value == null) {
-    		if(Expression.NOT_EQUAL.equals(predicate)) {
+    		if(Expression.NOT_EQUAL.equals(operator)) {
     			sb.append(" IS NOT NULL");
     		} else {
     			sb.append(" IS NULL");
     		}
     	} else {
-    		String operator = getJpqlOperator(predicate);
-    		sb.append(" ").append(operator).append(" ");
+    		String optr = getJpqlOperator(operator);
+    		sb.append(" ").append(optr).append(" ");
+    		
+    		String parameter = ":" + getJpqlParameter(clazz, subject.getName(), value);
 
-    		// with IN statement we expect List or Array
     		if(value instanceof Iterable || value instanceof Object[]) {
     			sb.append("(").append(parameter).append(")");
     		} else {
@@ -384,33 +438,102 @@ public class QueryConverter {
 
     	return sb.toString();
     }
+    
+    /**
+     * Build a where expression for a compound expression.
+     * 
+     * @param  clazz
+     *         The persisted class.
+     *         
+     * @param  expression
+     *         The criteria of the query.
+     * 
+     * @param  caseSensitive
+     *         Is case sensitive or not.
+     * 
+     * @return  The where expression.
+     * 
+     * @since   1.0
+     */
+    protected static String buildWhereExpressionForCompoundExpression(Class<?> clazz, Expression expression, boolean caseSensitive) {
+    	StringBuilder sb = new StringBuilder();
+
+        for (int i = 0; i < expression.getNumberOfSubExpression(); i++) {
+            Expression subExpr = expression.getSubExpression(i);
+            if (subExpr != null) {
+                String subExprStr = buildWhereExpression(clazz, subExpr, caseSensitive);
+                String optr = expression.getOperator(i);
+                if (Expression.AND.equals(optr)) {
+                    sb.append(" AND ");
+                } else if(Expression.OR.equals(optr)){
+                    sb.append(" OR ");
+                }
+                sb.append(subExprStr);
+            }
+        }
+
+        if (sb.length() == 0) {
+            return null;
+        }
+
+        return sb.toString();
+    }
+    
+    // TODO
+    protected static String buildOrderByClause(Class<?> clazz, Sort sort) {
+    	String tableAlias = getAlias(clazz);
+  
+    	StringBuilder sb = new StringBuilder();
+    	
+    	sb.append("ORDER BY");
+
+        List<Sort> sorts = sort.toList();
+        int i = 0;
+        for(Sort s : sorts) {
+            sb.append(" ").append(tableAlias).append(".").append(s.getValue());
+            if(!s.isAscending()) {
+                 sb.append(" DESC");
+            }
+
+            if(i + 1 < sorts.size()) {
+                sb.append(",");
+            }
+
+            i++;
+        }
+        
+        return sb.toString();
+    }
    
     /**
-     * Generate a unique JPQL parameter name based on query class, subject, and value
+     * Generate a unique JPQL parameter name based on the persisted class, 
+     * subject, and value.
      *
-     * NOTE: we must account for value in parameter in order to handle OR clauses, for example:
-     *  (([A] = "value1") || ([A] = "value2"))
-     *
-     * In such cases we cannon rely on subject name alone to guarantee variable uniqueness.  To solve this we generate an MD5 hash of value.toString()
-     *
-     * @param persistedClass
-     * @param subject
-     * @param value
-     * @return
+     * @param  clazz
+     *         The persisted class.
+     *       
+     * @param  subject
+     *         The subject of the expression.
+     * 
+     * @param  value
+     *         The value of the expression.
+     * 
+     * @return  The unique JPQL parameter.
+     * 
+     * @since   1.0
      */
-    protected static String getJpqlParameter(Class<?> persistedClass, String subject, Object value) {
+    protected static String getJpqlParameter(Class<?> clazz, String subject, Object value) {
     	subject = subject.replaceAll("\\.", "_").toUpperCase();
 
     	StringBuilder sb = new StringBuilder();
-    	sb.append( persistedClass.getSimpleName().toUpperCase() ).append( "_" ).append(subject);
+    	sb.append(clazz.getSimpleName().toUpperCase()).append("_").append(subject);
 
-    	// MD5 has value to guarantee subject/value pair uniqueness
     	if(value != null) {
     		try {
-    			String hash = Md5.hash( value.toString() );
-    			sb.append("_").append( hash );
-    		} catch( Exception e ) {
-    			
+    			String hash = Md5.hash(value.toString());
+    			sb.append("_").append(hash);
+    		} catch(Exception e) {
+    			// TODO
     		}
     	}
 
@@ -418,25 +541,33 @@ public class QueryConverter {
     }
    
     /**
-     * Get SQL table alias for argument class
+     * Get the alias of a class.
      *
-     * @param c
-     * @return
+     * @param  clazz
+     *         The class needs to be gotten the alias.
+     *         
+     * @return  The alias of a class.
+     * 
+     * @since   1.0
      */
-    protected static String getAlias(Class<?> c) {
-    	return c.getSimpleName().toLowerCase();
+    protected static String getAlias(Class<?> clazz) {
+    	return clazz.getSimpleName().toLowerCase();
     }
    
    /**
-    * Convert Expression predicate to equivalent JPQL operator.
+    * Convert the project-specific operator to JPQL operator.
     *
-    * @param predicate
-    * @return
+    * @param  operator
+    *         The operator needs to be converted.
+    *         
+    * @return  The converted JPQL operator.
+    * 
+    * @since   1.0
     */
-    protected static String getJpqlOperator(String predicate) {
-    	if(Expression.EQUAL.equals(predicate)) {
+    protected static String getJpqlOperator(String operator) {
+    	if(Expression.EQUAL.equals(operator)) {
     		return "=";
     	}
-    	return predicate;	
+    	return operator;	
     }
 }
