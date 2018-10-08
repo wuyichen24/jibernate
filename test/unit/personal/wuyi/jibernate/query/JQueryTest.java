@@ -25,7 +25,7 @@ import personal.wuyi.jibernate.expression.Expression;
  * @version 1.0
  * @since   1.0
  */
-public class QueryTest {
+public class JQueryTest {
 	private static MysqlDbConfig          dbConfig;
 	private static MysqlEntityManagerDao  dao;
 	

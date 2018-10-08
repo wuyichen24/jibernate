@@ -29,6 +29,8 @@ import personal.wuyi.reflect.ReflectUtil;
  * @since   1.0
  */
 public class QueryConverter {
+	private QueryConverter() {}
+	
 	/**
      * Convert {@code JQuery} (project query object) to JPQL query.
      *
@@ -235,7 +237,7 @@ public class QueryConverter {
 
         Map<String,Object> paramMap = new HashMap<>();
 
-        criteria.prefix((node) -> {
+        criteria.prefix(node -> {
             if(node instanceof Expression) {
                 Expression subExpr = (Expression) node;
                 String     subject = subExpr.getSubject().getName();
@@ -244,7 +246,7 @@ public class QueryConverter {
 
                 if(value != null) {
                     if(value instanceof String) {
-                        if(caseSensitive == false) {
+                        if(!caseSensitive) {
                             value = value.toString().toUpperCase();
                         }
                     } else if(value instanceof Object[]) {
@@ -313,19 +315,19 @@ public class QueryConverter {
         } else {
             boolean first = true;
             StringBuilder sb = new StringBuilder();
-            for(String prop : fields) {
+            for(String field : fields) {
                 if(!first) {
                     sb.append(",");
                 }
 
-                if(prop.equalsIgnoreCase("COUNT(*)")) {
+                if(field.equalsIgnoreCase("COUNT(*)")) {
                     sb.append("COUNT(").append(alias).append(")");
                 } else {
                     if(distinct) {
                         sb.append("DISTINCT(");
                     }
 
-                    sb.append(alias).append(".").append(prop);
+                    sb.append(alias).append(".").append(field);
 
                     if(distinct) {
                         sb.append(")");
@@ -479,7 +481,19 @@ public class QueryConverter {
         return sb.toString();
     }
     
-    // TODO
+    /**
+     * Build a order by clause.
+     * 
+     * @param  clazz
+     *         The persisted class.
+     * 
+     * @param  sort
+     *         The sorting option.
+     * 
+     * @return  The order by clause.
+     * 
+     * @since   1.0
+     */
     protected static String buildOrderByClause(Class<?> clazz, Sort sort) {
     	String tableAlias = getAlias(clazz);
   
