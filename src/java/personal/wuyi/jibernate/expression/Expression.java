@@ -53,6 +53,7 @@ public class Expression implements Cloneable, Serializable {
     public static final String STARTS_WITH        = "STARTS_WITH";
     public static final String ENDS_WITH          = "ENDS_WITH";
     public static final String CONTAINS           = "CONTAINS";
+    public static final String IN                 = "IN";
 
     protected static int SIDE_LEFT  = 1;
     protected static int SIDE_RIGHT = 2;

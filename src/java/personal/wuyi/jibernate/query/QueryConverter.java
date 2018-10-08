@@ -432,8 +432,14 @@ public class QueryConverter {
     		String parameter = ":" + getJpqlParameter(clazz, subject.getName(), value);
 
     		if(value instanceof Iterable || value instanceof Object[]) {
+    			if (!Expression.IN.equals(optr)) {
+    				throw new IllegalArgumentException("You are passing multiple values into Expression, the operator must be Expression.IN");
+    			}
     			sb.append("(").append(parameter).append(")");
     		} else {
+    			if (Expression.IN.equals(optr)) {
+    				throw new IllegalArgumentException("You are passing single value into Expression, the operator can not be Expression.IN");
+    			}
     			sb.append(parameter);
     		}
     	}
@@ -522,6 +528,11 @@ public class QueryConverter {
     /**
      * Generate a unique JPQL parameter name based on the persisted class, 
      * subject, and value.
+     * 
+     * <p>The format of JPQL parameter will be looked like:
+     * <pre>
+     *     [class name]_[subject name]_[value in MD5]
+     * </pre>
      *
      * @param  clazz
      *         The persisted class.

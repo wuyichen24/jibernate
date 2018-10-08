@@ -1,5 +1,7 @@
 package personal.wuyi.jibernate.query;
 
+import java.util.Arrays;
+
 import org.junit.Test;
 
 import junit.framework.Assert;
@@ -38,7 +40,12 @@ public class QueryConverterTest {
 		Assert.assertEquals("COUNT(student)",                                    QueryConverter.buildSelectClause(Student.class, true,  new String[] {"COUNT(*)"}));
 	}
 	
+	@Test
 	public void buildWhereClauseTest() {
-		
+		Assert.assertEquals("WHERE UPPER(student.firstname) = :STUDENT_FIRSTNAME_61409aa1fd47d4a5332de23cbf59a36f", QueryConverter.buildWhereClause(Student.class, new Expression("firstname", Expression.EQUAL, "John"), false));
+		Assert.assertEquals("WHERE student.firstname = :STUDENT_FIRSTNAME_61409aa1fd47d4a5332de23cbf59a36f",        QueryConverter.buildWhereClause(Student.class, new Expression("firstname", Expression.EQUAL, "John"), true));
+		Assert.assertEquals("WHERE student.firstname IS NULL",                                                      QueryConverter.buildWhereClause(Student.class, new Expression("firstname", Expression.EQUAL, null), true));
+		Assert.assertEquals("WHERE student.firstname IS NOT NULL",                                                  QueryConverter.buildWhereClause(Student.class, new Expression("firstname", Expression.NOT_EQUAL, null), true));
+		System.out.println(QueryConverter.buildWhereClause(Student.class, new Expression("firstname", Expression.EQUAL, Arrays.asList("John", "Mary")), true));
 	}
 }

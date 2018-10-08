@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.log4j.PropertyConfigurator;
@@ -69,6 +70,15 @@ public class CrudTest {
 				String str = (String) obj;
 				System.out.println(str);
 			}
+		}
+		
+		// Test IN expression
+		System.out.println();
+		EntityQuery<Student> q3 = new EntityQuery<Student>(Student.class);
+		q3.setCriteria(new Expression("firstName", Expression.IN, Arrays.asList("John", "Mary")));
+		List<Student> studentList3 = dao.read(q3);
+		for (Student student : studentList3) {
+			System.out.println(student.getFirstName());
 		}
 	}
 	
