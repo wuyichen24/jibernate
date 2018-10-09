@@ -4,42 +4,50 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Sort
+ * The Sort class.
  * 
- * @author Wuyi Chen
+ * <p>This class is to store the sorting information of your query. You can 
+ * sort on one field or multiple fields, like:
+ * <pre>
+ *    new Sort("firstname", true).and("gpa", false);
+ * </pre>
+ * 
+ * @author  Wuyi Chen
+ * @date    10/08/2018
+ * @version 1.0
+ * @since   1.0
  */
 public class Sort {
-    private String     value     = null;
+    private String     field     = null;
     private boolean    ascending = true;
     private List<Sort> list      = null;
 
-    protected Sort() {
-
-    }
-
     /**
      * Construct a {@code Sort}
      * 
-     * @param value
+     * @param  field
+     *         The field needs to be sorted on.
+     *         
+     * @since   1.0
      */
-    public Sort(String value) {
-        this.value = value;
+    public Sort(String field) {
+        this.field = field;
     }
 
 
     /**
      * Construct a {@code Sort}
      * 
-     * @param value
+     * @param field
      * @param ascending
      */
-    public Sort(String value, boolean ascending) {
-        this.value = value;
+    public Sort(String field, boolean ascending) {
+        this.field = field;
         this.ascending = ascending;
     }
 
-    public String  getValue()                      { return value;               }
-    public void    setValue(String value)          { this.value = value;         }
+    public String  getField()                      { return field;               }
+    public void    setField(String field)          { this.field = field;         }
     public boolean isAscending()                   { return ascending;           }
     public void    setAscending(boolean ascending) { this.ascending = ascending; }
     
@@ -84,8 +92,8 @@ public class Sort {
         if(this.isCascading() == false) {
             list = new ArrayList<>();
 
-            Sort self = new Sort(this.value, this.ascending);
-            this.value = null;
+            Sort self = new Sort(this.field, this.ascending);
+            this.field = null;
             this.ascending = true;
 
             list.add(self);

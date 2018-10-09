@@ -510,7 +510,7 @@ public class QueryConverter {
         List<Sort> sorts = sort.toList();
         int i = 0;
         for(Sort s : sorts) {
-            sb.append(" ").append(tableAlias).append(".").append(s.getValue());
+            sb.append(" ").append(tableAlias).append(".").append(s.getField());
             if(!s.isAscending()) {
                  sb.append(" DESC");
             }
