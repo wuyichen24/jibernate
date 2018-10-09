@@ -23,7 +23,9 @@ public class Sort {
     private List<Sort> list      = null;
 
     /**
-     * Construct a {@code Sort}
+     * Construct a {@code Sort}.
+     * 
+     * <p>This method will use ascending order for the field.
      * 
      * @param  field
      *         The field needs to be sorted on.
@@ -34,15 +36,19 @@ public class Sort {
         this.field = field;
     }
 
-
     /**
-     * Construct a {@code Sort}
+     * Construct a {@code Sort}.
      * 
-     * @param field
-     * @param ascending
+     * @param  field
+     *         The field needs to be sorted on.
+     *         
+     * @param  ascending
+     *         Sorting in ascending order or not.
+     *         
+     * @since   1.0
      */
     public Sort(String field, boolean ascending) {
-        this.field = field;
+        this.field     = field;
         this.ascending = ascending;
     }
 
@@ -52,10 +58,21 @@ public class Sort {
     public void    setAscending(boolean ascending) { this.ascending = ascending; }
     
     /**
-     * Parse sort expression
+     * Parse sort expression.
+     * 
+     * <p>Different fields are separated by comma, and for each field, use "-" 
+     * as descending order and use "+" as ascending order following a field 
+     * name. The format looks like:
+     * <pre>
+     *   field1+,field2-,field3+,...
+     * </pre>
      *
-     * @param input
-     * @return
+     * @param  input
+     *         The input string.
+     *         
+     * @return  The {@code Sort} object.
+     * 
+     * @since   1.0
      */
     public static Sort parse(String input) {
         Sort sort = null;
@@ -87,9 +104,18 @@ public class Sort {
         return sort;
     }
 
+    /**
+     * Add another {@code Sort} object into this {@code Sort} object.
+     * 
+     * @param  sort
+     *         The {@code Sort} object.
+     *         
+     * @return  The new merged {@code Sort} object.
+     * 
+     * @since   1.0
+     */
     public Sort add(Sort sort) {
-        // if non-cascading then convert to cascading sort
-        if(this.isCascading() == false) {
+        if(!this.isCascading()) {
             list = new ArrayList<>();
 
             Sort self = new Sort(this.field, this.ascending);
@@ -107,34 +133,100 @@ public class Sort {
         return this;
     }
 
-    public Sort add(String value) {
-        return add(new Sort(value));
+    /**
+     * Add another sorting field into this {@code Sort} object.
+     * 
+     * <p>The new field will be sorted as ascending order.
+     * 
+     * @param  field
+     *         The field needs to be added into this {@code Sort} object.
+     *         
+     * @return  The new merged {@code Sort} object.
+     * 
+     * @since   1.0
+     */
+    public Sort add(String field) {
+        return add(new Sort(field));
     }
 
-    public Sort add(String value, boolean ascending) {
-        return add(new Sort(value, ascending));
+    /**
+     * Add another sorting field into this {@code Sort} object.
+     * 
+     * @param  field
+     *         The field needs to be added into this {@code Sort} object.
+     *         
+     * @param  ascending
+     *         Sorting in ascending order or not.
+     *         
+     * @return  The new merged {@code Sort} object.
+     * 
+     * @since   1.0
+     */
+    public Sort add(String field, boolean ascending) {
+        return add(new Sort(field, ascending));
     }
 
+    /**
+     * Return a list of {@code Sort} object.
+     * 
+     * <p>This method will separate each sorting field into different 
+     * {@code Sort} objects.
+     * 
+     * @return  The list of {@code Sort} object.
+     * 
+     * @since   1.0
+     */
     public List<Sort> toList() {
         if (isCascading()) {
             return list;
         } else {
-            List<Sort> selfList = new ArrayList<>();
-            selfList.add(this);
-            return selfList;
+            List<Sort> newList = new ArrayList<>();
+            newList.add(this);
+            return newList;
         }
     }
 
+    /**
+     * Check this {@code Sort} object is cascading (compound) or not. 
+     * 
+     * @return  {@code true} if this {@code Sort} object is cascading 
+     *                       (compound);
+     *          {@code false} otherwise.
+     *          
+     * @since   1.0
+     */
     public boolean isCascading() {
-        if (list == null || list.isEmpty()) {
-            return false;
-        }
-        return true;
+        return !(list == null || list.isEmpty());
     }
-
 
     @Override
     public String toString() {
-        return "";
+    		if (isCascading()) {
+    			StringBuilder sb = new StringBuilder();
+            for (Sort sort : list) {
+            		if (list.get(list.size() - 1).equals(sort)) {
+            			sb.append(getStringOfSimpleSort(sort));
+            		} else {
+            			sb.append(getStringOfSimpleSort(sort)).append(",");
+            		}
+            }
+            return sb.toString();
+        } else {
+            return getStringOfSimpleSort(this);
+        }
+    }
+    
+    /**
+     * Get the string of a simple {@code Sort} object.
+     * 
+     * @param  sort
+     *         The simple {@code Sort} object.
+     *         
+     * @return  The string of a simple {@code Sort} object.
+     * 
+     * @since   1.0
+     */
+    public String getStringOfSimpleSort(Sort sort) {
+    		return sort.getField() + (sort.isAscending() ? "+" : "-");
     }
 }
