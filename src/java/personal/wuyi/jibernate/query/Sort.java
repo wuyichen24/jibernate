@@ -38,8 +38,8 @@ public class Sort {
     /**
      * Construct a {@code Sort}
      * 
-     * @param field
-     * @param ascending
+     * @param  field
+     * @param  ascending
      */
     public Sort(String field, boolean ascending) {
         this.field = field;
