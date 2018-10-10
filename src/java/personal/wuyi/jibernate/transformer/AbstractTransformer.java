@@ -1,21 +1,44 @@
 package personal.wuyi.jibernate.transformer;
 
 /**
- * Abstract transformer
+ * Abstract transformer.
  * 
- * <p>By default, most Transformers are expected to implements the decorator 
+ * <p>This class will be an abstract transformer and needs to be initialized 
+ * by a specific transformer. The transform method will transform a object to 
+ * another object in different or same type.
+ * 
+ * <p>By default, most transformers are expected to implements the decorator 
  * pattern, but are not strictly required to do so.
  * 
- * @author  Wuyi Chen
+ * @param  <X>
+ *         The class / type of the original object (before transforming).
+ *         
+ * @param  <Y>
+ *         The class / type of the transformed object (After transforming).
  * 
- * @param <X>
- * @param <Y>
+ * @author  Wuyi Chen
+ * @date    10/09/2018
+ * @version 1.0
+ * @since   1.0
  */
 public abstract class AbstractTransformer<X,Y> implements Transformer<X,Y> {
 	private Transformer<X,Y> transformer = null;
 	
+	/**
+	 * Constructs a {@code AbstractTransformer}.
+	 * 
+     * @since   1.0
+	 */
 	public AbstractTransformer() {}
 
+	/**
+	 * Constructs a {@code AbstractTransformer}.
+	 * 
+	 * @param  transformer
+	 *         The specific transformer object will do the transforming.
+	 *         
+     * @since   1.0
+	 */
 	public AbstractTransformer(Transformer<X,Y> transformer) {
 		this.transformer = transformer;
 	}
