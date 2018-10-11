@@ -3,6 +3,14 @@ package personal.wuyi.jibernate.util;
 import org.junit.Assert;
 import org.junit.Test;
 
+/**
+ * The test class for {@code HexDecimal}.
+ * 
+ * @author  Wuyi Chen
+ * @date    10/10/2018
+ * @version 1.0
+ * @since   1.0
+ */
 public class HexDecimalTest {
 	@Test
 	public void encodeTest() {
