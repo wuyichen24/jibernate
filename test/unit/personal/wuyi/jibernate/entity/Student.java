@@ -38,4 +38,16 @@ public class Student extends AbstractEntity {
 	public void      setGpa(double gpa)             { this.gpa = gpa;             }
 	public Ethnicity getRace()                      { return race;                }
 	public void      setRace(Ethnicity race)        { this.race = race;           }
+	
+	public Student() { }
+	
+	public Student(String firstName, String lastName, double gpa) {
+		this.firstName = firstName;
+		this.lastName  = lastName;
+		this.gpa       = gpa;
+	}
+	
+	public String toString() {
+		return firstName + "," + lastName + ":" + gpa;
+	}
 }

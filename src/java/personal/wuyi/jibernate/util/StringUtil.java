@@ -7,132 +7,171 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+/**
+ * The tool class for manipulating {@code String}.
+ *
+ * @author  Wuyi Chen
+ * @date    10/12/2018
+ * @version 1.0
+ * @since   1.0
+ */
 public class StringUtil {
+	private StringUtil() {}
+	
 	/**
-     * Format collection to string using default Object.toString() behavior.
+     * Join a collection to objects in string using default Object.toString() 
+     * method.
      *
-     * @param delimiter
-     * @param collection
-     * @param formatter
-     * @param <T>
-     * @return
+     * @param  delimiter
+     *         The delimiter for concatenating each string.
+     *         
+     * @param  collection
+     *         The collection of objects.
+     *         
+     * @return  The joined string of the collection.
+     * 
+     * @since   1.0
      */
-    public static <T> String join( String delimiter, Collection<T> collection ) {
-
-        return join( delimiter, collection, (n) -> n.toString() );
+    public static <T> String join(String delimiter, Collection<T> collection) {
+        return join(delimiter, collection, n -> n.toString());
     }
 
-
     /**
-     * Format collection to string
+     * Join a collection to objects in string.
      *
-     * @param delimiter
-     * @param collection
-     * @param formatter
-     * @param <T>
-     * @return
+     * @param  delimiter
+     *         The delimiter for concatenating each string.
+     *         
+     * @param  collection
+     *         The collection of objects.
+     *         
+     * @param  formatter
+     *         The function to generate the string by element in the list.
+     * 
+     * @return  The joined string of the collection.
+     * 
+     * @since   1.0
      */
-    public static <T> String join( String delimiter, Collection<T> collection, Function<T,String> formatter ) {
+    public static <T> String join(String delimiter, Collection<T> collection, Function<T,String> formatter) {
+        return collection.stream()
+                .map(formatter)
+                .collect(Collectors.joining(delimiter));
 
-        String joined = collection.stream()
-                .map( formatter )
-                .collect( Collectors.joining( delimiter ));
-
-        return joined;
-    }
-    
-    /**
-     * Prepend and append the argument "wrapper" value on either side of the argument string.
-     *
-     * @param s
-     * @param wrapper
-     * @return
-     */
-    public static String wrap( String s, String wrapper ) {
-
-        if( s == null ) {
-            s = "";
-        }
-
-        StringBuilder sb = new StringBuilder();
-        sb.append( wrapper ).append( s ).append( wrapper );
-
-        return sb.toString();
     }
     
     /**
-     * Find subtext occurring within argument text, and replace with argument value.
+     * Replace a string with another string.
      *
-     * @param text       the text input.
-     * @param find       the subtext to match
-     * @param replace    the value that will replace matched sub-text ($1 may be used to decorate matched value, e.g. "prefix-$1-postfix")
-     * @param wholeWord  flag indicating that matching should occur on whole word phrases only
-     * @param ignoreCase flag indicating that matching should ignore case
-     * @return The modified string or null if not matched.
+     * @param  string       
+     *         The input string.
+     * 
+     * @param  targetStr
+     *         The string to match.
+     *         
+     * @param  replaceStr
+     *         The string to replace by.
+     * 
+     * @param  isWholeWord  
+     *         The flag indicating that matching should occur on whole word 
+     *         or phrases only.
+     *         
+     * @param  isIgnoreCase 
+     *         The flag indicating that matching should ignore case.
+     *         
+     * @return  The modified string or null if not matched.
+     * 
+     * @since   1.0
      */
-    public static String replace( String text, String find, String replace, boolean wholeWord, boolean ignoreCase ) {
-
-        return replace( text, Arrays.asList( find ), replace, wholeWord, ignoreCase );
+    public static String replace(String string, String targetStr, String replaceStr, boolean isWholeWord, boolean isIgnoreCase) {
+        return replace(string, Arrays.asList(targetStr), replaceStr, isWholeWord, isIgnoreCase);
     }
 
 
     /**
      * Find all terms occurring within argument text, and replace with argument value.
      *
-     * @param text       the text input.
-     * @param find       a set of sub-text that replacement will match any
-     * @param replace    the value that will replace matched sub-text ($1 may be used to decorate matched value, e.g. "prefix-$1-postfix")
-     * @param wholeWord  flag indicating that matching should occur on whole word phrases only
-     * @param ignoreCase flag indicating that matching should ignore case
-     * @return The modified string or null if not matched.
+     * @param  string
+     *         The input string.
+     *         
+     * @param  targetCollection
+     *         The set of strings to match.
+     *         
+     * @param  replaceStr
+     *         The string to replace by.
+     *         
+     * @param  isWholeWord  
+     *         The flag indicating that matching should occur on whole word 
+     *         or phrases only.
+     *         
+     * @param  isIgnoreCase 
+     *         The flag indicating that matching should ignore case or not.
+     *         
+     * @return  The modified string or null if not matched.
+     * 
+     * @since   1.0
      */
-    public static String replace( String text, Collection<String> find, final String replace, boolean wholeWord, boolean ignoreCase ) {
-
-        Matcher matcher = getMatcher( text, find, wholeWord, ignoreCase );
-        String replaced = matcher.replaceAll( replace );
-
-        return replaced;
-
+    public static String replace(String string, Collection<String> targetCollection, final String replaceStr, boolean isWholeWord, boolean isIgnoreCase) {
+        Matcher matcher = getMatcher(string, targetCollection, isWholeWord, isIgnoreCase);
+        return matcher.replaceAll(replaceStr);
     }
     
     /**
-    *
-    * @param text
-    * @param find
-    * @param wholeWord
-    * @param ignoreCase
-    * @return
-    */
-   public static Matcher getMatcher( String text, Collection<String> find, boolean wholeWord, boolean ignoreCase ) {
-
-       // iterate over terms and escape any special regex characters
-       Collection<String> quoted = find.stream().map( s -> Pattern.quote( s ) ).collect( Collectors.toList() );
-
-       String regex = join( "|", quoted );
-
-       return getMatcher( text, regex, wholeWord, ignoreCase );
-   }
+     * Build a {@code Matcher} for matching a list of string.
+     * 
+     * <p>This method will iterate each string in the collection and 
+     * concatenate the regular expression for matching.
+     *
+     * @param  string
+     *         The input string.
+     *         
+     * @param  targetCollection
+     *         The set of strings to match.
+     *         
+     * @param  isWholeWord
+     *         The flag indicating that matching should occur on whole word 
+     *         or phrases only.
+     *         
+     * @param  isIgnoreCase
+     *         The flag indicating that matching should ignore case or not.
+     * 
+     * @return  The new {@code Matcher} object.
+     * 
+     * @since   1.0
+     */
+    public static Matcher getMatcher(String string, Collection<String> targetCollection, boolean isWholeWord, boolean isIgnoreCase) {
+    	Collection<String> quoted = targetCollection.stream().map(s -> Pattern.quote(s)).collect(Collectors.toList());
+    	String regex = join("|", quoted);
+    	return getMatcher(string, regex, isWholeWord, isIgnoreCase);
+    }
    
-   /**
-   *
-   * @param text
-   * @param find
-   * @param wholeWord
-   * @param ignoreCase
-   * @return
-   */
-  public static Matcher getMatcher( String text, String regex, boolean wholeWord, boolean ignoreCase ) {
+    /**
+     * Build a {@code Matcher} based on a regular expression
+     *
+     * @param  string
+     *         The input string.
+     * 
+     * @param  regex
+     *         The regular expression.
+     * 
+     * @param  isWholeWord
+     *         The flag indicating that matching should occur on whole word 
+     *         or phrases only.
+     * 
+     * @param  isIgnoreCase
+     *         The flag indicating that matching should ignore case or not.
+     * 
+     * @return  The new {@code Matcher} object.
+     * 
+     * @since   1.0
+     */
+    public static Matcher getMatcher(String string, String regex, boolean isWholeWord, boolean isIgnoreCase) {
+    	regex = "(" + regex + ")";
 
-      regex = "(" + regex + ")";  // define grouping
+    	if(isWholeWord) {
+    		regex = "\\b" + regex + "\\b";
+    	}
 
-      // match word boundaries
-      if( wholeWord ) {
-          regex = "\\b" + regex + "\\b";
-      }
-
-      Pattern pattern = ( ignoreCase) ? Pattern.compile( regex, Pattern.CASE_INSENSITIVE ) : Pattern.compile( regex ) ;
-      Matcher matcher = pattern.matcher( text );
-
-      return matcher;
-  }
+    	Pattern pattern = (isIgnoreCase) ? Pattern.compile(regex, Pattern.CASE_INSENSITIVE) : Pattern.compile(regex) ;
+    	return pattern.matcher(string);
+    }
 }

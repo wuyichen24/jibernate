@@ -8,6 +8,8 @@ import java.util.Deque;
 import java.util.List;
 import java.util.function.Consumer;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.google.common.base.Preconditions;
 
 import personal.wuyi.jibernate.util.ReflectUtil2;
@@ -1109,7 +1111,7 @@ public class Expression implements Cloneable, Serializable {
         } else if (value instanceof Collection) {
 			String s = StringUtil.join(",", (Collection<?>) value, v -> {
                 if (v instanceof String) {
-                    return(StringUtil.wrap((String) v, "\""));
+                	return(StringUtils.wrap((String) v, "\""));
                 }
                 return v.toString();
             });
