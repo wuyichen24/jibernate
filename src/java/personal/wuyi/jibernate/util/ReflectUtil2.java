@@ -10,75 +10,72 @@ import org.apache.commons.beanutils.PropertyUtils;
 
 import personal.wuyi.reflect.ReflectUtil;
 
+/**
+ * @author wuyichen
+ *
+ */
 public class ReflectUtil2 {
 	/**
+	 * Check 2 general objects are equals or not.
+	 * 
+	 * <p>There are different cases for evaluating the equivalence of 2 
+	 * objects:
+	 * <ul>
+	 *   <li>If both 2 objects are null, the method will return {@code true}; 
+	 *   If one is null and another is not null, the method will return 
+	 *   {@code false}.
+	 *   <li>If both 2 objects are {@code List}, they are equal only if they 
+	 *   have the same number of elements and each element in one {@code List} 
+	 *   has the same element in another {@code List}.
+	 * </ul> 
+	 * 
      * Check if two objects are "equivalent", which we assert to mean
      * either both are null, or B is polymorphically similar to A and
      * all values are equivalent.  For primitives == will be applied,
      * for primitive wrappers "equals()" method, otherwise equivalent will
      * be recursively called on all complex data structures.
      *
-     * @param a
-     * @param b
-     * @return
+     * @param  obj1
+     *         The first object.
+     * 
+     * @param  obj2
+     *         The second object.
+     * 
+     * @return  {@code true} if those objects are equal;
+     *          {@code false} otherwise;
      */
-    public static boolean equivalent(Object a, Object b) {
-    	if (a == null || b == null) {
-    		if (a == null && b == null) {
-    			return true;
-    		} else {
-    			return false;
+    public static boolean isEqual(Object obj1, Object obj2) {
+    		if (obj1 == null || obj2 == null) {
+    			if (obj1 == null && obj2 == null) {
+    				return true;
+    			} else {
+    				return false;
+    			}
     		}
-    	}
 
         // TODO map, array, iterable
-        if(List.class.isAssignableFrom(a.getClass()) && List.class.isAssignableFrom(b.getClass()) ) {
-
-            List m = (List) a;
-            List n = (List) b;
-
-            if(m.size() != n.size()) {
-                return false;
-            }
-
-            Iterator i = m.iterator();
-            Iterator j = n.iterator();
-
-            while(i.hasNext()) {
-
-                Object aa = i.next();
-                Object bb = j.next();
-
-                if(equivalent(aa, bb) == false) {
-                    return false;
-                }
-            }
-
-            return true;
+        if(List.class.isAssignableFrom(obj1.getClass()) && List.class.isAssignableFrom(obj2.getClass()) ) {
+        		return isEqualList((List<?>) obj1, (List<?>) obj2);
         }
 
-        if(a.getClass().isAssignableFrom(b.getClass()) == false) {
-
+        if(!obj1.getClass().isAssignableFrom(obj2.getClass())) {
             return false;
         }
 
-        // do primitive (wrapper) comparison
-        if(ReflectUtil.isPrimitive(a.getClass())) {
-            return a.equals(b);
+        if(ReflectUtil.isPrimitive(obj1.getClass())) {
+            return obj1.equals(obj2);
         }
-
-
 
         // check if objects are equivalent (recursive)
         try {
-            Map<String,Class> propertyMap = getPropertyMap(a.getClass());
+            Map<String,Class> propertyMap = getPropertyMap(obj1.getClass());
             for(String prop : propertyMap.keySet()) {
 
                 //Class propClass = propertyMap.get(prop);
-                Object valueA = PropertyUtils.getProperty(a, prop);
-                Object valueB = PropertyUtils.getProperty(b, prop);
+                Object valueA = PropertyUtils.getProperty(obj1, prop);
+                Object valueB = PropertyUtils.getProperty(obj2, prop);
 
-                boolean equivalent = equivalent(valueA, valueB);
+                boolean equivalent = isEqual(valueA, valueB);
                 if(!equivalent) {
 
                     // if any value is non-equivalent, then none are
@@ -97,12 +94,44 @@ public class ReflectUtil2 {
     }
     
     /**
+     * Check 2 lists are equal or not.
+     * 
+     * @param  list1
+     *         The first list.
+     *         
+     * @param  list2
+     *         The second list.
+     * 
+     * @return  {@code true} if 2 lists are equal;
+     *          {@code false} otherwise.
+     */
+    public static boolean isEqualList(List<?> list1, List<?> list2) {
+        if(list1.size() != list2.size()) {
+            return false;
+        }
+
+        Iterator<?> iter1 = list1.iterator();
+        Iterator<?> iter2 = list2.iterator();
+
+        while(iter1.hasNext()) {
+            Object ele1 = iter1.next();
+            Object ele2 = iter2.next();
+
+            if(!isEqual(ele1, ele2)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+    
+    /**
      * Returns a list of all bean properties, including those inherited from superclass (accessible getter method must be defined).
      *
      * @param c
      * @return
      */
-    public static Map<String, Class> getPropertyMap(Class c) {
+    public static Map<String, Class> getPropertyMap(Class<? extends Object> c) {
 
         return getPropertyMap(c, false, false);
     }
@@ -115,7 +144,7 @@ public class ReflectUtil2 {
      * @param c
      * @return
      */
-    public static Map<String, Class> getPropertyMap(Class c, boolean recurse, boolean setter) {
+    public static Map<String, Class> getPropertyMap(Class<? extends Object> c, boolean recurse, boolean setter) {
 
         if(c == null) {
             return null;
@@ -131,7 +160,7 @@ public class ReflectUtil2 {
         for(Map.Entry<String,Class<?>> entry : fieldMap.entrySet()) {
 
             String prop = entry.getKey();
-            Class propClass = entry.getValue();
+            Class<? extends Object> propClass = entry.getValue();
 
             // determine if getter/setter method exists and is accessible, otherwise ignore
             try {
@@ -144,7 +173,7 @@ public class ReflectUtil2 {
 
                     for(String childField : childMap.keySet()) {
 
-                        Class childClass = childMap.get(childField);
+                        Class<? extends Object> childClass = childMap.get(childField);
 
                         // define children as nested property
                         String nested = prop + "." + childField;
@@ -175,7 +204,7 @@ public class ReflectUtil2 {
      * @return
      * @throws NoSuchMethodException
      */
-    public static Method getBeanMethod(Class c, String propertyName, Class propertyClass, boolean setter) throws NoSuchMethodException {
+    public static Method getBeanMethod(Class<? extends Object> c, String propertyName, Class<? extends Object> propertyClass, boolean setter) throws NoSuchMethodException {
 
         String beanPrefix = (setter) ? "set" : "get";
 

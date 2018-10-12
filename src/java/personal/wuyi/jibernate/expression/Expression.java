@@ -1388,7 +1388,7 @@ public class Expression implements Cloneable, Serializable {
 
         // Value (check values for "equivalence", we don't care about being same object)
         if (getValue() != null) {
-            if (!ReflectUtil2.equivalent(getValue(), expression.getValue())) {
+            if (!ReflectUtil2.isEqual(getValue(), expression.getValue())) {
                 return false;
             }
         } else if (expression.getValue() != null) {
