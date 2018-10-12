@@ -11,8 +11,12 @@ import org.apache.commons.beanutils.PropertyUtils;
 import personal.wuyi.reflect.ReflectUtil;
 
 /**
- * @author wuyichen
- *
+ * The tool class for reflection.
+ * 
+ * @author  Wuyi Chen
+ * @date    09/18/2018
+ * @version 1.0
+ * @since   1.0
  */
 public class ReflectUtil2 {
 	/**
@@ -27,13 +31,11 @@ public class ReflectUtil2 {
 	 *   <li>If both 2 objects are {@code List}, they are equal only if they 
 	 *   have the same number of elements and each element in one {@code List} 
 	 *   has the same element in another {@code List}.
+	 *   <li>If both 2 objects are in primitive types, so they will be 
+	 *   evaluated by ==. If 2 objects are primitive wrappers, so 
+	 *   {@code equals()} will be applied.
+	 *   <li>Other cases, those 2 objects will be evaluated recursively.
 	 * </ul> 
-	 * 
-     * Check if two objects are "equivalent", which we assert to mean
-     * either both are null, or B is polymorphically similar to A and
-     * all values are equivalent.  For primitives == will be applied,
-     * for primitive wrappers "equals()" method, otherwise equivalent will
-     * be recursively called on all complex data structures.
      *
      * @param  obj1
      *         The first object.
@@ -43,19 +45,20 @@ public class ReflectUtil2 {
      * 
      * @return  {@code true} if those objects are equal;
      *          {@code false} otherwise;
+     *          
+     * @since   1.0
      */
     public static boolean isEqual(Object obj1, Object obj2) {
-    		if (obj1 == null || obj2 == null) {
-    			if (obj1 == null && obj2 == null) {
-    				return true;
-    			} else {
-    				return false;
-    			}
+    	if (obj1 == null || obj2 == null) {
+    		if (obj1 == null && obj2 == null) {
+    			return true;
+    		} else {
+    			return false;
     		}
-
-        // TODO map, array, iterable
-        if(List.class.isAssignableFrom(obj1.getClass()) && List.class.isAssignableFrom(obj2.getClass()) ) {
-        		return isEqualList((List<?>) obj1, (List<?>) obj2);
+    	}
+    	
+        if(List.class.isAssignableFrom(obj1.getClass()) && List.class.isAssignableFrom(obj2.getClass())) {
+        	return isEqualList((List<?>) obj1, (List<?>) obj2);
         }
 
         if(!obj1.getClass().isAssignableFrom(obj2.getClass())) {
@@ -66,27 +69,18 @@ public class ReflectUtil2 {
             return obj1.equals(obj2);
         }
 
-        // check if objects are equivalent (recursive)
         try {
-            Map<String,Class> propertyMap = getPropertyMap(obj1.getClass());
+            Map<String,Class<?>> propertyMap = getPropertyMap(obj1.getClass());
             for(String prop : propertyMap.keySet()) {
+                Object value1 = PropertyUtils.getProperty(obj1, prop);
+                Object value2 = PropertyUtils.getProperty(obj2, prop);
 
-                //Class propClass = propertyMap.get(prop);
-                Object valueA = PropertyUtils.getProperty(obj1, prop);
-                Object valueB = PropertyUtils.getProperty(obj2, prop);
-
-                boolean equivalent = isEqual(valueA, valueB);
+                boolean equivalent = isEqual(value1, value2);
                 if(!equivalent) {
-
-                    // if any value is non-equivalent, then none are
                     return false;
                 }
             }
-
-
-        }
-        catch(Exception e) {
-            // shouldn't happen
+        } catch(Exception e) {
             return false;
         }
 
@@ -104,6 +98,8 @@ public class ReflectUtil2 {
      * 
      * @return  {@code true} if 2 lists are equal;
      *          {@code false} otherwise.
+     *          
+     * @since   1.0
      */
     public static boolean isEqualList(List<?> list1, List<?> list2) {
         if(list1.size() != list2.size()) {
@@ -126,13 +122,14 @@ public class ReflectUtil2 {
     }
     
     /**
-     * Returns a list of all bean properties, including those inherited from superclass (accessible getter method must be defined).
+     * Returns a list of all bean properties
+     * 
+     * <p>All the bean properties including those inherited from superclass (accessible getter method must be defined).
      *
      * @param c
      * @return
      */
-    public static Map<String, Class> getPropertyMap(Class<? extends Object> c) {
-
+    public static Map<String, Class<?>> getPropertyMap(Class<? extends Object> c) {
         return getPropertyMap(c, false, false);
     }
 
@@ -144,14 +141,14 @@ public class ReflectUtil2 {
      * @param c
      * @return
      */
-    public static Map<String, Class> getPropertyMap(Class<? extends Object> c, boolean recurse, boolean setter) {
+    public static Map<String, Class<?>> getPropertyMap(Class<? extends Object> c, boolean recurse, boolean setter) {
 
         if(c == null) {
             return null;
         }
 
         // NOTE: LinkedHashMap used in case ordering matters to caller
-        Map<String,Class> map = new LinkedHashMap<>();
+        Map<String,Class<?>> map = new LinkedHashMap<>();
 
 
         // get top level fields (will recurse later as needed)
@@ -169,7 +166,7 @@ public class ReflectUtil2 {
 
                 if(recurse && propClass.isPrimitive() == false && ReflectUtil.isPrimitiveWrapper(propClass) == false) {
 
-                    Map<String, Class> childMap = getPropertyMap(propClass, true, setter);
+                    Map<String, Class<?>> childMap = getPropertyMap(propClass, true, setter);
 
                     for(String childField : childMap.keySet()) {
 
