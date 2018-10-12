@@ -22,37 +22,34 @@ public class ReflectUtil2 {
      * @param b
      * @return
      */
-    public static boolean equivalent( Object a, Object b ) {
-
-        if( a == null ) {
-            if( b == null ) {
-                return true;
-            }
-            return false;
-        }
-        else if( b == null ) {
-            return false;
-        }
+    public static boolean equivalent(Object a, Object b) {
+    	if (a == null || b == null) {
+    		if (a == null && b == null) {
+    			return true;
+    		} else {
+    			return false;
+    		}
+    	}
 
         // TODO map, array, iterable
-        if( List.class.isAssignableFrom( a.getClass() ) && List.class.isAssignableFrom( b.getClass() )  ) {
+        if(List.class.isAssignableFrom(a.getClass()) && List.class.isAssignableFrom(b.getClass()) ) {
 
             List m = (List) a;
             List n = (List) b;
 
-            if( m.size() != n.size() ) {
+            if(m.size() != n.size()) {
                 return false;
             }
 
             Iterator i = m.iterator();
             Iterator j = n.iterator();
 
-            while( i.hasNext() ) {
+            while(i.hasNext()) {
 
                 Object aa = i.next();
                 Object bb = j.next();
 
-                if( equivalent( aa, bb ) == false ) {
+                if(equivalent(aa, bb) == false) {
                     return false;
                 }
             }
@@ -60,29 +57,29 @@ public class ReflectUtil2 {
             return true;
         }
 
-        if( a.getClass().isAssignableFrom( b.getClass() ) == false ) {
+        if(a.getClass().isAssignableFrom(b.getClass()) == false) {
 
             return false;
         }
 
         // do primitive (wrapper) comparison
-        if( ReflectUtil.isPrimitive( a.getClass() ) ) {
-            return a.equals( b );
+        if(ReflectUtil.isPrimitive(a.getClass())) {
+            return a.equals(b);
         }
 
 
 
         // check if objects are equivalent (recursive)
         try {
-            Map<String,Class> propertyMap = getPropertyMap( a.getClass() );
-            for( String prop : propertyMap.keySet() ) {
+            Map<String,Class> propertyMap = getPropertyMap(a.getClass());
+            for(String prop : propertyMap.keySet()) {
 
-                //Class propClass = propertyMap.get( prop );
-                Object valueA = PropertyUtils.getProperty( a, prop );
-                Object valueB = PropertyUtils.getProperty( b, prop );
+                //Class propClass = propertyMap.get(prop);
+                Object valueA = PropertyUtils.getProperty(a, prop);
+                Object valueB = PropertyUtils.getProperty(b, prop);
 
-                boolean equivalent = equivalent( valueA, valueB );
-                if( !equivalent ) {
+                boolean equivalent = equivalent(valueA, valueB);
+                if(!equivalent) {
 
                     // if any value is non-equivalent, then none are
                     return false;
@@ -91,7 +88,7 @@ public class ReflectUtil2 {
 
 
         }
-        catch( Exception e ) {
+        catch(Exception e) {
             // shouldn't happen
             return false;
         }
@@ -105,9 +102,9 @@ public class ReflectUtil2 {
      * @param c
      * @return
      */
-    public static Map<String, Class> getPropertyMap( Class c ) {
+    public static Map<String, Class> getPropertyMap(Class c) {
 
-        return getPropertyMap( c, false, false );
+        return getPropertyMap(c, false, false);
     }
 
 
@@ -118,9 +115,9 @@ public class ReflectUtil2 {
      * @param c
      * @return
      */
-    public static Map<String, Class> getPropertyMap( Class c, boolean recurse, boolean setter ) {
+    public static Map<String, Class> getPropertyMap(Class c, boolean recurse, boolean setter) {
 
-        if( c == null ) {
+        if(c == null) {
             return null;
         }
 
@@ -129,9 +126,9 @@ public class ReflectUtil2 {
 
 
         // get top level fields (will recurse later as needed)
-        Map<String, Class<?>> fieldMap = ReflectUtil.getFieldMap( c, false );
+        Map<String, Class<?>> fieldMap = ReflectUtil.getFieldMap(c, false);
 
-        for( Map.Entry<String,Class<?>> entry : fieldMap.entrySet() ) {
+        for(Map.Entry<String,Class<?>> entry : fieldMap.entrySet()) {
 
             String prop = entry.getKey();
             Class propClass = entry.getValue();
@@ -139,29 +136,29 @@ public class ReflectUtil2 {
             // determine if getter/setter method exists and is accessible, otherwise ignore
             try {
 
-                Method method = getBeanMethod( c, prop, propClass, setter );
+                Method method = getBeanMethod(c, prop, propClass, setter);
 
-                if( recurse && propClass.isPrimitive() == false && ReflectUtil.isPrimitiveWrapper( propClass ) == false ) {
+                if(recurse && propClass.isPrimitive() == false && ReflectUtil.isPrimitiveWrapper(propClass) == false) {
 
-                    Map<String, Class> childMap = getPropertyMap( propClass, true, setter );
+                    Map<String, Class> childMap = getPropertyMap(propClass, true, setter);
 
-                    for( String childField : childMap.keySet() ) {
+                    for(String childField : childMap.keySet()) {
 
-                        Class childClass = childMap.get( childField );
+                        Class childClass = childMap.get(childField);
 
                         // define children as nested property
                         String nested = prop + "." + childField;
-                        map.put( nested, childClass );
+                        map.put(nested, childClass);
                     }
                 }
                 else {
 
-                    map.put( prop, propClass );
+                    map.put(prop, propClass);
                 }
 
                 // TODO - handle case where class is abstract or interface
             }
-            catch( NoSuchMethodException e ) {
+            catch(NoSuchMethodException e) {
                 // ok if not found, we are testing for existence of getter/setter
             }
 
@@ -178,25 +175,25 @@ public class ReflectUtil2 {
      * @return
      * @throws NoSuchMethodException
      */
-    public static Method getBeanMethod( Class c, String propertyName, Class propertyClass, boolean setter ) throws NoSuchMethodException {
+    public static Method getBeanMethod(Class c, String propertyName, Class propertyClass, boolean setter) throws NoSuchMethodException {
 
         String beanPrefix = (setter) ? "set" : "get";
 
         // build method name from type and field name
-        String methodName = beanPrefix + propertyName.substring( 0, 1 ).toUpperCase() + propertyName.substring( 1, propertyName.length() );
+        String methodName = beanPrefix + propertyName.substring(0, 1).toUpperCase() + propertyName.substring(1, propertyName.length());
 
         Class[] args = (setter) ? new Class[]{propertyClass} : null;
 
         try {
-            return c.getMethod( methodName, args );
+            return c.getMethod(methodName, args);
         }
-        catch( NoSuchMethodException e ) {
+        catch(NoSuchMethodException e) {
 
             // handle isBoolean() vs getBoolean()
-            if( !setter ) {
-                if( Boolean.class.isAssignableFrom( propertyClass ) || boolean.class.isAssignableFrom( propertyClass ) ) {
-                    methodName = "is" + propertyName.substring( 0, 1 ).toUpperCase() + propertyName.substring( 1, propertyName.length() );
-                    return c.getMethod( methodName );
+            if(!setter) {
+                if(Boolean.class.isAssignableFrom(propertyClass) || boolean.class.isAssignableFrom(propertyClass)) {
+                    methodName = "is" + propertyName.substring(0, 1).toUpperCase() + propertyName.substring(1, propertyName.length());
+                    return c.getMethod(methodName);
                 }
             }
 
