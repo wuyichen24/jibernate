@@ -122,15 +122,21 @@ public class ReflectUtil2 {
     }
     
     /**
-     * Returns a list of all bean properties
+     * Returns a property map of a class
      * 
-     * <p>All the bean properties including those inherited from superclass (accessible getter method must be defined).
+     * <p>The entries in the map reflect all the data members in the class and 
+     * its super class. The key of entries is the name of a data member, and 
+     * the value of the entries is the type of a data member. 
      *
-     * @param c
-     * @return
+     * @param  clazz
+     *         The class needs to get the property map.
+     * 
+     * @return  The property map of a class.
+     * 
+     * @since   1.0
      */
-    public static Map<String, Class<?>> getPropertyMap(Class<? extends Object> c) {
-        return getPropertyMap(c, false, false);
+    public static Map<String, Class<?>> getPropertyMap(Class<? extends Object> clazz) {
+        return getPropertyMap(clazz, false, false);
     }
 
 
@@ -138,12 +144,14 @@ public class ReflectUtil2 {
      * Returns a list of bean property names (accessible getter method must be defined).
      * If setter flag is specified, then an accessible setter method must be defined).
      *
-     * @param c
+     * @param clazz
+     * @param recurse
+     * @param setter
      * @return
      */
-    public static Map<String, Class<?>> getPropertyMap(Class<? extends Object> c, boolean recurse, boolean setter) {
+    public static Map<String, Class<?>> getPropertyMap(Class<? extends Object> clazz, boolean recurse, boolean setter) {
 
-        if(c == null) {
+        if(clazz == null) {
             return null;
         }
 
@@ -152,7 +160,7 @@ public class ReflectUtil2 {
 
 
         // get top level fields (will recurse later as needed)
-        Map<String, Class<?>> fieldMap = ReflectUtil.getFieldMap(c, false);
+        Map<String, Class<?>> fieldMap = ReflectUtil.getFieldMap(clazz, false);
 
         for(Map.Entry<String,Class<?>> entry : fieldMap.entrySet()) {
 
@@ -162,7 +170,7 @@ public class ReflectUtil2 {
             // determine if getter/setter method exists and is accessible, otherwise ignore
             try {
 
-                Method method = getBeanMethod(c, prop, propClass, setter);
+                Method method = getBeanMethod(clazz, prop, propClass, setter);
 
                 if(recurse && propClass.isPrimitive() == false && ReflectUtil.isPrimitiveWrapper(propClass) == false) {
 
