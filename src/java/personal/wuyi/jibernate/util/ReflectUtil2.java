@@ -49,13 +49,13 @@ public class ReflectUtil2 {
      * @since   1.0
      */
     public static boolean isEqual(Object obj1, Object obj2) {
-    	if (obj1 == null || obj2 == null) {
-    		if (obj1 == null && obj2 == null) {
-    			return true;
-    		} else {
-    			return false;
+    		if (obj1 == null || obj2 == null) {
+    			if (obj1 == null && obj2 == null) {
+    				return true;
+    			} else {
+    				return false;
+    			}
     		}
-    	}
     	
         if(List.class.isAssignableFrom(obj1.getClass()) && List.class.isAssignableFrom(obj2.getClass())) {
         	return isEqualList((List<?>) obj1, (List<?>) obj2);
