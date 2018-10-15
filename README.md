@@ -4,7 +4,34 @@
 The JPA (Java Persistence API) module based on the Hibernate ORM framework with the enhanced and simplified query and expression modules.
 
 ## Overview
-This is a JPA (Java Persistence API) module based on the Hibernate ORM framework. The entity and column mapping is based on annotations rather than a standalone mapping XML file. This module avoid writing the persistence file (XML) so that you will not be trapped by too detailed database configurations, you can use specific database configuration class for passing your basic database connection parameters to this module.
+This is a JPA (Java Persistence API) module based on the Hibernate ORM framework. The entity and column mapping is based on annotations rather than a standalone mapping XML file. For example, there is a student table in the database:
+```sql
+CREATE TABLE `student` (
+  `id`                 bigint(20)   NOT NULL AUTO_INCREMENT,
+  `first_name`         varchar(255) DEFAULT NULL,
+  `last_name`          varchar(255) DEFAULT NULL,
+  `dob`                datetime     DEFAULT NULL,
+  `gpa`                double       DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
+```
+
+So the persistence entity class which maps to this student table will look like this:
+```java
+@Entity
+@Table(name="student")
+public class Student extends AbstractEntity {
+    @Id
+	  @GeneratedValue(strategy = GenerationType.IDENTITY)
+	  @Column(name="id")           private Long      id;
+	  @Column(name="first_name")   private String    firstName;
+	  @Column(name="last_name")    private String    lastName;
+	  @Column(name="dob")          private Date      dob;
+	  @Column(name="gpa")          private double    gpa;
+}
+```
+
+This module avoid writing the persistence file (XML) so that you will not be trapped by too detailed database configurations, you can use specific database configuration class for passing your basic database connection parameters to this module.
 
 Another highlight of this project is it simplify the query, you don’t have to construct a long JPQL statement. It comes up the idea of Expression which has chain methods for you build up a complex query.
 ```java
