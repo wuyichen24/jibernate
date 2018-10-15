@@ -1,8 +1,9 @@
 package personal.wuyi.jibernate.util;
 
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.junit.Test;
 
@@ -11,8 +12,17 @@ import personal.wuyi.jibernate.entity.Ethnicity;
 import personal.wuyi.jibernate.entity.Student;
 
 import org.hamcrest.collection.IsMapContaining;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 
+/**
+ * The test class for {@code ReflectUtil2}.
+ * 
+ * @author  Wuyi Chen
+ * @date    10/15/2018
+ * @version 1.0
+ * @since   1.0
+ */
 public class ReflectUtil2Test {
 	@Test
 	public void isEqualTest() {
@@ -27,8 +37,15 @@ public class ReflectUtil2Test {
 		Assert.assertFalse(ReflectUtil2.isEqual(new Student("John", "Clash", 3.45), new Student("John", "Clash", 3.49)));
 	}
 	
+	@Test
 	public void isEqualListTest() {
+		List<String> list1 = Arrays.asList("ABC", "123", "XYZ");
+		List<String> list2 = Arrays.asList("ABC", "123", "XYZ");
+		Assert.assertTrue(ReflectUtil2.isEqualList(list1, list2));
 		
+		List<String> list3 = Arrays.asList("ABC", "123", "XYZ");
+		List<String> list4 = Arrays.asList("ABC", "XYZ", "123");
+		Assert.assertFalse(ReflectUtil2.isEqualList(list3, list4));
 	}
 	
 	@Test
