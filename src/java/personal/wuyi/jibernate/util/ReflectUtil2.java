@@ -20,6 +20,8 @@ import personal.wuyi.reflect.ReflectUtil;
  * @since   1.0
  */
 public class ReflectUtil2 {
+	private ReflectUtil2() {}
+	
 	/**
 	 * Check 2 general objects are equals or not.
 	 * 
@@ -50,13 +52,9 @@ public class ReflectUtil2 {
      * @since   1.0
      */
     public static boolean isEqual(Object obj1, Object obj2) {
-    		if (obj1 == null || obj2 == null) {
-    			if (obj1 == null && obj2 == null) {
-    				return true;
-    			} else {
-    				return false;
-    			}
-    		}
+    	if (obj1 == null || obj2 == null) {
+    		return obj1 == null && obj2 == null;
+    	}
     	
         if(List.class.isAssignableFrom(obj1.getClass()) && List.class.isAssignableFrom(obj2.getClass())) {
         	return isEqualList((List<?>) obj1, (List<?>) obj2);
@@ -76,8 +74,8 @@ public class ReflectUtil2 {
             		Object value1 = null;
             		Object value2 = null;
             	    try {
-            	    		value1 = PropertyUtils.getProperty(obj1, prop);
-            	    		value2 = PropertyUtils.getProperty(obj2, prop);
+            	    	value1 = PropertyUtils.getProperty(obj1, prop);
+            	    	value2 = PropertyUtils.getProperty(obj2, prop);
             	    } catch(NoSuchMethodException e) {
             	    	    // If the accessor method of a certain field is not define, the field will be ignored.
                     continue;
@@ -185,25 +183,21 @@ public class ReflectUtil2 {
             Class<? extends Object> fieldClass = entry.getValue();
 
             if(recurse && !fieldClass.isPrimitive() && !ReflectUtil.isPrimitiveWrapper(fieldClass) && !fieldClass.isEnum()) {
-            		Map<String, Class<?>> childMap = getPropertyMap(fieldClass, true, setter);
+            	Map<String, Class<?>> childMap = getPropertyMap(fieldClass, true, setter);
 
-                for(String childField : childMap.keySet()) {
-                		Class<? extends Object> childClass = childMap.get(childField);
-
-                		String nested = fieldName + "." + childField;
-                     map.put(nested, childClass);
+                for(Entry<String, Class<?>> entry1 : childMap.entrySet()) {
+                	String nested = fieldName + "." + entry1.getKey();
+                	map.put(nested, entry1.getValue());
                 }
             } else {
-            		map.put(fieldName, fieldClass);
+            	map.put(fieldName, fieldClass);
             		
-            		if (fieldClass.isEnum() && recurse) {
-            			if (recurse) {
-            				Object[] values = fieldClass.getEnumConstants();
-            				for (Object value : values) {
-            					map.put(((Ethnicity) value).name(), Enum.class);
-            				}
-            			}
-            		} 
+            	if (fieldClass.isEnum() && recurse) {
+            		Object[] values = fieldClass.getEnumConstants();
+            		for (Object value : values) {
+            			map.put(((Ethnicity) value).name(), Enum.class);
+            		}
+            	} 
             }
         }
 
