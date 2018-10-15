@@ -1,6 +1,5 @@
 package personal.wuyi.jibernate.util;
 
-import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -74,8 +73,15 @@ public class ReflectUtil2 {
         try {
             Map<String,Class<?>> propertyMap = getPropertyMap(obj1.getClass());
             for(String prop : propertyMap.keySet()) {
-                Object value1 = PropertyUtils.getProperty(obj1, prop);
-                Object value2 = PropertyUtils.getProperty(obj2, prop);
+            		Object value1 = null;
+            		Object value2 = null;
+            	    try {
+            	    		value1 = PropertyUtils.getProperty(obj1, prop);
+            	    		value2 = PropertyUtils.getProperty(obj2, prop);
+            	    } catch(NoSuchMethodException e) {
+            	    	    // If the accessor method of a certain field is not define, the field will be ignored.
+                    continue;
+                }
 
                 boolean equivalent = isEqual(value1, value2);
                 if(!equivalent) {

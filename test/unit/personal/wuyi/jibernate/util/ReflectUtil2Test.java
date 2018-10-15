@@ -6,6 +6,7 @@ import java.util.Map.Entry;
 
 import org.junit.Test;
 
+import junit.framework.Assert;
 import personal.wuyi.jibernate.entity.Ethnicity;
 import personal.wuyi.jibernate.entity.Student;
 
@@ -13,8 +14,17 @@ import org.hamcrest.collection.IsMapContaining;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 public class ReflectUtil2Test {
+	@Test
 	public void isEqualTest() {
-		
+		Assert.assertTrue(ReflectUtil2.isEqual(null, null));
+		Assert.assertFalse(ReflectUtil2.isEqual(null, new Student()));
+		Assert.assertFalse(ReflectUtil2.isEqual(new Student(), null));
+		Assert.assertFalse(ReflectUtil2.isEqual(new Student(), new String()));
+		Assert.assertTrue(ReflectUtil2.isEqual("abcdefg", "abcdefg"));
+		Assert.assertTrue(ReflectUtil2.isEqual(123L, 123L));
+		Assert.assertFalse(ReflectUtil2.isEqual("abcdefg", "opqrst"));
+		Assert.assertTrue(ReflectUtil2.isEqual(new Student("John", "Clash", 3.45), new Student("John", "Clash", 3.45)));
+		Assert.assertFalse(ReflectUtil2.isEqual(new Student("John", "Clash", 3.45), new Student("John", "Clash", 3.49)));
 	}
 	
 	public void isEqualListTest() {
