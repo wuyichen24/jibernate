@@ -1,13 +1,15 @@
 package personal.wuyi.jibernate.util;
 
-import java.lang.reflect.Method;
+import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.commons.beanutils.PropertyUtils;
 
+import personal.wuyi.jibernate.entity.Ethnicity;
 import personal.wuyi.reflect.ReflectUtil;
 
 /**
@@ -122,7 +124,7 @@ public class ReflectUtil2 {
     }
     
     /**
-     * Returns a property map of a class
+     * Returns a property map of a class.
      * 
      * <p>The entries in the map reflect all the data members in the class and 
      * its super class. The key of entries is the name of a data member, and 
@@ -141,98 +143,64 @@ public class ReflectUtil2 {
 
 
     /**
-     * Returns a list of bean property names (accessible getter method must be defined).
-     * If setter flag is specified, then an accessible setter method must be defined).
+     * Returns a property map of a class.
+     * 
+     * <p>The entries in the map reflect all the data members in the class. 
+     * If any field is not primitive type or not primitive wrapper class. This 
+     * method can give an option for getting the fields from the class of the 
+     * field in the original class.
+     * 
+     * <p>If a field is an enumeration type, this method will grab all the 
+     * values from the enumeration class.
      *
-     * @param clazz
-     * @param recurse
-     * @param setter
-     * @return
+     * @param  clazz
+     *         The class needs to get the property map.
+     * 
+     * @param  recurse
+     *         The option for checking the fields in the sub-class.
+     * 
+     * @param  setter
+     *         The setter option for checking the field must have setter class.
+     * 
+     * @return  The property map of a class.
+     * 
+     * @since   1.0
      */
     public static Map<String, Class<?>> getPropertyMap(Class<? extends Object> clazz, boolean recurse, boolean setter) {
-
         if(clazz == null) {
             return null;
         }
 
-        // NOTE: LinkedHashMap used in case ordering matters to caller
-        Map<String,Class<?>> map = new LinkedHashMap<>();
-
-
-        // get top level fields (will recurse later as needed)
+        Map<String, Class<?>> map      = new LinkedHashMap<>();
         Map<String, Class<?>> fieldMap = ReflectUtil.getFieldMap(clazz, false);
 
-        for(Map.Entry<String,Class<?>> entry : fieldMap.entrySet()) {
+        for(Entry<String,Class<?>> entry : fieldMap.entrySet()) {
+            String                  fieldName  = entry.getKey();
+            Class<? extends Object> fieldClass = entry.getValue();
 
-            String prop = entry.getKey();
-            Class<? extends Object> propClass = entry.getValue();
+            if(recurse && !fieldClass.isPrimitive() && !ReflectUtil.isPrimitiveWrapper(fieldClass) && !fieldClass.isEnum()) {
+            		Map<String, Class<?>> childMap = getPropertyMap(fieldClass, true, setter);
 
-            // determine if getter/setter method exists and is accessible, otherwise ignore
-            try {
+                for(String childField : childMap.keySet()) {
+                		Class<? extends Object> childClass = childMap.get(childField);
 
-                Method method = getBeanMethod(clazz, prop, propClass, setter);
-
-                if(recurse && propClass.isPrimitive() == false && ReflectUtil.isPrimitiveWrapper(propClass) == false) {
-
-                    Map<String, Class<?>> childMap = getPropertyMap(propClass, true, setter);
-
-                    for(String childField : childMap.keySet()) {
-
-                        Class<? extends Object> childClass = childMap.get(childField);
-
-                        // define children as nested property
-                        String nested = prop + "." + childField;
-                        map.put(nested, childClass);
-                    }
+                		String nested = fieldName + "." + childField;
+                     map.put(nested, childClass);
                 }
-                else {
-
-                    map.put(prop, propClass);
-                }
-
-                // TODO - handle case where class is abstract or interface
+            } else {
+            		map.put(fieldName, fieldClass);
+            		
+            		if (fieldClass.isEnum() && recurse) {
+            			if (recurse) {
+            				Object[] values = fieldClass.getEnumConstants();
+            				for (Object value : values) {
+            					map.put(((Ethnicity) value).name(), Enum.class);
+            				}
+            			}
+            		} 
             }
-            catch(NoSuchMethodException e) {
-                // ok if not found, we are testing for existence of getter/setter
-            }
-
         }
 
         return map;
-    }
-    
-    /**
-     * @param c
-     * @param propertyName
-     * @param propertyClass
-     * @param setter
-     * @return
-     * @throws NoSuchMethodException
-     */
-    public static Method getBeanMethod(Class<? extends Object> c, String propertyName, Class<? extends Object> propertyClass, boolean setter) throws NoSuchMethodException {
-
-        String beanPrefix = (setter) ? "set" : "get";
-
-        // build method name from type and field name
-        String methodName = beanPrefix + propertyName.substring(0, 1).toUpperCase() + propertyName.substring(1, propertyName.length());
-
-        Class[] args = (setter) ? new Class[]{propertyClass} : null;
-
-        try {
-            return c.getMethod(methodName, args);
-        }
-        catch(NoSuchMethodException e) {
-
-            // handle isBoolean() vs getBoolean()
-            if(!setter) {
-                if(Boolean.class.isAssignableFrom(propertyClass) || boolean.class.isAssignableFrom(propertyClass)) {
-                    methodName = "is" + propertyName.substring(0, 1).toUpperCase() + propertyName.substring(1, propertyName.length());
-                    return c.getMethod(methodName);
-                }
-            }
-
-            throw e;
-        }
-
     }
 }
