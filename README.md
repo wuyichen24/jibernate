@@ -31,7 +31,11 @@ public class Student extends AbstractEntity {
 }
 ```
 
-This module avoid writing the persistence file (XML) so that you will not be trapped by too detailed database configurations, you can use specific database configuration class for passing your basic database connection parameters to this module.
+Also, this module avoid writing the persistence file (XML) so that you will not be trapped by too detailed database configurations, you can use specific database configuration class for passing your basic database connection parameters to this module. For example:
+```java
+MysqlDbConfig dbConfig = new MysqlDbConfig("config/MysqlDb.properties").initialize();
+MysqlEntityManagerDao dao = = new MysqlEntityManagerDao(dbConfig);
+```
 
 Another highlight of this project is it simplify the query, you don’t have to construct a long JPQL statement. It comes up the idea of Expression which has chain methods for you build up a complex query.
 ```java
