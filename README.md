@@ -22,12 +22,12 @@ So the persistence entity class which maps to this student table will look like 
 @Table(name="student")
 public class Student extends AbstractEntity {
     @Id
-	  @GeneratedValue(strategy = GenerationType.IDENTITY)
-	  @Column(name="id")           private Long      id;
-	  @Column(name="first_name")   private String    firstName;
-	  @Column(name="last_name")    private String    lastName;
-	  @Column(name="dob")          private Date      dob;
-	  @Column(name="gpa")          private double    gpa;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name="id")           private Long      id;
+    @Column(name="first_name")   private String    firstName;
+    @Column(name="last_name")    private String    lastName;
+    @Column(name="dob")          private Date      dob;
+    @Column(name="gpa")          private double    gpa;
 }
 ```
 
