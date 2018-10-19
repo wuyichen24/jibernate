@@ -16,6 +16,8 @@
 
 package personal.wuyi.jibernate.query;
 
+import com.google.common.base.Preconditions;
+
 import personal.wuyi.jibernate.entity.Persisted;
 import personal.wuyi.jibernate.expression.Expression;
 
@@ -63,7 +65,6 @@ public class JQuery<E extends Persisted> {
     public Integer    getOffset()                             { return offset;                                  }
     public void       setOffset(Integer offset)               { this.offset = offset;                           }
     public Integer    getLimit()                              { return limit;                                   }
-    public void       setLimit(Integer limit)                 { this.limit = limit;                             }
     public boolean    isCaseSensitive()                       { return caseSensitive;                           }
     public void       setCaseSensitive(boolean caseSensitive) { this.caseSensitive = caseSensitive;             }
     public boolean    isDistinct()                            { return distinct;                                }
@@ -71,6 +72,19 @@ public class JQuery<E extends Persisted> {
     public boolean    isHistory()                             { return history;                                 }
     public void       setHistory(boolean history)             { this.history = history;                         }
 
+    /**
+     * Set the limit of a query.
+     * 
+     * @param  limit
+     *         The limit of records in the result list of a query.
+     *         
+     * @since   1.0
+     */
+    public void setLimit(Integer limit) {
+    	Preconditions.checkArgument(limit > 0, "The number for the limit should be greater than 0.");
+    	this.limit = limit;
+    }
+    
     /**
      * Set an simple expression as the criteria of the query.
      * 

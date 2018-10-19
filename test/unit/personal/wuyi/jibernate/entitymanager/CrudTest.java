@@ -78,7 +78,7 @@ public class CrudTest {
 //		Assert.assertEquals(2, studentList.size());
 		
 		// query for only few columns
-		EntityQuery<Student> q2 = new EntityQuery<Student>(Student.class);
+		EntityQuery<Student> q2 = new EntityQuery<>(Student.class);
 		q2.setCriteria(new Expression("firstName", Expression.EQUAL, "John"));
 		List<List<?>> listList = dao.read(q1, "firstName", "lastName");
 		for (List<?> list : listList) {
