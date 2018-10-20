@@ -127,7 +127,7 @@ public class JQuery<E extends Persisted> {
      *         
      * @since   1.0
      */
-    public void setSort(String... sorts) {
+    public void setSortTemplate(String... sorts) {
         Sort newSort = null;
 
         for(String s : sorts) {

@@ -71,6 +71,8 @@ public class QueryConverter {
         boolean    caseSensitive = transformedQuery.isCaseSensitive();
         Integer    limit         = transformedQuery.getLimit();
         Integer    offset        = transformedQuery.getOffset();
+        
+        transformedQuery.setSort(query.getSort()); 
 
         String jpqlStatement = getJpqlStatement(transformedQuery, fields);
         Query  jpaQuery      = entityManager.createQuery(jpqlStatement);
@@ -84,9 +86,10 @@ public class QueryConverter {
 
         if(limit != null) {
             jpaQuery.setMaxResults(limit);
-            if(offset != null) {
-                jpaQuery.setFirstResult(offset);
-            }
+        }
+        
+        if(offset != null) {
+            jpaQuery.setFirstResult(offset);
         }
 
         return jpaQuery;

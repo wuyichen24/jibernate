@@ -32,6 +32,7 @@ import personal.wuyi.jibernate.config.MysqlDbConfig;
 import personal.wuyi.jibernate.entity.Student;
 import personal.wuyi.jibernate.entitymanager.MysqlEntityManagerDao;
 import personal.wuyi.jibernate.expression.Expression;
+import personal.wuyi.reflect.ReflectUtil;
 
 /**
  * The test class for {@code Query}.
@@ -57,7 +58,7 @@ public class JQueryTest {
 		// test ascending
 		EntityQuery<Student> q1 = new EntityQuery<Student>(Student.class);
 		q1.setCriteria(new Expression("firstName", Expression.EQUAL, "John"));
-		q1.setSort("gpa+");
+		q1.setSortTemplate("gpa+");
 		List<Student> studentList1 = dao.read(q1);
 		List<Double> gpaList1 = new ArrayList<>();
 		for (Student student : studentList1) {
@@ -68,13 +69,33 @@ public class JQueryTest {
 		// test descending
 		EntityQuery<Student> q2 = new EntityQuery<Student>(Student.class);
 		q2.setCriteria(new Expression("firstName", Expression.EQUAL, "John"));
-		q2.setSort("gpa-");
+		q2.setSortTemplate("gpa-");
 		List<Student> studentList2 = dao.read(q2);
 		List<Double> gpaList2 = new ArrayList<>();
 		for (Student student : studentList2) {
 			gpaList2.add(student.getGpa());
 		}
 		Assert.assertTrue(Ordering.natural().reverse().isOrdered(gpaList2));
-		
+	}
+	
+	@Test
+	public void setLimitTest() {
+		EntityQuery<Student> q1 = new EntityQuery<Student>(Student.class);
+		q1.setCriteria(new Expression("firstName", Expression.EQUAL, "John"));
+		q1.setLimit(4);
+		List<Student> studentList = dao.read(q1);
+		Assert.assertEquals(4, studentList.size());
+	}
+	
+	@Test
+	public void setOffsetTest() {
+		EntityQuery<Student> q1 = new EntityQuery<Student>(Student.class);
+		q1.setCriteria(new Expression("firstName", Expression.EQUAL, "John"));
+		q1.setOffset(2);
+		List<Student> studentList = dao.read(q1);
+
+		for (Student stu : studentList) {
+			System.out.println(stu.getId());
+		}
 	}
 }
