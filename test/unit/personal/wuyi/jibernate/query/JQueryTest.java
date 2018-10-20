@@ -58,7 +58,7 @@ public class JQueryTest {
 		// test ascending
 		EntityQuery<Student> q1 = new EntityQuery<Student>(Student.class);
 		q1.setCriteria(new Expression("firstName", Expression.EQUAL, "John"));
-		q1.setSortTemplate("gpa+");
+		q1.setSort("gpa+");
 		List<Student> studentList1 = dao.read(q1);
 		List<Double> gpaList1 = new ArrayList<>();
 		for (Student student : studentList1) {
@@ -69,7 +69,7 @@ public class JQueryTest {
 		// test descending
 		EntityQuery<Student> q2 = new EntityQuery<Student>(Student.class);
 		q2.setCriteria(new Expression("firstName", Expression.EQUAL, "John"));
-		q2.setSortTemplate("gpa-");
+		q2.setSort("gpa-");
 		List<Student> studentList2 = dao.read(q2);
 		List<Double> gpaList2 = new ArrayList<>();
 		for (Student student : studentList2) {
