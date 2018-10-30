@@ -1,0 +1,19 @@
+language: java
+jdk:
+    - oraclejdk8
+
+after_success:
+- ./gradlew test jacocoTestReport coveralls
+
+notifications:
+  email:
+    recipients:
+      - wuyichen24@gmail.com
+    on_success: never
+    on_failure: always
+
+services:
+  - mysql
+
+before_install:
+  - mysql -u root --password="" < config/travis.sql
