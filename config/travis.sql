@@ -11,3 +11,27 @@ CREATE TABLE IF NOT EXISTS `student` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=latin1;
 
+NSERT INTO student
+(first_name,last_name,dob,gpa,race) 
+VALUES ('John','Doe','1997-06-10', 3.46, 'ASIAN');
+
+INSERT INTO student
+(first_name,last_name,dob,gpa,race) 
+VALUES ('John','Doe','1997-06-10', 3.48, 'ASIAN');
+
+INSERT INTO student
+(first_name,last_name,dob,gpa,race) 
+VALUES ('John','Doe','1997-06-10', 3.52, 'ASIAN');
+
+INSERT INTO student
+(first_name,last_name,dob,gpa,race) 
+VALUES ('John','Doe','1997-06-10', 3.54, 'ASIAN');
+
+INSERT INTO student
+(first_name,last_name,dob,gpa,race) 
+VALUES ('John','Doe','1997-06-10', 3.56, 'ASIAN');
+
+INSERT INTO student
+(first_name,last_name,dob,gpa,race) 
+VALUES ('John','Doe','1997-06-10', 3.58, 'ASIAN');
+
