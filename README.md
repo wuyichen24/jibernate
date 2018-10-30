@@ -1,4 +1,5 @@
 # jibernate
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/8334effbd0444bf0895d72f72bc20c51)](https://app.codacy.com/app/wuyichen24/jibernate?utm_source=github.com&utm_medium=referral&utm_content=wuyichen24/jibernate&utm_campaign=Badge_Grade_Dashboard)
 [![Build Status](https://travis-ci.org/wuyichen24/jibernate.svg?branch=master)](https://travis-ci.org/wuyichen24/jibernate)
 [![Coverage Status](https://coveralls.io/repos/github/wuyichen24/jibernate/badge.svg?branch=master)](https://coveralls.io/github/wuyichen24/jibernate?branch=master)
 [![License](https://img.shields.io/badge/License-Apache%202.0-green.svg)](https://opensource.org/licenses/Apache-2.0) 
