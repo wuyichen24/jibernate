@@ -29,7 +29,7 @@ public class ReflectUtil2Test {
 		Assert.assertTrue(ReflectUtil2.isEqual(null, null));
 		Assert.assertFalse(ReflectUtil2.isEqual(null, new Student()));
 		Assert.assertFalse(ReflectUtil2.isEqual(new Student(), null));
-		Assert.assertFalse(ReflectUtil2.isEqual(new Student(), new String()));
+		Assert.assertFalse(ReflectUtil2.isEqual(new Student(), "  "));
 		Assert.assertTrue(ReflectUtil2.isEqual("abcdefg", "abcdefg"));
 		Assert.assertTrue(ReflectUtil2.isEqual(123L, 123L));
 		Assert.assertFalse(ReflectUtil2.isEqual("abcdefg", "opqrst"));

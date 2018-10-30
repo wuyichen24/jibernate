@@ -31,7 +31,7 @@ import personal.wuyi.jibernate.config.MysqlDbConfig;
  * @since   1.0
  */
 public class MysqlEntityManagerDao extends AbstractEntityManagerDao {
-	MysqlDbConfig config;
+	private MysqlDbConfig config;
 	
 	/**
 	 * Constructs a {@code MysqlEntityManagerDao}.

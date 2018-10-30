@@ -168,8 +168,8 @@ abstract class AbstractEntityManagerDao implements Dao {
 
         try {
             // make a copy since we are going to modify query
-            query = ReflectUtil.copy(query);
-            final Query jpaQuery = QueryConverter.getJpaQuery(entityManager, query, "COUNT(*)");
+        	JQuery<T> queryCopy = ReflectUtil.copy(query);
+            final Query jpaQuery = QueryConverter.getJpaQuery(entityManager, queryCopy, "COUNT(*)");
             return (Long) jpaQuery.getSingleResult();
         } finally {
             entityManager.close();

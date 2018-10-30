@@ -181,13 +181,13 @@ public class StringUtil {
      * @since   1.0
      */
     public static Matcher getMatcher(String string, String regex, boolean isWholeWord, boolean isIgnoreCase) {
-    	regex = "(" + regex + ")";
+    	String newRegex = "(" + regex + ")";
 
     	if(isWholeWord) {
-    		regex = "\\b" + regex + "\\b";
+    		newRegex = "\\b" + regex + "\\b";
     	}
 
-    	Pattern pattern = (isIgnoreCase) ? Pattern.compile(regex, Pattern.CASE_INSENSITIVE) : Pattern.compile(regex) ;
+    	Pattern pattern = (isIgnoreCase) ? Pattern.compile(newRegex, Pattern.CASE_INSENSITIVE) : Pattern.compile(regex) ;
     	return pattern.matcher(string);
     }
 }

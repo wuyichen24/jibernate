@@ -32,20 +32,20 @@ import static org.junit.Assert.assertThat;
  */
 public class ExpressionEngineTest2 {
 	// AB + CD
-	Expression comSop1 = new Expression(new Expression("A", Expression.EQUAL, "a").and("B", Expression.EQUAL, "b"))
+	private Expression comSop1 = new Expression(new Expression("A", Expression.EQUAL, "a").and("B", Expression.EQUAL, "b"))
 			.or(new Expression("C", Expression.EQUAL, "c").and("D", Expression.EQUAL, "d"));
 	
 	// (A + B)(C + D)
-	Expression comSop2 = new Expression(new Expression("A", Expression.EQUAL, "a").or("B", Expression.EQUAL, "b"))
+	private Expression comSop2 = new Expression(new Expression("A", Expression.EQUAL, "a").or("B", Expression.EQUAL, "b"))
 			.and(new Expression("C", Expression.EQUAL, "c").or("D", Expression.EQUAL, "d"));
 	
 	// (A + B)(C + D)(E + F)
-	Expression comSop3 = new Expression(new Expression("A", Expression.EQUAL, "a").or("B", Expression.EQUAL, "b"))
+	private Expression comSop3 = new Expression(new Expression("A", Expression.EQUAL, "a").or("B", Expression.EQUAL, "b"))
 			.and(new Expression("C", Expression.EQUAL, "c").or("D", Expression.EQUAL, "d"))
 			.and(new Expression("E", Expression.EQUAL, "e").or("F", Expression.EQUAL, "f"));
 	
 	// !(A + B)(C + D)
-	Expression comSop4 = new Expression(new Expression("A", Expression.EQUAL, "a").or("B", Expression.EQUAL, "b").complement())
+	private Expression comSop4 = new Expression(new Expression("A", Expression.EQUAL, "a").or("B", Expression.EQUAL, "b").complement())
 			.and(new Expression("C", Expression.EQUAL, "c").or("D", Expression.EQUAL, "d"));
 	
 	@Test

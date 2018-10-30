@@ -35,7 +35,7 @@ import personal.wuyi.jibernate.expression.Expression;
 public class QueryConverterTest {
 	@Test
 	public void transformTest() {
-		
+		// TODO
 	}
 	
 	@Test

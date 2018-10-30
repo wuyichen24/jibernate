@@ -687,7 +687,7 @@ public class Expression implements Cloneable, Serializable {
      */
     protected void addCompoundExpression(Expression expression, String operator) {
         if (expression == null) {
-            throw new NullPointerException("Expression cannot be null");
+            throw new IllegalArgumentException("Expression cannot be null");
         }
 
         if (!expression.isCompound()) {

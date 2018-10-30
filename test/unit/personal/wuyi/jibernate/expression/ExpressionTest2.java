@@ -34,13 +34,13 @@ import org.junit.runners.Parameterized.Parameters;
  */
 @RunWith(Parameterized.class)
 public class ExpressionTest2 {	
-	String leftOperator;
-	String rightOperator;
-	Expression a = new Expression("aaa", Expression.EQUAL, "111");
-	Expression b = new Expression("bbb", Expression.EQUAL, "222");
-	Expression c = new Expression("ccc", Expression.EQUAL, "333");
-	Expression expectA;
-	Expression expectB;
+	private String leftOperator;
+	private String rightOperator;
+	private Expression a = new Expression("aaa", Expression.EQUAL, "111");
+	private Expression b = new Expression("bbb", Expression.EQUAL, "222");
+	private Expression c = new Expression("ccc", Expression.EQUAL, "333");
+	private Expression expectA;
+	private Expression expectB;
 	Expression expectC;
 	
 	public ExpressionTest2(String leftOperator, String rightOperator, Expression expectA, Expression expectB, Expression expectC) {
