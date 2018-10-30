@@ -32,7 +32,6 @@ import personal.wuyi.jibernate.config.MysqlDbConfig;
 import personal.wuyi.jibernate.entity.Student;
 import personal.wuyi.jibernate.entitymanager.MysqlEntityManagerDao;
 import personal.wuyi.jibernate.expression.Expression;
-import personal.wuyi.reflect.ReflectUtil;
 
 /**
  * The test class for {@code Query}.
