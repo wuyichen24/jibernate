@@ -1,5 +1,6 @@
 # jibernate
 [![Build Status](https://travis-ci.org/wuyichen24/jibernate.svg?branch=master)](https://travis-ci.org/wuyichen24/jibernate)
+[![Coverage Status](https://coveralls.io/repos/github/wuyichen24/jibernate/badge.svg?branch=master)](https://coveralls.io/github/wuyichen24/jibernate?branch=master)
 [![License](https://img.shields.io/badge/License-Apache%202.0-green.svg)](https://opensource.org/licenses/Apache-2.0) 
 
 The JPA (Java Persistence API) module based on the Hibernate ORM framework with the enhanced and simplified query and expression modules.
