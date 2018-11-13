@@ -531,7 +531,7 @@ public class ExpressionEngine {
 			while(!operStack.isEmpty() && !((String) operStack.peek()).equals("_")) {
 				String op = (String) operStack.pop();
 
-				if(op.equals("!")) {
+				if("!".equals(op)) {
 					reduceForComplementOperator(pdaStack);
 				} else {
 					reduceForAndOrOperator(op, pdaStack);
@@ -983,16 +983,16 @@ public class ExpressionEngine {
 		}
 
 		// normalize logical operators
-		input = StringUtil.replace(input, "AND", "&&", true, true);
-		input = StringUtil.replace(input, "OR", "||", true, true);
+		String normalizedInput = StringUtil.replace(input, "AND", "&&", true, true);
+		normalizedInput        = StringUtil.replace(normalizedInput, "OR", "||", true, true);
 
-		int length = input.length();
+		int length = normalizedInput.length();
 		Deque<Character>  stack           = new ArrayDeque<>();   // store the current expression string by parenthesis
 		Deque<Expression> expressionStack = new ArrayDeque<>();   // store the expressions has been parsed.
 
 		int index = 0;
 		while(index < length) {
-			char currentChar = input.charAt(index);
+			char currentChar = normalizedInput.charAt(index);
 
 			if(currentChar == ')') {    // when meet balanced parenthesis, evaluate the values in stack
 				StringBuilder sb = new StringBuilder();
@@ -1068,8 +1068,8 @@ public class ExpressionEngine {
 		if(value.startsWith("\"") && value.endsWith("\"")) {     // string
 			return value.substring(1, value.length() - 1);
 		} else if(value.startsWith("[") && value.endsWith("]")) {  // list
-			value = value.substring(1, value.length() - 1);
-			String[] values = value.split(",");
+			String formattedValue = value.substring(1, value.length() - 1);
+			String[] values = formattedValue.split(",");
 			List<Object> list = new ArrayList<>();
 			
 			for(String s : values) {
