@@ -152,9 +152,9 @@ public class QueryConverter {
      * @since   1.0
      */
     protected static Expression transform(Expression expression) {
-        expression = (new UriExpressionTransformer()).transform(expression);
-        expression = (new SearchExpressionTransformer()).transform(expression);
-        return expression;
+        Expression expr1 = (new UriExpressionTransformer()).transform(expression);
+        Expression expr2 = (new SearchExpressionTransformer()).transform(expr1);
+        return expr2;
     }
     
     /**
@@ -567,10 +567,10 @@ public class QueryConverter {
      * @since   1.0
      */
     protected static String getJpqlParameter(Class<?> clazz, String subject, Object value) {
-    	subject = subject.replaceAll("\\.", "_").toUpperCase();
+    	String formattedSubject = subject.replaceAll("\\.", "_").toUpperCase();
 
     	StringBuilder sb = new StringBuilder();
-    	sb.append(clazz.getSimpleName().toUpperCase()).append("_").append(subject);
+    	sb.append(clazz.getSimpleName().toUpperCase()).append("_").append(formattedSubject);
 
     	if(value != null) {
     		try {
