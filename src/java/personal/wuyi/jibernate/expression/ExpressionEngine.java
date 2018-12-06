@@ -363,8 +363,8 @@ public class ExpressionEngine {
 			 * if there is only one division, so shrink the threshold by half until there is more than one division.
 			 * */
 			if(threshold > 1) {
-				threshold = threshold / 2;
-				return getSumOfProducts(expr, threshold);
+				int newThreshold = threshold / 2;
+				return getSumOfProducts(expr, newThreshold);
 			} else {
 				// FIXME: deal with all AND expression
 				return getSumOfProductsByStack(divisionList.get(0));

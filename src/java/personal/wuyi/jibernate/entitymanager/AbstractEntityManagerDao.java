@@ -68,7 +68,7 @@ abstract class AbstractEntityManagerDao implements Dao {
 	 * 
      * @since   1.0
 	 */
-	abstract String     getDialect();
+	protected abstract String     getDialect();
 	
 	/**
      * Build the {@code DataSource} used by current {@code EntityManager} 
@@ -79,7 +79,7 @@ abstract class AbstractEntityManagerDao implements Dao {
      * 
      * @since   1.0
      */
-	abstract DataSource getDataSource();
+	protected abstract DataSource getDataSource();
 	
 	/**
 	 * Get the name of persistence unit.
@@ -88,7 +88,7 @@ abstract class AbstractEntityManagerDao implements Dao {
 	 * 
      * @since   1.0
 	 */
-	abstract String     getPersistenceUnit();
+	protected abstract String     getPersistenceUnit();
 	
 	/* (non-Javadoc)
 	 * @see personal.wuyi.jibernate.core.Dao#read(personal.wuyi.jibernate.core.Uri)

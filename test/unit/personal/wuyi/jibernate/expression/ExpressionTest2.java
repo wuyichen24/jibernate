@@ -41,7 +41,7 @@ public class ExpressionTest2 {
 	private Expression c = new Expression("ccc", Expression.EQUAL, "333");
 	private Expression expectA;
 	private Expression expectB;
-	Expression expectC;
+	private Expression expectC;
 	
 	public ExpressionTest2(String leftOperator, String rightOperator, Expression expectA, Expression expectB, Expression expectC) {
 	    this.leftOperator  = leftOperator;

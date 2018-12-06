@@ -44,7 +44,7 @@ public class SubjectTest {
 		Subject sub1 = new Subject("first name", "John");
 		
 		Assert.assertFalse(sub1.equals(null));
-		Assert.assertFalse(sub1.equals("first name"));
+		Assert.assertFalse("first name".equals(sub1));
 		
 		Subject sub2 = new Subject("first name", "Mary");
 		Assert.assertFalse(sub1.equals(sub2));

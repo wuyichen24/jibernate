@@ -725,7 +725,7 @@ public class Expression implements Cloneable, Serializable {
      */
     protected void validateConditionBeforeAddingSubExpression(Expression expression, String operator) {
     	if (expression == null) {
-            throw new NullPointerException("Expression cannot be null");
+            throw new IllegalArgumentException("Expression cannot be null");
         }
         
         if (!isCompound()) {
@@ -735,7 +735,7 @@ public class Expression implements Cloneable, Serializable {
 
         if (!subExpressionAndOperatorList.isEmpty()) {
             if (operator == null) {
-                throw new NullPointerException("The operator cannot be null");
+                throw new IllegalArgumentException("The operator cannot be null");
             }
 
             if (!operator.equals(Expression.AND) && !operator.equals(Expression.OR)) {
@@ -871,8 +871,8 @@ public class Expression implements Cloneable, Serializable {
      * @since   1.0 
      */
     public Expression complement(Expression expression) {
-    	expression = (Expression) expression.clone();
-    	return expression.complement();
+    	Expression expr = (Expression) expression.clone();
+    	return expr.complement();
     }
 
     /**

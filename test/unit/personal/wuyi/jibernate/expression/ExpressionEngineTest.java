@@ -101,10 +101,6 @@ public class ExpressionEngineTest {
 		Assert.assertTrue(newExpr3.equals(sinExpr));
 	}
 	
-	public void unionTest() {
-		
-	}
-	
 	@Test
 	public void intersectionTest() {
 		Expression exprA = new Expression("A", Expression.EQUAL, "a");

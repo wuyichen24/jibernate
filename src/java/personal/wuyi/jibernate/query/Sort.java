@@ -94,10 +94,10 @@ public class Sort {
         Sort sort = null;
         
         if(input != null) {
-            input = input.trim();
+            String newInput = input.trim();
             
-            if(input.length() > 0) {
-                String[] parsed = input.split(",");
+            if(newInput.length() > 0) {
+                String[] parsed = newInput.split(",");
                 
                 for(String value : parsed) {
                     value = value.trim();

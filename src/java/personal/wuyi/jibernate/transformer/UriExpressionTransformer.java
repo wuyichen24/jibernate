@@ -40,15 +40,16 @@ import personal.wuyi.jibernate.expression.Subject;
 public class UriExpressionTransformer extends ExpressionTransformer {
     @Override
     public Expression transform(Subject subject, String operator, Object value) {
+    	Subject newSubject = subject;
         if ("uri".equals(subject.getName()) && value != null) {
-        	subject = new Subject(getAttribute());
+        	newSubject = new Subject(getAttribute());
         	if (value instanceof String) {
         		value = Uri.parse((String) value);
         	}
         	value = ((Uri) value).getId();
         }
 
-        return super.transform(subject, operator, value);
+        return super.transform(newSubject, operator, value);
     }
 
     /**
