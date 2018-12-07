@@ -23,6 +23,7 @@ import java.text.SimpleDateFormat;
 import java.util.List;
 
 import org.apache.log4j.PropertyConfigurator;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -67,7 +68,7 @@ public class AbstractEntityManagerDaoTest {
 		
 		dao.write(student);
 		
-		System.out.println(student.isPersisted());
+		Assert.assertTrue(student.isPersisted());
 	}
 	
 	@Test
@@ -79,18 +80,16 @@ public class AbstractEntityManagerDaoTest {
 		Student student = studentList.get(0);
 		student.setFirstName("Alex");
 		Uri uri = student.getUri();
-		System.out.println(uri.toString());
-		System.out.println(student.isPersisted());
+		Assert.assertEquals("/personal/wuyi/jibernate/entity/Student/1", uri.toString());
+		Assert.assertTrue(student.isPersisted());
 		
 		// query for only few columns
 		EntityQuery<Student> q2 = new EntityQuery<Student>(Student.class);
 		q2.setCriteria(new Expression("firstName", Expression.EQUAL, "John"));
 		List<List<?>> listList = dao.read(q1, "firstName", "lastName");
 		for (List<?> list : listList) {
-			for (Object obj : list) {
-				String str = (String) obj;
-				System.out.println(str);
-			}
+			Assert.assertEquals("John", (String) list.get(0));
+			Assert.assertEquals("Doe", (String) list.get(1));
 		}
 	}
 	
