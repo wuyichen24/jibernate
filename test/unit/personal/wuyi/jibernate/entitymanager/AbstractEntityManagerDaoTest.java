@@ -53,22 +53,19 @@ import personal.wuyi.jibernate.test.GenericDbClientUtil;
  * @since   1.0
  */
 public class AbstractEntityManagerDaoTest {
-	private MysqlDbConfig          dbConfig;
 	private MysqlEntityManagerDao  dao;
 	
-	private GenericDbConfig        config;
 	private GenericDbClient        dbService;
 	
 	@Before
 	public void buildConnnection() throws IllegalArgumentException, IllegalAccessException, IOException, SQLException, ClassNotFoundException {
 		// build dao connection
-		dbConfig   = new MysqlDbConfig("config/MysqlDb.properties").initialize();
-		dao        = new MysqlEntityManagerDao(dbConfig);
+		MysqlDbConfig dbConfig = new MysqlDbConfig("config/MysqlDb.properties").initialize();
+		dao                    = new MysqlEntityManagerDao(dbConfig);
 		
 		// build generic database connection for testing purpose only
-		config    = new GenericDbConfig(dbConfig.getHost(), dbConfig.getPort(), dbConfig.getDatabase(), dbConfig.getUsername(), dbConfig.getPassword());
 		dbService = new GenericDbClient(DbType.MYSQL);
-		dbService.buildConnection(config);
+		dbService.buildConnection(new GenericDbConfig(dbConfig.getHost(), dbConfig.getPort(), dbConfig.getDatabase(), dbConfig.getUsername(), dbConfig.getPassword()));
 		PropertyConfigurator.configure("config/Log4j.properties");
 	}
 	
@@ -105,14 +102,14 @@ public class AbstractEntityManagerDaoTest {
 		
 		for (int i = 0; i < studentList.size(); i++) {
 			Student student = studentList.get(i);
-			rs.next();
-			
-			Assert.assertEquals((long) rs.getLong("id"),    (long) student.getId());
-			Assert.assertEquals(rs.getString("first_name"), student.getFirstName());
-			Assert.assertEquals(rs.getString("last_name"),  student.getLastName());
-			Assert.assertEquals(rs.getDate("dob"),          student.getDob());
-			Assert.assertEquals(rs.getDouble("gpa"),        student.getGpa(), 0.0);
-			Assert.assertEquals(rs.getString("race"),       student.getRace().toString());
+			if (rs.next()){
+				Assert.assertEquals((long) rs.getLong("id"),    (long) student.getId());
+				Assert.assertEquals(rs.getString("first_name"), student.getFirstName());
+				Assert.assertEquals(rs.getString("last_name"),  student.getLastName());
+				Assert.assertEquals(rs.getDate("dob"),          student.getDob());
+				Assert.assertEquals(rs.getDouble("gpa"),        student.getGpa(), 0.0);
+				Assert.assertEquals(rs.getString("race"),       student.getRace().toString());
+			}
 		}
 		
 		// query for only few columns
