@@ -36,7 +36,6 @@ import personal.wuyi.client.database.GenericDbConfig;
 import personal.wuyi.jibernate.config.MysqlDbConfig;
 import personal.wuyi.jibernate.entity.Ethnicity;
 import personal.wuyi.jibernate.entity.Student;
-import personal.wuyi.jibernate.entity.Uri;
 import personal.wuyi.jibernate.entitymanager.MysqlEntityManagerDao;
 import personal.wuyi.jibernate.exception.DatabaseOperationException;
 import personal.wuyi.jibernate.expression.Expression;
@@ -110,6 +109,8 @@ public class AbstractEntityManagerDaoTest {
 				Assert.assertEquals(rs.getDouble("gpa"),        student.getGpa(), 0.0);
 				Assert.assertEquals(rs.getString("race"),       student.getRace().toString());
 			}
+			Assert.assertTrue(student.isPersisted());
+			Assert.assertEquals("/personal/wuyi/jibernate/entity/Student/"+ rs.getLong("id"), student.getUri().toString());
 		}
 		
 		// query for only few columns
