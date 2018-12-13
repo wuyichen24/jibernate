@@ -34,7 +34,9 @@ abstract class AbstractEntity implements ManagedEntity {
 
     @Override
     public Uri getUri() {
-        return new Uri(this.getClass(), this.getId());
+    	// Let it call the default method from interface
+    	// https://zeroturnaround.com/rebellabs/java-8-explained-default-methods/
+    	return ManagedEntity.super.getUri();
     }
 
     @Override
