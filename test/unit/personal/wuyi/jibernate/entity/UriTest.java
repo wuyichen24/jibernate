@@ -16,6 +16,8 @@
 
 package personal.wuyi.jibernate.entity;
 
+import java.lang.reflect.Field;
+
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -52,6 +54,25 @@ public class UriTest {
 	}
 	
 	@Test
+	public void reloadTest() throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
+		Uri uri = new Uri(Student.class, 24);
+		
+		// use reflection to set value on private field
+		Field classField = uri.getClass().getDeclaredField("clazz");
+		classField.setAccessible(true);
+		classField.set(uri, null);
+		
+		Field idField = uri.getClass().getDeclaredField("id");
+		idField.setAccessible(true);
+		idField.set(uri, null);
+		
+		uri.reload();
+		
+		Assert.assertEquals(Student.class, uri.getType());
+		Assert.assertEquals(24, uri.getId());
+	}
+	
+	@Test
 	public void parseTest() {
 		Uri uri = Uri.parse("/personal/wuyi/jibernate/entity/Student/27");
 		Assert.assertEquals(Student.class,                                uri.getType());
@@ -61,11 +82,20 @@ public class UriTest {
 	@Test
 	public void getPathTest() {
 		Assert.assertEquals("/personal/wuyi/jibernate/entity/Student/", Uri.getPath(Student.class));
+		Assert.assertEquals("", Uri.getPath(null));
+	}
+	
+	@Test
+	public void hashCodeTest() {
+		Uri uri1 = new Uri(Student.class, 24);
+		Assert.assertEquals(-159100475, uri1.hashCode());
 	}
 	
 	@Test
 	public void equalsTest() {
 		Assert.assertTrue((new Uri(Student.class, 24)).equals(new Uri(Student.class, 24)));
 		Assert.assertFalse((new Uri(Student.class, 24)).equals(new Uri(Student.class, 27)));
+		Assert.assertFalse((new Uri(Student.class, 24)).equals(null));
+		Assert.assertFalse((new Uri(Student.class, 24)).equals("abc"));
 	}
 }

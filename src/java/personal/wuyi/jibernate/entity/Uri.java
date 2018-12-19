@@ -172,7 +172,7 @@ public class Uri {
      * @since   1.0
      */
     public String getPath() {
-       return getPath(this.clazz);
+    	return getPath(this.clazz);
     }
 
     /**
@@ -192,7 +192,7 @@ public class Uri {
         if(clazz != null) {
             return Joiner.on("").join(SEPARATOR, clazz.getName().replaceAll("\\.", SEPARATOR), SEPARATOR);
         } else {
-        	    return "";
+        	return "";
         }
     }
 
@@ -297,7 +297,7 @@ public class Uri {
      * @since   1.0
      */
     private boolean isEqualId(Uri uri) {
-    	  	if (getId() != null) {
+    	if (getId() != null) {
             if(uri.getId() != null) {
                 if(!getId().equals(uri.getId())) {
                     return false;
@@ -311,7 +311,7 @@ public class Uri {
             }
         }
     	
-    	  	return true;
+    	return true;
     }
 }
 
