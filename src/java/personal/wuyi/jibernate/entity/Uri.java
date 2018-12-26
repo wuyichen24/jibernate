@@ -192,7 +192,7 @@ public class Uri {
         if(clazz != null) {
             return Joiner.on("").join(SEPARATOR, clazz.getName().replaceAll("\\.", SEPARATOR), SEPARATOR);
         } else {
-        	return "";
+        	return null;
         }
     }
 

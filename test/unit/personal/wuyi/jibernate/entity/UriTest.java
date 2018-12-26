@@ -82,7 +82,7 @@ public class UriTest {
 	@Test
 	public void getPathTest() {
 		Assert.assertEquals("/personal/wuyi/jibernate/entity/Student/", Uri.getPath(Student.class));
-		Assert.assertEquals("", Uri.getPath(null));
+		Assert.assertEquals(null, Uri.getPath(null));
 	}
 	
 	@Test
@@ -92,10 +92,29 @@ public class UriTest {
 	}
 	
 	@Test
-	public void equalsTest() {
+	public void equalsTest() throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
 		Assert.assertTrue((new Uri(Student.class, 24)).equals(new Uri(Student.class, 24)));
 		Assert.assertFalse((new Uri(Student.class, 24)).equals(new Uri(Student.class, 27)));
+		Assert.assertFalse((new Uri(Student.class, 24)).equals(new Uri(String.class, 27)));
 		Assert.assertFalse((new Uri(Student.class, 24)).equals(null));
 		Assert.assertFalse((new Uri(Student.class, 24)).equals("abc"));
+		
+		Uri uriA = new Uri(Student.class, 24);
+		Uri uriB = new Uri(Student.class, 25);
+		
+		Field idField1 = uriA.getClass().getDeclaredField("clazz");
+		idField1.setAccessible(true);
+		idField1.set(uriA, null);
+		Assert.assertFalse(uriA.equals(uriB));
+		Assert.assertFalse(uriB.equals(uriA));
+		
+		Uri uriC = new Uri(Student.class, 24);
+		Uri uriD = new Uri(Student.class, 25);
+		
+		Field idField = uriC.getClass().getDeclaredField("id");
+		idField.setAccessible(true);
+		idField.set(uriC, null);
+		Assert.assertFalse(uriC.equals(uriD));
+		Assert.assertFalse(uriD.equals(uriC));
 	}
 }
