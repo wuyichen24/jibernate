@@ -149,6 +149,12 @@ public class AbstractEntityManagerDaoTest {
 		for (List<?> list : listList2) {
 			Assert.assertEquals("John", (String) list.get(0));
 		}
+		
+		// test read 2 or more fields with no matched result
+		EntityQuery<Student> q3 = new EntityQuery<Student>(Student.class);
+		q3.setCriteria(new Expression("firstName", Expression.EQUAL, "Manson"));
+		List<List<?>> listList3 = dao.read(q3, "firstName", "lastName");
+		Assert.assertTrue(listList3.isEmpty());	
 	}
 	
 	/**

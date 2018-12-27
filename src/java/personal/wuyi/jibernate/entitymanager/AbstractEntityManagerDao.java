@@ -120,11 +120,7 @@ abstract class AbstractEntityManagerDao implements Dao {
 
         try {
             final Query jpaQuery = QueryConverter.getJpaQuery(entityManager, query);
-            List<T> results = jpaQuery.getResultList();
-            if(results == null) {
-                results = new ArrayList<>(0);
-            }
-            return results;
+            return jpaQuery.getResultList();
         } finally {
             entityManager.close();
         }
@@ -141,23 +137,19 @@ abstract class AbstractEntityManagerDao implements Dao {
             final Query jpaQuery = QueryConverter.getJpaQuery(entityManager, query, fieldNames);
             List<?> results = jpaQuery.getResultList();
             
-            if(results == null) {
-                return new ArrayList<>(0);
+            List<List<?>> list = new ArrayList<>();
+            if(fieldNames.length == 1) {
+            	for(Object result : results) {
+            		List<Object> sublist = new ArrayList<>();
+            		sublist.add(result);
+            		list.add(sublist);
+            	}
             } else {
-                List<List<?>> list = new ArrayList<>();
-                if(fieldNames.length == 1) {
-                    for(Object result : results) {
-                        List<Object> sublist = new ArrayList<>();
-                        sublist.add(result);
-                        list.add(sublist);
-                    }
-                } else {
-                    for(Object result : results) {
-                        list.add(Arrays.asList(((Object[]) result)));
-                    }
-                }
-                return list;
+            	for(Object result : results) {
+            		list.add(Arrays.asList(((Object[]) result)));
+            	}
             }
+            return list;
         } finally {
             entityManager.close();
         }
