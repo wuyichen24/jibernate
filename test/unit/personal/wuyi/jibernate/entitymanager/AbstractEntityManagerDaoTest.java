@@ -269,6 +269,35 @@ public class AbstractEntityManagerDaoTest {
 		Assert.assertEquals(expectedCount, count);
 	}
 	
+	@Test
+	public void deleteTest() throws ParseException, DatabaseOperationException, SQLException {
+		DateFormat df = new SimpleDateFormat("MM/dd/yyyy");
+		
+		Student studentNew1 = new Student();
+		studentNew1.setFirstName("Bob");
+		studentNew1.setLastName("Scott");
+		studentNew1.setDob(df.parse("07/16/2002"));
+		studentNew1.setGpa(2.22);
+		studentNew1.setRace(Ethnicity.WHITE);
+		
+		Student studentNew2 = new Student();
+		studentNew2.setFirstName("Smith");
+		studentNew2.setLastName("Scott");
+		studentNew2.setDob(df.parse("07/16/2002"));
+		studentNew2.setGpa(2.22);
+		studentNew2.setRace(Ethnicity.WHITE);
+		
+		dao.write(Arrays.asList(studentNew1, studentNew2));
+		
+		int originalCount = GenericDbClientUtil.getNumberOfRecords(dbService, "student", "last_name = 'Scott'");
+		Assert.assertEquals(2, originalCount);
+		
+		dao.delete(Arrays.asList(studentNew1, studentNew2));
+		
+		int newCount = GenericDbClientUtil.getNumberOfRecords(dbService, "student", "last_name = 'Scott'");
+		Assert.assertEquals(0, newCount);
+	}
+	
 	@After
 	public void closeConnection() throws SQLException {
 		dbService.closeConnection();
