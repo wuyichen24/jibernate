@@ -26,6 +26,7 @@ import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.log4j.PropertyConfigurator;
@@ -73,8 +74,11 @@ public class AbstractEntityManagerDaoTest {
 		PropertyConfigurator.configure("config/Log4j.properties");
 	}
 	
+	/**
+	 * Test writing a new object
+	 */
 	@Test
-	public void writeTest() throws ParseException, DatabaseOperationException, SQLException  {
+	public void writeTest1() throws ParseException, DatabaseOperationException, SQLException  {
 		DateFormat df = new SimpleDateFormat("MM/dd/yyyy");
 		
 		int orignalCount = GenericDbClientUtil.getNumberOfRecords(dbService, "student", "first_name = 'John'");
@@ -91,6 +95,72 @@ public class AbstractEntityManagerDaoTest {
 		
 		Assert.assertEquals(orignalCount + 1, newCount);
 		Assert.assertTrue(student.isPersisted());
+	}
+	
+	/**
+	 * Test writing an existing object
+	 */
+	@Test
+	public void writeTest2() throws ParseException, DatabaseOperationException {
+		DateFormat df = new SimpleDateFormat("MM/dd/yyyy");
+		
+		EntityQuery<Student> q1 = new EntityQuery<Student>(Student.class);
+		q1.setCriteria(new Expression("firstName", Expression.EQUAL, "John"));
+	    q1.setSort(new Sort("id", true));
+		List<Student> studentList = dao.read(q1);
+		
+		Student student1 = studentList.get(0);
+		student1.setDob(df.parse("07/16/2003"));
+		
+		dao.write(student1);
+		
+		Student student2 = dao.read(new Uri(Student.class, student1.getId()));
+		Assert.assertEquals(student1.getDob(), student2.getDob());
+	}
+	
+	/**
+	 * Test writing a list of objects 
+	 */
+	@Test
+	public void writeTest3() throws ParseException, DatabaseOperationException, SQLException {
+		DateFormat df = new SimpleDateFormat("MM/dd/yyyy");
+		
+		int originalCount = GenericDbClientUtil.getNumberOfRecords(dbService, "student", "first_name = 'John'");
+		
+		EntityQuery<Student> q1 = new EntityQuery<Student>(Student.class);
+		q1.setCriteria(new Expression("firstName", Expression.EQUAL, "John"));
+	    q1.setSort(new Sort("id", true));
+		List<Student> studentList = dao.read(q1);
+		
+		Student studentNew1 = new Student();
+		studentNew1.setFirstName("John");
+		studentNew1.setLastName("Doe");
+		studentNew1.setDob(df.parse("07/16/2002"));
+		studentNew1.setGpa(2.22);
+		studentNew1.setRace(Ethnicity.HISPANIC);
+		
+		Student studentNew2 = new Student();
+		studentNew2.setFirstName("John");
+		studentNew2.setLastName("Doe");
+		studentNew2.setDob(df.parse("07/16/2002"));
+		studentNew2.setGpa(2.22);
+		studentNew2.setRace(Ethnicity.AMERICAN_INDIAN);
+		
+		Student studentExist1 = studentList.get(0);
+		studentExist1.setRace(Ethnicity.BLACK);
+		
+		Student studentExist2 = studentList.get(1);
+		studentExist2.setRace(Ethnicity.BLACK);
+		
+		dao.write(Arrays.asList(studentNew1, studentNew2, studentExist1, studentExist2));
+		
+		int newCount = GenericDbClientUtil.getNumberOfRecords(dbService, "student", "first_name = 'John'");
+		
+		Assert.assertEquals(originalCount + 2, newCount);
+		Student studentExist1Verify = dao.read(new Uri(Student.class, studentExist1.getId()));
+		Assert.assertEquals(Ethnicity.BLACK, studentExist1Verify.getRace());
+		Student studentExist2Verify = dao.read(new Uri(Student.class, studentExist2.getId()));
+		Assert.assertEquals(Ethnicity.BLACK, studentExist2Verify.getRace());
 	}
 	
 	/**
