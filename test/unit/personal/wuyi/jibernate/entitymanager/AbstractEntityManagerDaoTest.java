@@ -16,6 +16,10 @@
 
 package personal.wuyi.jibernate.entitymanager;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.fail;
+
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -36,6 +40,7 @@ import personal.wuyi.client.database.GenericDbConfig;
 import personal.wuyi.jibernate.config.MysqlDbConfig;
 import personal.wuyi.jibernate.entity.Ethnicity;
 import personal.wuyi.jibernate.entity.Student;
+import personal.wuyi.jibernate.entity.Uri;
 import personal.wuyi.jibernate.entitymanager.MysqlEntityManagerDao;
 import personal.wuyi.jibernate.exception.DatabaseOperationException;
 import personal.wuyi.jibernate.expression.Expression;
@@ -88,14 +93,17 @@ public class AbstractEntityManagerDaoTest {
 		Assert.assertTrue(student.isPersisted());
 	}
 	
+	/**
+	 * Test reading a list of objects by inputing an {@code EntityQuery} object.
+	 */
 	@Test
-	public void readTest() throws SQLException {
-		// basic query
+	public void readTest1() throws SQLException {
 		EntityQuery<Student> q1 = new EntityQuery<Student>(Student.class);
 		q1.setCriteria(new Expression("firstName", Expression.EQUAL, "John"));
 	    q1.setSort(new Sort("id", true));
 		List<Student> studentList = dao.read(q1);
-				
+		
+		// use general db client to read data for assertions
 		String sql = "select * from student where first_name = 'John' order by id asc";
 		ResultSet rs = dbService.executeQuery(sql);
 		
@@ -113,13 +121,64 @@ public class AbstractEntityManagerDaoTest {
 			Assert.assertEquals("/personal/wuyi/jibernate/entity/Student/"+ rs.getLong("id"), student.getUri().toString());
 		}
 		
-		// query for only few columns
+		// test result set is empty
 		EntityQuery<Student> q2 = new EntityQuery<Student>(Student.class);
-		q2.setCriteria(new Expression("firstName", Expression.EQUAL, "John"));
-		List<List<?>> listList = dao.read(q1, "firstName", "lastName");
-		for (List<?> list : listList) {
+		q2.setCriteria(new Expression("firstName", Expression.EQUAL, "Manson"));
+		List<Student> studentList2 = dao.read(q2);
+		Assert.assertTrue(studentList2.isEmpty());
+	}
+	
+	/**
+	 * Test reading a list of objects only with few columns.
+	 */
+	@Test
+	public void readTest2() {
+		// test read 2 or more fields
+		EntityQuery<Student> q1 = new EntityQuery<Student>(Student.class);
+		q1.setCriteria(new Expression("firstName", Expression.EQUAL, "John"));
+		List<List<?>> listList1 = dao.read(q1, "firstName", "lastName");
+		for (List<?> list : listList1) {
 			Assert.assertEquals("John", (String) list.get(0));
 			Assert.assertEquals("Doe", (String) list.get(1));
+		}
+		
+		// test read only 1 field
+		EntityQuery<Student> q2 = new EntityQuery<Student>(Student.class);
+		q2.setCriteria(new Expression("firstName", Expression.EQUAL, "John"));
+		List<List<?>> listList2 = dao.read(q2, "firstName");
+		for (List<?> list : listList2) {
+			Assert.assertEquals("John", (String) list.get(0));
+		}
+	}
+	
+	/**
+	 * Test reading only one object by inputing a {@code Uri} object.
+	 */
+	@Test
+	public void readTest3() throws SQLException {
+		String sql = "select * from student where first_name = 'John' order by id asc";
+		ResultSet rs = dbService.executeQuery(sql);
+		
+		while (rs.next()) {
+			Uri uri = new Uri(Student.class, rs.getLong("id"));
+			Student student = dao.read(uri);
+			Assert.assertEquals((long) rs.getLong("id"),    (long) student.getId());
+			Assert.assertEquals(rs.getString("first_name"), student.getFirstName());
+			Assert.assertEquals(rs.getString("last_name"),  student.getLastName());
+			Assert.assertEquals(rs.getDate("dob"),          student.getDob());
+			Assert.assertEquals(rs.getDouble("gpa"),        student.getGpa(), 0.0);
+			Assert.assertEquals(rs.getString("race"),       student.getRace().toString());
+		}
+	}
+	
+	@Test
+	public void readExceptionTest() {
+		try {
+			Uri uri = new Uri(Student.class);
+			dao.read(uri);
+			fail("Expected an IllegalArgumentException to be thrown");
+		} catch (IllegalArgumentException e) {
+			assertThat(e.getMessage(), is("id can not be null when you query by primary key."));
 		}
 	}
 	

@@ -98,6 +98,10 @@ abstract class AbstractEntityManagerDao implements Dao {
     public <T extends Persisted> T read(Uri uri) {
         final Object id = uri.getId();
         final EntityManager entityManager = getEntityManager();
+        
+        if (id == null) {
+        	throw new IllegalArgumentException("id can not be null when you query by primary key.");
+        }
 
         try {
             return (T) entityManager.find(uri.getType(), id);
