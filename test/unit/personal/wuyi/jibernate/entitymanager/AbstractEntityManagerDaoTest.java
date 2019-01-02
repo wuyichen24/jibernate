@@ -301,22 +301,6 @@ public class AbstractEntityManagerDaoTest {
 		Assert.assertEquals(0, newCount);
 	}
 	
-	@Test
-	public void startTest() throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
-//		dao.start();
-//		Field entityManagerFactoryField = AbstractEntityManagerDao.class.getDeclaredField("entityManagerFactory");
-//		entityManagerFactoryField.setAccessible(true);
-//		Assert.assertNotNull((EntityManagerFactory) entityManagerFactoryField.get(dao));
-	}
-	
-	@Test
-	public void stopTest() throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
-//		dao.stop();		
-//		Field entityManagerFactoryField = AbstractEntityManagerDao.class.getDeclaredField("entityManagerFactory");
-//		entityManagerFactoryField.setAccessible(true);
-//		Assert.assertNull((EntityManagerFactory) entityManagerFactoryField.get(dao));
-	}
-	
 	@After
 	public void closeConnection() throws SQLException {
 		dbService.closeConnection();

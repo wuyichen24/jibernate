@@ -30,6 +30,10 @@ import junit.framework.Assert;
 public class DatabaseOperationExceptionTest {	
 	@Test
 	public void constructorTest() {
+		Exception e0 = new DatabaseOperationException();
+		Assert.assertNull(e0.getMessage());
+		Assert.assertNull(e0.getCause());
+		
 		Exception e1 = new DatabaseOperationException("aabbccdd");
 		Assert.assertEquals("aabbccdd", e1.getMessage());
 		
