@@ -16,8 +16,15 @@
 
 package personal.wuyi.jibernate.expression;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.fail;
+
 import org.junit.Assert;
 import org.junit.Test;
+
+import personal.wuyi.jibernate.entity.Student;
+import personal.wuyi.jibernate.entity.Uri;
 
 /**
  * Test class for {@code Expression}.
@@ -142,10 +149,28 @@ public class ExpressionTest {
 		Assert.assertEquals(Expression.OR,  com3AndOrExpr.getOperator(2));
 	}
 	
-	@Test(expected = IndexOutOfBoundsException.class)
+	@Test
 	public void getOperatorTestException() {
-		com2AndExpr.getOperator(20);
-		com2AndExpr.getOperator(-10);
+		try {
+			com2AndExpr.getOperator(20);
+			fail("Expected an IndexOutOfBoundsException to be thrown");
+		} catch (IndexOutOfBoundsException e) {
+			assertThat(e.getMessage(), is("Index: 20, Size: 2"));
+		}
+		
+		try {
+			com2AndExpr.getOperator(-10);
+			fail("Expected an IndexOutOfBoundsException to be thrown");
+		} catch (IndexOutOfBoundsException e) {
+			assertThat(e.getMessage(), is("Index: -10, Size: 2"));
+		}
+		
+		try {
+			com2AndExpr.getOperator(0, 200);
+			fail("Expected an IllegalArgumentException to be thrown");
+		} catch (IllegalArgumentException e) {
+			assertThat(e.getMessage(), is("The side \"200\" is unknown"));
+		}
 	}
 	
 	@Test
@@ -200,10 +225,28 @@ public class ExpressionTest {
 		Assert.assertEquals(Expression.AND, com2OrExpr.getOperator(1, Expression.SIDE_LEFT));
 	}
 	
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void setOperatorTestException() {
-		com2AndExpr.setOperator(0, Expression.SIDE_LEFT, Expression.AND);   // can not set on the left side of the first expression
-		com2AndExpr.setOperator(1, Expression.SIDE_RIGHT, Expression.AND);  // can not set on the right side of the last expression
+		try {
+			com2AndExpr.setOperator(0, Expression.SIDE_LEFT, Expression.AND);
+			fail("Expected an java.lang.IllegalArgumentException to be thrown");
+		} catch (IllegalArgumentException e) {
+			assertThat(e.getMessage(), is("Can not set an operator on the left side of the first sub-expression without an expression"));
+		}
+		
+		try {
+			com2AndExpr.setOperator(1, Expression.SIDE_RIGHT, Expression.AND);
+			fail("Expected an java.lang.IllegalArgumentException to be thrown");
+		} catch (IllegalArgumentException e) {
+			assertThat(e.getMessage(), is("Can not set an operator on the right side of the last sub-expression without an expression"));
+		}
+		
+		try {
+			com2AndExpr.setOperator(0, 200, Expression.AND);
+			fail("Expected an java.lang.IllegalArgumentException to be thrown");
+		} catch (IllegalArgumentException e) {
+			assertThat(e.getMessage(), is("The side \"200\" is unknown"));
+		}
 	}
 	
 	@Test
