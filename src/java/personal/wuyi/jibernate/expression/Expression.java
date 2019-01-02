@@ -338,6 +338,7 @@ public class Expression implements Cloneable, Serializable {
      */
     public static Expression combineExpressions(String operator, Expression... subExpressions) {
     	final Expression expression = new Expression();
+    	expression.compound();
 
         for (int i = 0; i < subExpressions.length; i++) {
             expression.addSubExpressionWithOperator(subExpressions[i], operator);

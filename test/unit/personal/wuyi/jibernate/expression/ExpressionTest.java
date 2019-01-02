@@ -28,7 +28,9 @@ import org.junit.Test;
  * @since   1.0
  */
 public class ExpressionTest {
-	private Expression sinExpr           = new Expression("firstName", Expression.EQUAL, "John");
+	private Expression sinAExpr          = new Expression("firstName", Expression.EQUAL, "John");
+	private Expression sinBExpr          = new Expression("age", Expression.EQUAL, 23);
+	private Expression sinCExpr          = new Expression("score", Expression.EQUAL, 99);
 	private Expression com2AndExpr       = new Expression("firstName", Expression.EQUAL, "John").and("age", Expression.EQUAL, 23);
 	private Expression com2OrExpr        = new Expression("firstName", Expression.EQUAL, "John").or("firstName", Expression.EQUAL, "Johnson");
 	private Expression com3AndExpr       = new Expression("firstName", Expression.EQUAL, "John").and("age", Expression.EQUAL, 23).and("score", Expression.EQUAL, 99);
@@ -46,16 +48,16 @@ public class ExpressionTest {
 	
 	@Test
 	public void isCompoundTest() {		
-		Assert.assertFalse(sinExpr.isCompound());
+		Assert.assertFalse(sinAExpr.   isCompound());
 		Assert.assertTrue(com2AndExpr.isCompound());
-		Assert.assertTrue(com2OrExpr.isCompound());
+		Assert.assertTrue(com2OrExpr. isCompound());
 		Assert.assertTrue(com3AndExpr.isCompound());
-		Assert.assertTrue(com3OrExpr.isCompound());
+		Assert.assertTrue(com3OrExpr. isCompound());
 	}
 	
 	@Test
 	public void getNumberOfSubExpressionTest() {
-		Assert.assertEquals(0, sinExpr.getNumberOfSubExpression());
+		Assert.assertEquals(0, sinAExpr.getNumberOfSubExpression());
 		Assert.assertEquals(2, com2AndExpr.getNumberOfSubExpression());
 		Assert.assertEquals(2, com2OrExpr.getNumberOfSubExpression());
 		Assert.assertEquals(3, com3AndExpr.getNumberOfSubExpression());
@@ -70,6 +72,16 @@ public class ExpressionTest {
 	}
 	
 	@Test
+	public void andStaticTest() {
+		Expression newExpr = Expression.and(sinAExpr, sinBExpr, sinCExpr);
+		Assert.assertEquals(sinAExpr, newExpr.getSubExpression(0));
+		Assert.assertEquals(sinBExpr, newExpr.getSubExpression(1));
+		Assert.assertEquals(sinCExpr, newExpr.getSubExpression(2));
+		Assert.assertEquals(Expression.AND,  newExpr.getOperator(1));
+		Assert.assertEquals(Expression.AND,  newExpr.getOperator(2));
+	}
+	
+	@Test
 	public void orTest() {
 		Assert.assertEquals(Expression.OR,  com2OrExpr.getOperator(1));
 		Assert.assertEquals(Expression.OR,  com3OrExpr.getOperator(1));
@@ -77,8 +89,18 @@ public class ExpressionTest {
 	}
 	
 	@Test
+	public void orStaticTest() {
+		Expression newExpr = Expression.or(sinAExpr, sinBExpr, sinCExpr);
+		Assert.assertEquals(sinAExpr, newExpr.getSubExpression(0));
+		Assert.assertEquals(sinBExpr, newExpr.getSubExpression(1));
+		Assert.assertEquals(sinCExpr, newExpr.getSubExpression(2));
+		Assert.assertEquals(Expression.OR,  newExpr.getOperator(1));
+		Assert.assertEquals(Expression.OR,  newExpr.getOperator(2));
+	}
+	
+	@Test
 	public void getSubExpressionTest() {
-		Assert.assertNull(sinExpr.getSubExpression(0));
+		Assert.assertNull(sinAExpr.getSubExpression(0));
 		Assert.assertEquals(new Expression("age", Expression.EQUAL, 23), com2AndExpr.getSubExpression(1));
 		Assert.assertEquals(new Expression("age", Expression.EQUAL, 23), com3AndExpr.getSubExpression(1));
 	}
@@ -90,7 +112,7 @@ public class ExpressionTest {
 	
 	@Test
 	public void replaceSubExpressionTest() {
-		sinExpr.replaceSubExpression(1, new Expression("age", Expression.EQUAL, 23));
+		sinAExpr.replaceSubExpression(1, new Expression("age", Expression.EQUAL, 23));
 		
 		// update existing sub-expression
 		com2AndExpr.replaceSubExpression(1, new Expression("lastName", Expression.STARTS_WITH, "Jr"));
@@ -108,7 +130,7 @@ public class ExpressionTest {
 	
 	@Test
 	public void getOperatorTest() {
-		Assert.assertNull(sinExpr.getOperator(0));
+		Assert.assertNull(sinAExpr.getOperator(0));
 		Assert.assertNull(com2AndExpr.getOperator(0));    // no operator on the left side of the first sub-expression
 		Assert.assertEquals(Expression.AND, com2AndExpr.getOperator(1));
 		Assert.assertEquals(Expression.AND, com3AndExpr.getOperator(1));
@@ -128,8 +150,8 @@ public class ExpressionTest {
 	
 	@Test
 	public void getOperatorWithSideTest() {
-		Assert.assertNull(sinExpr.getOperator(0, Expression.SIDE_LEFT));
-		Assert.assertNull(sinExpr.getOperator(0, Expression.SIDE_RIGHT));
+		Assert.assertNull(sinAExpr.getOperator(0, Expression.SIDE_LEFT));
+		Assert.assertNull(sinAExpr.getOperator(0, Expression.SIDE_RIGHT));
 		
 		Assert.assertNull(com2AndExpr.getOperator(0, Expression.SIDE_LEFT));
 		Assert.assertEquals(Expression.AND, com2AndExpr.getOperator(0, Expression.SIDE_RIGHT));
@@ -203,8 +225,8 @@ public class ExpressionTest {
 	@Test(expected = IllegalArgumentException.class)
 	public void addSubExpressionWithOperatorTestException() {
 		// check if a simple expression to call this method, this method will throw exception
-		sinExpr.addSubExpressionWithOperator(new Expression("age", Expression.EQUAL, 23), Expression.AND);
-		Assert.assertEquals(1, sinExpr.getNumberOfSubExpression());
+		sinAExpr.addSubExpressionWithOperator(new Expression("age", Expression.EQUAL, 23), Expression.AND);
+		Assert.assertEquals(1, sinAExpr.getNumberOfSubExpression());
 	}
 	
 	@Test
@@ -221,18 +243,18 @@ public class ExpressionTest {
 	@Test(expected = IllegalArgumentException.class)
 	public void addCompoundExpressionTestException() {
 		// check if a simple expression to call this method, this method will throw exception
-		sinExpr.addCompoundExpression(com2OrExpr, Expression.AND);
-		Assert.assertEquals(3, sinExpr.getNumberOfSubExpression());
+		sinAExpr.addCompoundExpression(com2OrExpr, Expression.AND);
+		Assert.assertEquals(3, sinAExpr.getNumberOfSubExpression());
 	}
 	
 	@Test
 	public void removeSubExpressionTest() {
 		// remove sub-expression from a simple expression.
-		sinExpr.removeSubExpression(0);
-		Assert.assertEquals(new Subject("firstName", null), sinExpr.getSubject());
-		Assert.assertEquals(Expression.EQUAL, sinExpr.getOperator());
-		Assert.assertEquals("John", sinExpr.getValue());
-		Assert.assertFalse(sinExpr.isComplement());
+		sinAExpr.removeSubExpression(0);
+		Assert.assertEquals(new Subject("firstName", null), sinAExpr.getSubject());
+		Assert.assertEquals(Expression.EQUAL, sinAExpr.getOperator());
+		Assert.assertEquals("John", sinAExpr.getValue());
+		Assert.assertFalse(sinAExpr.isComplement());
 		
 		// remove a sub-expression from a compound expression which has 2 sub-expressions. (this method needs to simplify this compound expression)
 		Assert.assertTrue(com2AndExpr.isCompound());
@@ -282,8 +304,8 @@ public class ExpressionTest {
 	
 	@Test
 	public void complement() {
-		System.out.println(sinExpr.toString());
-		Expression sinExprComplement = sinExpr.complement(true);
+		System.out.println(sinAExpr.toString());
+		Expression sinExprComplement = sinAExpr.complement(true);
 		Assert.assertEquals(0, sinExprComplement.getNumberOfSubExpression());
 		System.out.println(sinExprComplement.toString());
 		System.out.println();
@@ -318,12 +340,12 @@ public class ExpressionTest {
 	@Test
 	public void resetTest() {
 		// test simple expression
-		sinExpr.reset();
-		Assert.assertNull(sinExpr.getSubject());
-		Assert.assertNull(sinExpr.getOperator());
-		Assert.assertNull(sinExpr.getValue());
-		Assert.assertFalse(sinExpr.isComplement());
-		Assert.assertEquals(0, sinExpr.getNumberOfSubExpression());
+		sinAExpr.reset();
+		Assert.assertNull(sinAExpr.getSubject());
+		Assert.assertNull(sinAExpr.getOperator());
+		Assert.assertNull(sinAExpr.getValue());
+		Assert.assertFalse(sinAExpr.isComplement());
+		Assert.assertEquals(0, sinAExpr.getNumberOfSubExpression());
 		
 		// test compound expression
 		com3AndOrExpr.reset();
@@ -352,9 +374,9 @@ public class ExpressionTest {
 	
 	@Test
 	public void equalTest() {
-		Assert.assertTrue(sinExpr.equals(new Expression("firstName", Expression.EQUAL, "John")));
-		Assert.assertFalse(sinExpr.equals(new Expression("firstName", Expression.EQUAL, "Johnny")));
-		Assert.assertFalse(sinExpr.equals(new Expression("firstName", Expression.ENDS_WITH, "John")));
+		Assert.assertTrue(sinAExpr.equals(new Expression("firstName", Expression.EQUAL, "John")));
+		Assert.assertFalse(sinAExpr.equals(new Expression("firstName", Expression.EQUAL, "Johnny")));
+		Assert.assertFalse(sinAExpr.equals(new Expression("firstName", Expression.ENDS_WITH, "John")));
 		
 		Assert.assertTrue(comMultiLevelExpr.equals(new Expression(new Expression("firstName", Expression.EQUAL, "John").and("age", Expression.EQUAL, 23))
 				.or(new Expression("firstName", Expression.EQUAL, "Mary").and("age", Expression.EQUAL, 24).and("score", Expression.EQUAL, 99))
@@ -366,9 +388,9 @@ public class ExpressionTest {
 	
 	@Test 
 	public void cloneTest() {
-		Expression newSinExpr = (Expression) sinExpr.clone();
+		Expression newSinExpr = (Expression) sinAExpr.clone();
 		newSinExpr.and("age", Expression.EQUAL, 33);
-		Assert.assertTrue(!sinExpr.isCompound());
+		Assert.assertTrue(!sinAExpr.isCompound());
 		
 		Expression newComMultiLevelExpr = (Expression) comMultiLevelExpr.clone();
 		newComMultiLevelExpr.getSubExpression(1).setOperator(Expression.ENDS_WITH);
