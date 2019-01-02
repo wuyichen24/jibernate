@@ -21,6 +21,7 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.DateFormat;
@@ -28,6 +29,8 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.List;
+
+import javax.persistence.EntityManagerFactory;
 
 import org.apache.log4j.PropertyConfigurator;
 import org.junit.After;
@@ -296,6 +299,22 @@ public class AbstractEntityManagerDaoTest {
 		
 		int newCount = GenericDbClientUtil.getNumberOfRecords(dbService, "student", "last_name = 'Scott'");
 		Assert.assertEquals(0, newCount);
+	}
+	
+	@Test
+	public void startTest() throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
+		dao.start();
+		Field entityManagerFactoryField = AbstractEntityManagerDao.class.getDeclaredField("entityManagerFactory");
+		entityManagerFactoryField.setAccessible(true);
+		Assert.assertNotNull((EntityManagerFactory) entityManagerFactoryField.get(dao));
+	}
+	
+	@Test
+	public void stopTest() throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
+		dao.stop();		
+		Field entityManagerFactoryField = AbstractEntityManagerDao.class.getDeclaredField("entityManagerFactory");
+		entityManagerFactoryField.setAccessible(true);
+		Assert.assertNull((EntityManagerFactory) entityManagerFactoryField.get(dao));
 	}
 	
 	@After
