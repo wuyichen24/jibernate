@@ -223,6 +223,12 @@ public class ExpressionTest {
 		
 		com2OrExpr.setOperator(0, Expression.SIDE_RIGHT, Expression.AND);
 		Assert.assertEquals(Expression.AND, com2OrExpr.getOperator(1, Expression.SIDE_LEFT));
+		
+		com3AndExpr.setOperator(1, Expression.SIDE_LEFT, Expression.OR);
+		Assert.assertEquals(Expression.OR, com3AndExpr.getOperator(1, Expression.SIDE_LEFT));
+		
+		com3OrExpr.setOperator(1, Expression.SIDE_LEFT, Expression.AND);
+		Assert.assertEquals(Expression.AND, com3OrExpr.getOperator(1, Expression.SIDE_LEFT));
 	}
 	
 	@Test
@@ -251,18 +257,48 @@ public class ExpressionTest {
 	
 	@Test
 	public void addSubExpressionWithOperatorTest() {
+		// add one expression on the right end of the sub-expression list
+		// (if not specify the index, it will add it to the right end of the list)
 		com2AndExpr.addSubExpressionWithOperator(new Expression("score", Expression.EQUAL, 98), Expression.OR);
 		Assert.assertEquals(3, com2AndExpr.getNumberOfSubExpression());
+		Assert.assertEquals(new Expression("firstName", Expression.EQUAL, "John"),    com2AndExpr.getSubExpression(0));
+		Assert.assertEquals(Expression.AND, com2AndExpr.getOperator(0, Expression.SIDE_RIGHT));
+		Assert.assertEquals(new Expression("age", Expression.EQUAL, 23),              com2AndExpr.getSubExpression(1));
 		Assert.assertEquals(Expression.OR, com2AndExpr.getOperator(1, Expression.SIDE_RIGHT));
+		Assert.assertEquals(new Expression("score", Expression.EQUAL, 98),             com2AndExpr.getSubExpression(2));
 		
-		// add one the first sub-expression
+		// add one expression on the left end of the sub-expression list
 		com2OrExpr.addSubExpressionWithOperator(0, new Expression("score", Expression.EQUAL, 99), Expression.AND);
 		Assert.assertEquals(3, com2OrExpr.getNumberOfSubExpression());
+		Assert.assertEquals(new Expression("score", Expression.EQUAL, 99),            com2OrExpr.getSubExpression(0));
 		Assert.assertEquals(Expression.AND, com2OrExpr.getOperator(1, Expression.SIDE_LEFT));
+		Assert.assertEquals(new Expression("firstName", Expression.EQUAL, "John"),    com2OrExpr.getSubExpression(1));
+		Assert.assertEquals(Expression.OR, com2OrExpr.getOperator(2, Expression.SIDE_LEFT));
+		Assert.assertEquals(new Expression("firstName", Expression.EQUAL, "Johnson"), com2OrExpr.getSubExpression(2));
 		
+		// add one expression on the right end of the sub-expression list
+		// (if index is too large, it will still add on the right end rather than throwing an exception)
 		com3OrExpr.addSubExpressionWithOperator(12, new Expression("score", Expression.EQUAL, 99), Expression.AND);
 		Assert.assertEquals(4, com3OrExpr.getNumberOfSubExpression());
+		Assert.assertEquals(new Expression("firstName", Expression.EQUAL, "John"),            com3OrExpr.getSubExpression(0));
+		Assert.assertEquals(Expression.OR, com3OrExpr.getOperator(1, Expression.SIDE_LEFT));
+		Assert.assertEquals(new Expression("firstName", Expression.EQUAL, "Johnson"),         com3OrExpr.getSubExpression(1));
+		Assert.assertEquals(Expression.OR, com3OrExpr.getOperator(2, Expression.SIDE_LEFT));
+		Assert.assertEquals(new Expression("firstName", Expression.EQUAL, "Johnny"),          com3OrExpr.getSubExpression(2));
 		Assert.assertEquals(Expression.AND, com3OrExpr.getOperator(3, Expression.SIDE_LEFT));
+		Assert.assertEquals(new Expression("score", Expression.EQUAL, 99),                    com3OrExpr.getSubExpression(3));
+		
+		// add one expression in the middle of the sub-expression list
+		com3AndExpr.addSubExpressionWithOperator(1, new Expression("score", Expression.EQUAL, 99), Expression.OR);
+		Assert.assertEquals(4, com3AndExpr.getNumberOfSubExpression());
+		Assert.assertEquals(new Expression("firstName", Expression.EQUAL, "John"),              com3AndExpr.getSubExpression(0));
+		Assert.assertEquals(Expression.OR, com3AndExpr.getOperator(0, Expression.SIDE_RIGHT));
+		Assert.assertEquals(new Expression("score", Expression.EQUAL, 99),                      com3AndExpr.getSubExpression(1));
+		Assert.assertEquals(Expression.AND, com3AndExpr.getOperator(1, Expression.SIDE_RIGHT));
+		Assert.assertEquals(new Expression("age", Expression.EQUAL, 23),                        com3AndExpr.getSubExpression(2));
+		Assert.assertEquals(Expression.AND, com3AndExpr.getOperator(2, Expression.SIDE_RIGHT));
+		Assert.assertEquals(new Expression("score", Expression.EQUAL, 99),                      com3AndExpr.getSubExpression(3));
+		
 	}
 	
 	@Test(expected = IllegalArgumentException.class)
