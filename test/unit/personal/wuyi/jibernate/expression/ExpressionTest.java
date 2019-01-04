@@ -233,6 +233,7 @@ public class ExpressionTest {
 	
 	@Test
 	public void setOperatorTestException() {
+		// can not set an operator on the left side of the first expression, throw exception
 		try {
 			com2AndExpr.setOperator(0, Expression.SIDE_LEFT, Expression.AND);
 			fail("Expected an java.lang.IllegalArgumentException to be thrown");
@@ -240,6 +241,8 @@ public class ExpressionTest {
 			assertThat(e.getMessage(), is("Can not set an operator on the left side of the first sub-expression without an expression"));
 		}
 		
+		
+		// can not set an operator on the right side of the last expression, throw exception
 		try {
 			com2AndExpr.setOperator(1, Expression.SIDE_RIGHT, Expression.AND);
 			fail("Expected an java.lang.IllegalArgumentException to be thrown");
@@ -247,6 +250,7 @@ public class ExpressionTest {
 			assertThat(e.getMessage(), is("Can not set an operator on the right side of the last sub-expression without an expression"));
 		}
 		
+		// if side option is an invalid value, throw exception
 		try {
 			com2AndExpr.setOperator(0, 200, Expression.AND);
 			fail("Expected an java.lang.IllegalArgumentException to be thrown");
@@ -301,11 +305,39 @@ public class ExpressionTest {
 		
 	}
 	
-	@Test(expected = IllegalArgumentException.class)
-	public void addSubExpressionWithOperatorTestException() {
-		// check if a simple expression to call this method, this method will throw exception
-		sinAExpr.addSubExpressionWithOperator(new Expression("age", Expression.EQUAL, 23), Expression.AND);
-		Assert.assertEquals(1, sinAExpr.getNumberOfSubExpression());
+	@Test
+	public void addSubExpressionWithOperatorTestException() {		
+		// This function is not applied to simple expression, throw exception
+		try {
+			sinAExpr.addSubExpressionWithOperator(new Expression("age", Expression.EQUAL, 23), Expression.AND);
+			fail("Expected an java.lang.IllegalArgumentException to be thrown");
+		} catch (IllegalArgumentException e) {
+			assertThat(e.getMessage(), is("This method is not valid for any simple expression. A simple expression needs to be compounded before adding a new sub-expression."));
+		}
+		
+		// This function can not accept null as expression input parameter, throw exception
+		try {
+			com2OrExpr.addSubExpressionWithOperator(null, Expression.AND);
+			fail("Expected an java.lang.IllegalArgumentException to be thrown");
+		} catch (IllegalArgumentException e) {
+			assertThat(e.getMessage(), is("Expression cannot be null."));
+		}
+		
+		// This function can not accept null as operator input parameter, throw exception
+		try {
+			com2OrExpr.addSubExpressionWithOperator(new Expression("age", Expression.EQUAL, 23), null);
+			fail("Expected an java.lang.IllegalArgumentException to be thrown");
+		} catch (IllegalArgumentException e) {
+			assertThat(e.getMessage(), is("The operator cannot be null."));
+		}
+		
+		// if boolean operator is an invalid value, throw exception
+		try {
+			com2OrExpr.addSubExpressionWithOperator(new Expression("age", Expression.EQUAL, 23), "dummy string");
+			fail("Expected an java.lang.IllegalArgumentException to be thrown");
+		} catch (IllegalArgumentException e) {
+			assertThat(e.getMessage(), is("Operator must be either Expression.AND or Expression.OR."));
+		}
 	}
 	
 	@Test
@@ -319,11 +351,23 @@ public class ExpressionTest {
 		Assert.assertEquals(new Expression("firstName", Expression.EQUAL, "Johnson"), com2AndExpr.getSubExpression(3));
 	}
 	
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void addCompoundExpressionTestException() {
-		// check if a simple expression to call this method, this method will throw exception
-		sinAExpr.addCompoundExpression(com2OrExpr, Expression.AND);
-		Assert.assertEquals(3, sinAExpr.getNumberOfSubExpression());
+		// This function is not applied to simple expression, throw exception
+		try {
+			sinAExpr.addCompoundExpression(com2OrExpr, Expression.AND);
+			fail("Expected an java.lang.IllegalArgumentException to be thrown");
+		} catch (IllegalArgumentException e) {
+			assertThat(e.getMessage(), is("This method is not valid for any simple expression. A simple expression needs to be compounded before adding a new sub-expression."));
+		}
+		
+		// This function can not accept null as expression input parameter, throw exception
+		try {
+			com2OrExpr.addCompoundExpression(null, Expression.AND);
+			fail("Expected an java.lang.IllegalArgumentException to be thrown");
+		} catch (IllegalArgumentException e) {
+			assertThat(e.getMessage(), is("Expression cannot be null."));
+		}
 	}
 	
 	@Test

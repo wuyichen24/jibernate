@@ -605,42 +605,6 @@ public class Expression implements Cloneable, Serializable {
         } 
     }
 
-    /**
-     * Add a sub-expression with a operator on certain side into a list of 
-     * sub-expressions.
-     * 
-     * <p>This method is not valid for any simple expression. The simple 
-     * expression needs to be compounded before adding a new sub-expression.
-     * You can use 
-     * {@code combineExpression(String operator, Expression expression)} 
-     * for a simple expression.
-     * 
-     * @param  index
-     *         The expression index.
-     *         
-     * @param  expression
-     *         The expression needs to be added.
-     * 
-     * @param  operator
-     *         The operator needs to be added.
-     * 
-     * @param  side
-     *         The operator will be added to which side of the new 
-     *         sub-expression, left or right.
-     */
-    protected void addSubExpressionWithOperator(int index, Expression expression, String operator, int side) {
-        if (side == SIDE_LEFT || index <= 0) {
-        	addSubExpressionWithOperator(index, expression, operator);
-            return;
-        }
-
-        validateConditionBeforeAddingSubExpression(expression, operator);
-
-        // inserts <expr> <op> at specified index
-        subExpressionAndOperatorList.add(convertExpressionIndexToArrayIndex(index), operator);
-        subExpressionAndOperatorList.add(convertExpressionIndexToArrayIndex(index), expression);
-    }
-
 	/**
 	 * Combine this expression with another compound expression.
 	 * 
@@ -661,10 +625,10 @@ public class Expression implements Cloneable, Serializable {
     public void combineCompoundExpression(String operator, Expression expression) {
       	// If current expression is a simple expression, it will compound 
 	    // itself prior to doing AND/OR operation with another expression.
-    		if (!isCompound()) {
+    	if (!isCompound()) {
             compound();
         }
-    		addCompoundExpression(expression, operator);
+    	addCompoundExpression(expression, operator);
     }
 
     /**
@@ -688,11 +652,11 @@ public class Expression implements Cloneable, Serializable {
      */
     protected void addCompoundExpression(Expression expression, String operator) {
         if (expression == null) {
-            throw new IllegalArgumentException("Expression cannot be null");
+            throw new IllegalArgumentException("Expression cannot be null.");
         }
 
         if (!expression.isCompound()) {
-        		addSubExpressionWithOperator(expression, operator);
+        	addSubExpressionWithOperator(expression, operator);
             return;
         }
 
@@ -726,7 +690,7 @@ public class Expression implements Cloneable, Serializable {
      */
     protected void validateConditionBeforeAddingSubExpression(Expression expression, String operator) {
     	if (expression == null) {
-            throw new IllegalArgumentException("Expression cannot be null");
+            throw new IllegalArgumentException("Expression cannot be null.");
         }
         
         if (!isCompound()) {
@@ -736,11 +700,11 @@ public class Expression implements Cloneable, Serializable {
 
         if (!subExpressionAndOperatorList.isEmpty()) {
             if (operator == null) {
-                throw new IllegalArgumentException("The operator cannot be null");
+                throw new IllegalArgumentException("The operator cannot be null.");
             }
 
             if (!operator.equals(Expression.AND) && !operator.equals(Expression.OR)) {
-                throw new IllegalArgumentException("Operator must be either " + AND + " or " + OR);
+                throw new IllegalArgumentException("Operator must be either Expression.AND or Expression.OR.");
             }
         }
     }
