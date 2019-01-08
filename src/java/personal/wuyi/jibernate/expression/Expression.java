@@ -859,12 +859,10 @@ public class Expression implements Cloneable, Serializable {
             Expression expr = getSubExpression(0);
 
             if (expr.isCompound()) {
-            	expr.complement(distribute);
+            	return expr.complement(distribute);
             } else {
-            	complement(expr);
+            	return complement(expr);
             }
-
-            return this;
         }
 
         Deque<Serializable> exprStack      = new ArrayDeque<>();    // store the expression tree

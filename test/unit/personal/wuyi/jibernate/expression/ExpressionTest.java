@@ -46,6 +46,7 @@ public class ExpressionTest {
 	private Expression comMultiLevelExpr = new Expression(new Expression("firstName", Expression.EQUAL, "John").and("age", Expression.EQUAL, 23))
 										.or(new Expression("firstName", Expression.EQUAL, "Mary").and("age", Expression.EQUAL, 24).and("score", Expression.EQUAL, 99))
 										.or(new Expression("firstName", Expression.EQUAL, "Tony").and("age", Expression.EQUAL, 25).and("lastName", Expression.EQUAL, "Lee"));
+	private Expression nestedExpr        = new Expression(new Expression(new Expression("firstName", Expression.EQUAL, "John")));
 	
 	@Test 
 	public void constructorTest() {
@@ -423,39 +424,55 @@ public class ExpressionTest {
 		// case for can not find
 		Expression targetedExpr2 = comMultiLevelExpr.findSubExpression("school");
 		Assert.assertNull(targetedExpr2);
+		
+		// put null as input subject
+		Assert.assertNull(comMultiLevelExpr.findSubExpression(null));
 	}
 	
 	@Test
 	public void complement() {
+		// complement a simple expression
 		System.out.println(sinAExpr.toString());
-		Expression sinExprComplement = sinAExpr.complement(true);
-		Assert.assertEquals(0, sinExprComplement.getNumberOfSubExpression());
-		System.out.println(sinExprComplement.toString());
+		Expression sinAExprComplement = sinAExpr.complement(true);
+		Assert.assertEquals(0, sinAExprComplement.getNumberOfSubExpression());
+		System.out.println(sinAExprComplement.toString());
 		System.out.println();
 		
+		// complement a compound expression (2 sub-expressions)
 		System.out.println(com2AndExpr.toString());
 		Expression com2AndExprComplement = com2AndExpr.complement(true);
 		Assert.assertEquals(2, com2AndExprComplement.getNumberOfSubExpression());
 		System.out.println(com2AndExprComplement.toString());
 		System.out.println();
 		
+		// complement a compound expression (2 sub-expressions)
 		System.out.println(com2OrExpr.toString());
 		Expression com2OrExprComplement = com2OrExpr.complement(true);
 		Assert.assertEquals(2, com2OrExprComplement.getNumberOfSubExpression());
 		System.out.println(com2OrExprComplement.toString());
 		System.out.println();
 		
+		// complement a compound expression (3 sub-expressions)
 		System.out.println(com3AndExpr.toString());
 		Expression com3AndExprComplement = com3AndExpr.complement(true);
 		Assert.assertEquals(3, com3AndExprComplement.getNumberOfSubExpression());
 		System.out.println(com3AndExprComplement.toString());
 		System.out.println();
 		
+		// complement a compound expression (more complicated expression)
 		System.out.println(comMultiLevelExpr.toString());
 		Assert.assertEquals(3, comMultiLevelExpr.getNumberOfSubExpression());
 		Expression complementExpr2 = comMultiLevelExpr.complement(true);
 		Assert.assertEquals(3, complementExpr2.getNumberOfSubExpression());
 		System.out.println(complementExpr2.toString());
+		System.out.println();
+		
+		// complement one simple expression but nested in multiple level
+		System.out.println(nestedExpr.toString());
+		Expression nestedExprComplement = nestedExpr.complement(true);
+		Assert.assertEquals(0, nestedExprComplement.getNumberOfSubExpression());
+		System.out.println(nestedExprComplement.toString());
+		System.out.println();
 	}
 	
 	
