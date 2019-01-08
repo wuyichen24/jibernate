@@ -20,6 +20,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.fail;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -498,8 +501,18 @@ public class ExpressionTest {
 	
 	@Test
 	public void toStringTest() {
+		// test a compound expression (with 3 sub-expressions)
 		Assert.assertEquals("(([firstName]==\"John\") && ([age]==23) && ([score]==99))", com3AndExpr.toString());
+		
+		// test a compound expression (more complicated expression)
 		Assert.assertEquals("((([firstName]==\"John\") && ([age]==23)) || (([firstName]==\"Mary\") && ([age]==24) && ([score]==99)) || (([firstName]==\"Tony\") && ([age]==25) && ([lastName]==\"Lee\")))", comMultiLevelExpr.toString());
+	
+		// test an expression whose subject has value
+		Assert.assertEquals("([firstName = FIRSTNAME]==\"John\")", new Expression(new Subject("firstName", "FIRSTNAME"), Expression.EQUAL, "John").toString());
+		
+		// test an expression which value is a list
+		List<String> valueList = Arrays.asList("John", "Johnny", "Johnson");
+		Assert.assertEquals("([firstName]==[\"John\",\"Johnny\",\"Johnson\"])", new Expression("firstName", Expression.EQUAL, valueList).toString());
 	}
 	
 	@Test
