@@ -26,9 +26,6 @@ import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
 
-import personal.wuyi.jibernate.entity.Student;
-import personal.wuyi.jibernate.entity.Uri;
-
 /**
  * Test class for {@code Expression}.
  * 
