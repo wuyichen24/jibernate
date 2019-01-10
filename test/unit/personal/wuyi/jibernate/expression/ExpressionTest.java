@@ -20,9 +20,11 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.fail;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -523,7 +525,51 @@ public class ExpressionTest {
 	
 	@Test
 	public void prefixTest() {
-		// TODO need to know how to use Consumer
+		// prefix simple expression: A => A
+		List<Object> traverseList1 = new ArrayList<>();
+		sinAExpr.prefix(node -> {
+            if(node instanceof Expression) {
+                traverseList1.add((Expression) node);
+            } else if (node instanceof String) {
+            	traverseList1.add((String) node);
+            }
+        });
+		Assert.assertEquals(1, traverseList1.size());
+		assertThat(traverseList1, Matchers.hasItems(
+				new Expression("firstName", Expression.EQUAL, "John")
+        ));
+		
+		// prefix compound expression: A && B => &&, A, B
+		List<Object> traverseList2 = new ArrayList<>();
+		com2AndExpr.prefix(node -> {
+            if(node instanceof Expression) {
+                traverseList2.add((Expression) node);
+            } else if (node instanceof String) {
+            	traverseList2.add((String) node);
+            }
+        });
+		Assert.assertEquals(3, traverseList2.size());
+		Assert.assertEquals(Expression.AND,                                        traverseList2.get(0));
+		Assert.assertEquals(new Expression("firstName", Expression.EQUAL, "John"), traverseList2.get(1));
+		Assert.assertEquals(new Expression("age", Expression.EQUAL, 23),           traverseList2.get(2));
+		
+		
+		// prefix compound expression: A || (B  && C) => ||, A, &&, B, C
+		List<Object> traverseList3 = new ArrayList<>();
+		Expression compoundExpr3 = new Expression("AAA", Expression.EQUAL, "aaa").or(new Expression("BBB", Expression.EQUAL, "bbb").and("CCC", Expression.EQUAL, "ccc"));
+		compoundExpr3.prefix(node -> {
+            if(node instanceof Expression) {
+                traverseList3.add((Expression) node);
+            } else if (node instanceof String) {
+            	traverseList3.add((String) node);
+            }
+        });
+		Assert.assertEquals(5, traverseList3.size());
+		Assert.assertEquals(Expression.OR, traverseList3.get(0));
+		Assert.assertEquals(new Expression("AAA", Expression.EQUAL, "aaa"), traverseList3.get(1));
+		Assert.assertEquals(Expression.AND, traverseList3.get(2));
+		Assert.assertEquals(new Expression("BBB", Expression.EQUAL, "bbb"), traverseList3.get(3));
+		Assert.assertEquals(new Expression("CCC", Expression.EQUAL, "ccc"), traverseList3.get(4));
 	}
 	
 	@Test
@@ -536,7 +582,7 @@ public class ExpressionTest {
 		Assert.assertFalse(sinAExpr.equals(exprNull));
 		
 		// compare with non-expression object
-		Assert.assertFalse(sinAExpr.equals("ABC"));
+		Assert.assertFalse(sinAExpr.equals(new StringBuilder()));
 		
 		// value is different
 		Assert.assertFalse(sinAExpr.equals(new Expression("firstName", Expression.EQUAL, "Johnny")));
