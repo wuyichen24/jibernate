@@ -507,9 +507,13 @@ public class ExpressionTest {
 		// test an expression whose subject has value
 		Assert.assertEquals("([firstName = FIRSTNAME]==\"John\")", new Expression(new Subject("firstName", "FIRSTNAME"), Expression.EQUAL, "John").toString());
 		
-		// test an expression which value is a list
-		List<String> valueList = Arrays.asList("John", "Johnny", "Johnson");
-		Assert.assertEquals("([firstName]==[\"John\",\"Johnny\",\"Johnson\"])", new Expression("firstName", Expression.EQUAL, valueList).toString());
+		// test an expression which value is a list of string
+		List<String> valueList1 = Arrays.asList("John", "Johnny", "Johnson");
+		Assert.assertEquals("([firstName]==[\"John\",\"Johnny\",\"Johnson\"])", new Expression("firstName", Expression.EQUAL, valueList1).toString());
+		
+		// test an expression which value is a list of non-string object
+		List<StringBuilder> valueList2 = Arrays.asList(new StringBuilder("John"), new StringBuilder("Johnny"), new StringBuilder("Johnson"));
+		Assert.assertEquals("([firstName]==[John,Johnny,Johnson])", new Expression("firstName", Expression.EQUAL, valueList2).toString());
 	}
 	
 	@Test
