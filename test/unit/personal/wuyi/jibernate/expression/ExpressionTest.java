@@ -527,16 +527,71 @@ public class ExpressionTest {
 	}
 	
 	@Test
-	public void equalTest() {
+	public void equalsSimpleExpressionTest() {
+		// happy path
 		Assert.assertTrue(sinAExpr.equals(new Expression("firstName", Expression.EQUAL, "John")));
+		
+		// compare with null object
+		Expression exprNull = null;
+		Assert.assertFalse(sinAExpr.equals(exprNull));
+		
+		// compare with non-expression object
+		Assert.assertFalse(sinAExpr.equals("ABC"));
+		
+		// value is different
 		Assert.assertFalse(sinAExpr.equals(new Expression("firstName", Expression.EQUAL, "Johnny")));
+		
+		// operator is different
 		Assert.assertFalse(sinAExpr.equals(new Expression("firstName", Expression.ENDS_WITH, "John")));
 		
+		// subject is null
+		Assert.assertFalse(new Expression((Subject) null, Expression.EQUAL, "John").equals(new Expression("firstName", Expression.EQUAL, "John")));
+		Assert.assertFalse(new Expression("firstName", Expression.EQUAL, "John").equals(new Expression((Subject) null, Expression.EQUAL, "John")));
+		
+		// operator is null
+		Assert.assertFalse(new Expression("firstName", null, "John").equals(new Expression("firstName", Expression.EQUAL, "John")));
+		Assert.assertFalse(new Expression("firstName", Expression.EQUAL, "John").equals(new Expression("firstName", null, "John")));
+		
+		// value is null
+		Assert.assertFalse(new Expression("firstName", Expression.EQUAL, null).equals(new Expression("firstName", Expression.EQUAL, "John")));
+		Assert.assertFalse(new Expression("firstName", Expression.EQUAL, "John").equals(new Expression("firstName", Expression.EQUAL, null)));
+	}
+	
+	@Test
+	public void equalsCompoundExpressionTest() {
 		Assert.assertTrue(comMultiLevelExpr.equals(new Expression(new Expression("firstName", Expression.EQUAL, "John").and("age", Expression.EQUAL, 23))
 				.or(new Expression("firstName", Expression.EQUAL, "Mary").and("age", Expression.EQUAL, 24).and("score", Expression.EQUAL, 99))
 				.or(new Expression("firstName", Expression.EQUAL, "Tony").and("age", Expression.EQUAL, 25).and("lastName", Expression.EQUAL, "Lee"))));
+		
+		// different number of sub-expressions
+		Expression expr1A = new Expression("firstName", Expression.EQUAL, "Mary").and("age", Expression.EQUAL, 29).and("score", Expression.EQUAL, 99);
+		Expression expr1B = new Expression("firstName", Expression.EQUAL, "Mary").and("age", Expression.EQUAL, 29);
+		Assert.assertFalse(expr1A.equals(expr1B));
+		Assert.assertFalse(expr1B.equals(expr1A));
+		
+		// one sub-expression is null
+		Expression expr2A = new Expression("firstName", Expression.EQUAL, "Mary").and("age", Expression.EQUAL, 29).and("score", Expression.EQUAL, 99);
+		Expression expr2B = new Expression("firstName", Expression.EQUAL, "Mary").and("age", Expression.EQUAL, 29).and("score", Expression.EQUAL, 99);
+		expr2B.replaceSubExpression(1, null);
+		Assert.assertFalse(expr2A.equals(expr2B));
+		Assert.assertFalse(expr2B.equals(expr2A));
+		
+		// one operator is different
+		Expression expr3A = new Expression("firstName", Expression.EQUAL, "Mary").and("age", Expression.EQUAL, 29).or("score", Expression.EQUAL, 99);
+		Expression expr3B = new Expression("firstName", Expression.EQUAL, "Mary").and("age", Expression.EQUAL, 29).and("score", Expression.EQUAL, 99);
+		Assert.assertFalse(expr3A.equals(expr3B));
+		Assert.assertFalse(expr3B.equals(expr3A));
+		
+		// one operator is null
+		Expression expr4A = new Expression("firstName", Expression.EQUAL, "Mary").and("age", Expression.EQUAL, 29).and("score", Expression.EQUAL, 99);
+		Expression expr4B = new Expression("firstName", Expression.EQUAL, "Mary").and("age", Expression.EQUAL, 29).and("score", Expression.EQUAL, 99);
+		expr4B.setOperator(1, Expression.SIDE_RIGHT, null);
+		Assert.assertFalse(expr4A.equals(expr4B));
+		Assert.assertFalse(expr4B.equals(expr4A));
+		
+		// value of a certain sub-expression is different
 		Assert.assertFalse(comMultiLevelExpr.equals(new Expression(new Expression("firstName", Expression.EQUAL, "John").and("age", Expression.EQUAL, 23))
-				.or(new Expression("firstName", Expression.EQUAL, "Mary").and("age", Expression.EQUAL, 29).and("score", Expression.EQUAL, 99))
+				.or(new Expression("firstName", Expression.EQUAL, "Mary").and("age", Expression.EQUAL, 29).and("score", Expression.EQUAL, 99))   // age is not same
 				.or(new Expression("firstName", Expression.EQUAL, "Tony").and("age", Expression.EQUAL, 25).and("lastName", Expression.EQUAL, "Lee"))));
 	}
 	
