@@ -1118,11 +1118,6 @@ public class Expression implements Cloneable, Serializable {
      * @since   1.0
      */
     private void toStringCompoundExpression(Expression expr, StringBuilder sb) {
-    	if (!expr.isCompound()) {
-            sb.append(expr.toString());
-            return;
-        }
-
         if (expr.isComplement()) {
             sb.append("!");
         }

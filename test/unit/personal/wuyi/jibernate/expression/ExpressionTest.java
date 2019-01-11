@@ -565,9 +565,9 @@ public class ExpressionTest {
             }
         });
 		Assert.assertEquals(5, traverseList3.size());
-		Assert.assertEquals(Expression.OR, traverseList3.get(0));
+		Assert.assertEquals(Expression.OR,                                  traverseList3.get(0));
 		Assert.assertEquals(new Expression("AAA", Expression.EQUAL, "aaa"), traverseList3.get(1));
-		Assert.assertEquals(Expression.AND, traverseList3.get(2));
+		Assert.assertEquals(Expression.AND,                                 traverseList3.get(2));
 		Assert.assertEquals(new Expression("BBB", Expression.EQUAL, "bbb"), traverseList3.get(3));
 		Assert.assertEquals(new Expression("CCC", Expression.EQUAL, "ccc"), traverseList3.get(4));
 	}
