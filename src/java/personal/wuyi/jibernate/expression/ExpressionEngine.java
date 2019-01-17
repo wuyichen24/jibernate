@@ -1089,7 +1089,7 @@ public class ExpressionEngine {
 			return Boolean.valueOf(value);
 		} else {
 			try {
-				return DateUtils.parseDate(value, new String[] {"MM/dd/yy","MM/dd/yy HH:mm:ss", "E MMM d HH:mm:ss z yyyy"});
+				return DateUtils.parseDate(value, new String[] {"MM/dd/yy", "MM/dd/yyyy", "MM/dd/yy HH:mm:ss", "E MMM d HH:mm:ss z yyyy"});
 			} catch(Exception e) {
 				boolean isInteger = Pattern.matches("^\\d*$", value);
 				if(isInteger) {

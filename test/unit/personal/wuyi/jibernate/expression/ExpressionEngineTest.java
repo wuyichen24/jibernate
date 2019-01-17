@@ -16,6 +16,11 @@
 
 package personal.wuyi.jibernate.expression;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.List;
+
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -124,12 +129,36 @@ public class ExpressionEngineTest {
 	}
 	
 	@Test
-	public void parseTest() {	
+	public void parseSimpleExpressionTest() throws ParseException {
+		// parse invalid string
 		Assert.assertEquals(null,              ExpressionEngine.parse(null));
 		Assert.assertEquals(null,              ExpressionEngine.parse(""));
 		Assert.assertEquals(null,              ExpressionEngine.parse("     "));
 		Assert.assertEquals(null,              ExpressionEngine.parse("abc"));
+		
+		// parse value is string
 		Assert.assertEquals(sinExpr,           ExpressionEngine.parse("([firstName]==\"John\")"));
+		
+		// parse value is list
+		List<String> valueList1 = Arrays.asList("John", "Johnny", "Johnson");
+		Assert.assertEquals(new Expression("firstName", Expression.EQUAL, valueList1), ExpressionEngine.parse("([firstName]==[\"John\",\"Johnny\",\"Johnson\"])"));
+		
+		// parse value is null
+		Assert.assertEquals(new Expression("firstName", Expression.EQUAL, null),       ExpressionEngine.parse("([firstName]==null)"));
+		
+		// parse value is boolean
+		Assert.assertEquals(new Expression("firstName", Expression.EQUAL, true),       ExpressionEngine.parse("([firstName]==true)"));
+		
+		// parse value is date
+		Assert.assertEquals(new Expression("firstName", Expression.EQUAL, new SimpleDateFormat("MM/dd/yyyy").parse("11/29/2018")), ExpressionEngine.parse("([firstName]==11/29/2018)"));
+		
+		// parse vavlue is double
+		Assert.assertEquals(new Expression("firstName", Expression.EQUAL, 2.3), ExpressionEngine.parse("([firstName]==2.3)"));
+	}
+	
+	@Test
+	public void parseCompoundExpression() {
+		// parse compound expression
 		Assert.assertEquals(com2AndExpr,       ExpressionEngine.parse("(([firstName]==\"John\") && ([age]==23))"));
 		Assert.assertEquals(com2OrExpr,        ExpressionEngine.parse("(([firstName]==\"John\") || ([firstName]==\"Johnson\"))"));
 		Assert.assertEquals(com3AndExpr,       ExpressionEngine.parse("(([firstName]==\"John\") && ([age]==23) && ([score]==99))"));
