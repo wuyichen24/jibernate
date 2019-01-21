@@ -16,6 +16,10 @@
 
 package personal.wuyi.jibernate.expression;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.fail;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -43,27 +47,89 @@ public class ExpressionEngineTest {
 										.or(new Expression("firstName", Expression.EQUAL, "Mary").and("age", Expression.EQUAL, 24).and("score", Expression.EQUAL, 99))
 										.or(new Expression("firstName", Expression.EQUAL, "Tony").and("age", Expression.EQUAL, 25).and("lastName", Expression.EQUAL, "Lee"));
 	
+	/**
+	 * test evaluate an expression
+	 */
 	@Test
 	public void evaluateTest1() {
 		Assert.assertFalse(ExpressionEngine.evaluate(new Expression("firstName", Expression.EQUAL, "John")));    // subject.name = firstName, subject.value = null
 		Assert.assertTrue(ExpressionEngine.evaluate(new Expression(new Subject("firstName", "John"), Expression.EQUAL, "John")));
 	}
 	
+	/**
+	 * test evaluate an combination of a subject, an operator and a value
+	 */
 	@Test
 	public void evaluateTest2() {
+		// test some special cases
 		Assert.assertTrue(ExpressionEngine.evaluate(null, Expression.EQUAL, null));
 		Assert.assertFalse(ExpressionEngine.evaluate(null, Expression.NOT_EQUAL, null));
 		Assert.assertTrue(ExpressionEngine.evaluate(123L, Expression.NOT_EQUAL, null));
 		Assert.assertTrue(ExpressionEngine.evaluate(null, Expression.NOT_EQUAL, 123L));
 		
+		// test equal
+		Assert.assertTrue(ExpressionEngine.evaluate(123L, Expression.EQUAL, 123L));
+		Assert.assertFalse(ExpressionEngine.evaluate(123L, Expression.EQUAL, 234L));
+		
+		// test not equal
+		Assert.assertTrue(ExpressionEngine.evaluate(123L, Expression.NOT_EQUAL, 234L));
+		Assert.assertFalse(ExpressionEngine.evaluate(123L, Expression.NOT_EQUAL, 123L));
+		
+		// test greater than
+		Assert.assertTrue(ExpressionEngine.evaluate(234L, Expression.GREATER_THAN, 123L));
+		Assert.assertFalse(ExpressionEngine.evaluate(123L, Expression.GREATER_THAN, 123L));
+		Assert.assertFalse(ExpressionEngine.evaluate(123L, Expression.GREATER_THAN, 234L));
+		
+		// test greater than equal
+		Assert.assertTrue(ExpressionEngine.evaluate(234L, Expression.GREATER_THAN_EQUAL, 123L));
+		Assert.assertTrue(ExpressionEngine.evaluate(123L, Expression.GREATER_THAN_EQUAL, 123L));
+		Assert.assertFalse(ExpressionEngine.evaluate(123L, Expression.GREATER_THAN_EQUAL, 234L));
+		
+		// test less than
+		Assert.assertTrue(ExpressionEngine.evaluate(123L, Expression.LESS_THAN, 234L));
+		Assert.assertFalse(ExpressionEngine.evaluate(123L, Expression.LESS_THAN, 123L));
+		Assert.assertFalse(ExpressionEngine.evaluate(234L, Expression.LESS_THAN, 123L));
+		
+		// test less than equal
+		Assert.assertTrue(ExpressionEngine.evaluate(123L, Expression.LESS_THAN_EQUAL, 234L));
+		Assert.assertTrue(ExpressionEngine.evaluate(123L, Expression.LESS_THAN_EQUAL, 123L));
+		Assert.assertFalse(ExpressionEngine.evaluate(234L, Expression.LESS_THAN_EQUAL, 123L));
+		
+		// test start with
 		Assert.assertTrue(ExpressionEngine.evaluate("abcdefg", Expression.STARTS_WITH, "abc"));
+		Assert.assertFalse(ExpressionEngine.evaluate("abcdefg", Expression.STARTS_WITH, "abd"));
+		
+		// test end with
 		Assert.assertTrue(ExpressionEngine.evaluate("abcdefg", Expression.ENDS_WITH,   "efg"));
+		Assert.assertFalse(ExpressionEngine.evaluate("abcdefg", Expression.ENDS_WITH,   "dfg"));
 	}
 	
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void evaluateTestException() {
-		ExpressionEngine.evaluate("123", Expression.EQUAL, 123L);
-		ExpressionEngine.evaluate('a', Expression.EQUAL, "a");
+		// two types are not assignable from each other
+		try {
+			ExpressionEngine.evaluate("123", Expression.EQUAL, 123L);
+			fail("Expected an java.lang.IllegalArgumentException to be thrown");
+		} catch (IllegalArgumentException e) {
+			assertThat(e.getMessage(), is("java.lang.String is not comparable to java.lang.Long"));
+		}
+		
+		// 1st or 2nd operand is not comparable
+		try {
+			ExpressionEngine.evaluate(new StringBuilder(), Expression.EQUAL, new StringBuilder());
+			fail("Expected an java.lang.IllegalArgumentException to be thrown");
+		} catch (IllegalArgumentException e) {
+			assertThat(e.getMessage(), is("java.lang.StringBuilder is not comparable"));
+		}
+		
+		// invalid operator
+		try {
+			Assert.assertTrue(ExpressionEngine.evaluate(123L, "XXYYZZ", 123L));
+			fail("Expected an java.lang.IllegalArgumentException to be thrown");
+		} catch (IllegalArgumentException e) {
+			assertThat(e.getMessage(), is("Comparison XXYYZZ not supported."));
+		}
+		
 	}
 	
 	@Test
