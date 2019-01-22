@@ -65,6 +65,8 @@ public class ExpressionEngine {
 		
 		boolean truth = false;
 		for(Expression minterm : mintermList) {
+			minterm = ExpressionEngine.simplifyNestedExpression(minterm);
+			
 			if(minterm.isCompound()) {        // if a minterm is compound, make sure all the sub-expression are true
 				boolean minTruth = true;
 				for (int i = 0; i < minterm.getNumberOfSubExpression(); i++) {

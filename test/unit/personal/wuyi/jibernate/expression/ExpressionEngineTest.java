@@ -52,8 +52,15 @@ public class ExpressionEngineTest {
 	 */
 	@Test
 	public void evaluateTest1() {
+		// test subject.value = null
 		Assert.assertFalse(ExpressionEngine.evaluate(new Expression("firstName", Expression.EQUAL, "John")));    // subject.name = firstName, subject.value = null
+		
+		// test simple expression
 		Assert.assertTrue(ExpressionEngine.evaluate(new Expression(new Subject("firstName", "John"), Expression.EQUAL, "John")));
+		
+		// test compound expression
+		Assert.assertTrue(ExpressionEngine.evaluate(new Expression(new Subject("firstName", "John"), Expression.EQUAL, "John").or(new Expression(new Subject("lastName", "Andy"), Expression.EQUAL, "Andy"))));
+		Assert.assertTrue(ExpressionEngine.evaluate(new Expression(new Subject("firstName", "John"), Expression.EQUAL, "John").and(new Expression(new Subject("lastName", "Andy"), Expression.EQUAL, "Andy"))));
 	}
 	
 	/**
@@ -129,7 +136,6 @@ public class ExpressionEngineTest {
 		} catch (IllegalArgumentException e) {
 			assertThat(e.getMessage(), is("Comparison XXYYZZ not supported."));
 		}
-		
 	}
 	
 	@Test
