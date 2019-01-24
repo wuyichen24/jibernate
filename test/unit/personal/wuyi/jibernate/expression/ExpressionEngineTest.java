@@ -179,17 +179,55 @@ public class ExpressionEngineTest {
 	}
 	
 	@Test
+	public void unionTest() {
+		Expression exprA = new Expression("A", Expression.EQUAL, "a");
+		Expression exprB = new Expression("B", Expression.EQUAL, "b");
+		Expression exprAAndB = new Expression("A", Expression.EQUAL, "a").and("B", Expression.EQUAL, "b");
+		Expression exprCAndD = new Expression("C", Expression.EQUAL, "c").and("D", Expression.EQUAL, "d");
+		
+		// union(a, b) = a + b
+		Assert.assertEquals(new Expression("A", Expression.EQUAL, "a").or("B", Expression.EQUAL, "b"), ExpressionEngine.union(exprA, exprB));
+		
+		// union(a, c * d) = a + c * d
+		Assert.assertEquals(new Expression("A", Expression.EQUAL, "a")
+				.or("C", Expression.EQUAL, "c")
+				.and("D", Expression.EQUAL, "d"), ExpressionEngine.union(exprA, exprCAndD));
+		
+		// union(c * d, a) = c * d + a
+		Assert.assertEquals(new Expression("C", Expression.EQUAL, "c")
+				.and("D", Expression.EQUAL, "d")
+				.or("A", Expression.EQUAL, "a"), ExpressionEngine.union(exprCAndD, exprA));
+		
+		// union(c * d, a) = c * d + a
+		Assert.assertEquals(new Expression("A", Expression.EQUAL, "a")
+				.and("B", Expression.EQUAL, "b")
+				.or("C", Expression.EQUAL, "c")
+				.and("D", Expression.EQUAL, "d"), ExpressionEngine.union(exprAAndB, exprCAndD));
+	}
+	
+	@Test
 	public void intersectionTest() {
 		Expression exprA = new Expression("A", Expression.EQUAL, "a");
 		Expression exprB = new Expression("B", Expression.EQUAL, "b");
 		Expression exprAOrB = new Expression("A", Expression.EQUAL, "a").or("B", Expression.EQUAL, "b");
 		Expression exprCOrD = new Expression("C", Expression.EQUAL, "c").or("D", Expression.EQUAL, "d");
 		
+		// intersect(a, b) = a * b
 		Assert.assertEquals(new Expression("A", Expression.EQUAL, "a").and("B", Expression.EQUAL, "b"), ExpressionEngine.intersection(exprA, exprB));
+		
+		// intersect(a, c + d) = a * c + a * d
 		Assert.assertEquals(new Expression("A", Expression.EQUAL, "a")
 				.and("C", Expression.EQUAL, "c")
 				.or("A", Expression.EQUAL, "a")
 				.and("D", Expression.EQUAL, "d"), ExpressionEngine.intersection(exprA, exprCOrD));
+		
+		// intersect(c + d, a) = c * a + c * d
+		Assert.assertEquals(new Expression("A", Expression.EQUAL, "a")
+				.and("C", Expression.EQUAL, "c")
+				.or("A", Expression.EQUAL, "a")
+				.and("D", Expression.EQUAL, "d"), ExpressionEngine.intersection(exprCOrD, exprA));
+		
+		// intersect(a + b, c + d) = a * c + a * d + b * c + b * d
 		Assert.assertEquals(new Expression("A", Expression.EQUAL, "a")
 				.and("C", Expression.EQUAL, "c")
 				.or("A", Expression.EQUAL, "a")
@@ -211,9 +249,13 @@ public class ExpressionEngineTest {
 		// parse value is string
 		Assert.assertEquals(sinExpr,           ExpressionEngine.parse("([firstName]==\"John\")"));
 		
-		// parse value is list
+		// parse value is list of string
 		List<String> valueList1 = Arrays.asList("John", "Johnny", "Johnson");
 		Assert.assertEquals(new Expression("firstName", Expression.EQUAL, valueList1), ExpressionEngine.parse("([firstName]==[\"John\",\"Johnny\",\"Johnson\"])"));
+		
+		// parse value is list of integer
+		List<Integer> valueList2 = Arrays.asList(11, 22, 33);
+		Assert.assertEquals(new Expression("firstName", Expression.EQUAL, valueList2), ExpressionEngine.parse("([firstName]==[11,22,33])"));
 		
 		// parse value is null
 		Assert.assertEquals(new Expression("firstName", Expression.EQUAL, null),       ExpressionEngine.parse("([firstName]==null)"));

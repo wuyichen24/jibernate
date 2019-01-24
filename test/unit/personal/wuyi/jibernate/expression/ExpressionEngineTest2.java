@@ -16,6 +16,8 @@
 
 package personal.wuyi.jibernate.expression;
 
+import java.util.List;
+
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -48,6 +50,10 @@ public class ExpressionEngineTest2 {
 	private Expression comSop4 = new Expression(new Expression("A", Expression.EQUAL, "a").or("B", Expression.EQUAL, "b").complement())
 			.and(new Expression("C", Expression.EQUAL, "c").or("D", Expression.EQUAL, "d"));
 	
+	// AB + AB
+	private Expression comSop5 = new Expression(new Expression("A", Expression.EQUAL, "a").and("B", Expression.EQUAL, "b"))
+			.or(new Expression("A", Expression.EQUAL, "a").and("B", Expression.EQUAL, "b"));
+	
 	@Test
 	public void getSumOfProductsTest() {
 		// Case 1: AB + CD ==> AB + CD
@@ -74,10 +80,20 @@ public class ExpressionEngineTest2 {
 		System.out.println("By Stack:          " + ExpressionEngine.getSumOfProductsByStack(comSop4));
 		System.out.println("By Divide&Conquor: " + ExpressionEngine.getSumOfProductsByDivideAndConquor(comSop4, 2));
 		Assert.assertEquals(ExpressionEngine.getSumOfProductsByStack(comSop4), ExpressionEngine.getSumOfProductsByDivideAndConquor(comSop4, 2));
+		
+//		// Case 5: AB + AB ==> AB
+//		System.out.println("Original Expr:     " + comSop5);
+//		System.out.println("By Stack:          " + ExpressionEngine.getSumOfProductsByStack(comSop5));
+//		System.out.println("By Divide&Conquor: " + ExpressionEngine.getSumOfProductsByDivideAndConquor(comSop5, 3));
+//		Assert.assertEquals(ExpressionEngine.getSumOfProductsByStack(comSop5), ExpressionEngine.getSumOfProductsByDivideAndConquor(comSop5, 3));
 	}
 	
 	@Test
 	public void getMintermsTest() {
+		// Case 0: input a null expression
+		List<Expression> expressionList = ExpressionEngine.getMinterms(null);
+		Assert.assertTrue(expressionList.isEmpty());
+		
 		// Case 1: AB + CD ==> {AB, CD}
 		assertThat(ExpressionEngine.getMinterms(comSop1), containsInAnyOrder(
 				new Expression("A", Expression.EQUAL, "a").and("B", Expression.EQUAL, "b"),
@@ -108,6 +124,13 @@ public class ExpressionEngineTest2 {
 		assertThat(ExpressionEngine.getMinterms(comSop4), containsInAnyOrder(
 				new Expression(new Expression("A", Expression.EQUAL, "a").complement()).and(new Expression("B", Expression.EQUAL, "b").complement()).and("C", Expression.EQUAL, "c"),
 				new Expression(new Expression("A", Expression.EQUAL, "a").complement()).and(new Expression("B", Expression.EQUAL, "b").complement()).and("D", Expression.EQUAL, "d"))
+        );
+		
+		// Case 5: AB + AB ==> {AB}
+		List<Expression> expressionList2 = ExpressionEngine.getMinterms(comSop5);
+		Assert.assertEquals(1, expressionList2.size());
+		assertThat(expressionList2, containsInAnyOrder(
+				new Expression("A", Expression.EQUAL, "a").and("B", Expression.EQUAL, "b"))
         );
 	}
 }

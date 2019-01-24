@@ -749,11 +749,11 @@ public class ExpressionEngine {
 				union.combineExpression(null, e1);
 				union.combineExpression(Expression.OR, e2);
 			} else {
-				union = e2;
+				union = (Expression) e2.clone();
 				union.addSubExpressionWithOperator(0, e1, Expression.OR);
 			}
 		} else {
-			union = e1;
+			union = (Expression) e1.clone();
 			if(!e2.isCompound()) {
 				union.combineExpression(Expression.OR, e2);
 			} else {
