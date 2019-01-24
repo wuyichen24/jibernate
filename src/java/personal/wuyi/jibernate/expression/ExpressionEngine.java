@@ -327,7 +327,9 @@ public class ExpressionEngine {
 				for(int i = p; i <= q; i++) {
 					division.combineExpression(expr.getOperator(i, Expression.SIDE_LEFT), expr.getSubExpression(i));
 				}
-				divisionList.add(division);
+				if (!divisionList.contains(division)) {    // don't add duplicate product term
+					divisionList.add(division);
+				}
 
 				if(rightOptr == null) {         // if the right operator is null, it means the right bound hit the right end.
 					break;

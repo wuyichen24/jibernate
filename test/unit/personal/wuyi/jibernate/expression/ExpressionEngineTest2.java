@@ -81,11 +81,11 @@ public class ExpressionEngineTest2 {
 		System.out.println("By Divide&Conquor: " + ExpressionEngine.getSumOfProductsByDivideAndConquor(comSop4, 2));
 		Assert.assertEquals(ExpressionEngine.getSumOfProductsByStack(comSop4), ExpressionEngine.getSumOfProductsByDivideAndConquor(comSop4, 2));
 		
-//		// Case 5: AB + AB ==> AB
-//		System.out.println("Original Expr:     " + comSop5);
-//		System.out.println("By Stack:          " + ExpressionEngine.getSumOfProductsByStack(comSop5));
-//		System.out.println("By Divide&Conquor: " + ExpressionEngine.getSumOfProductsByDivideAndConquor(comSop5, 3));
-//		Assert.assertEquals(ExpressionEngine.getSumOfProductsByStack(comSop5), ExpressionEngine.getSumOfProductsByDivideAndConquor(comSop5, 3));
+		// Case 5: AB + AB ==> AB
+		System.out.println("Original Expr:     " + comSop5);
+		System.out.println("By Stack:          " + ExpressionEngine.getSumOfProductsByStack(comSop5));
+		System.out.println("By Divide&Conquor: " + ExpressionEngine.getSumOfProductsByDivideAndConquor(comSop5, 3));
+		Assert.assertEquals(ExpressionEngine.getSumOfProductsByStack(comSop5), ExpressionEngine.getSumOfProductsByDivideAndConquor(comSop5, 3));
 	}
 	
 	@Test
