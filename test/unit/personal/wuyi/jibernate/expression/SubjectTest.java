@@ -67,7 +67,6 @@ public class SubjectTest {
 		Assert.assertFalse(new Subject("first name").equals(new Subject()));
 		Assert.assertFalse(new Subject().equals(new Subject("last name")));
 		
-		
 		// check name and value
 		Assert.assertTrue(new Subject("first name", "John").equals(new Subject("first name", "John")));
 		Assert.assertFalse(new Subject("first name", "John").equals(new Subject("first name", "Johnny")));
