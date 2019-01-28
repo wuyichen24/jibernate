@@ -25,10 +25,25 @@ import junit.framework.Assert;
  * 
  * @author  Wuyi Chen
  * @date    09/18/2018
- * @version 1.0
+ * @version 1.1
  * @since   1.0
  */
 public class SubjectTest {
+	@Test
+	public void constructorTest() {
+		Subject sub1 = new Subject();
+		Assert.assertNull(sub1.getName());
+		Assert.assertNull(sub1.getValue());
+		
+		Subject sub2 = new Subject("Young");
+		Assert.assertEquals("Young", sub2.getName());
+		Assert.assertNull(sub2.getValue());
+		
+		Subject sub3 = new Subject("Young", "Lisa");
+		Assert.assertEquals("Young", sub3.getName());
+		Assert.assertEquals("Lisa", sub3.getValue());
+	}
+	
 	@Test
 	public void cloneTest() {
 		Subject oldSubject    = new Subject("first name", "John");
@@ -41,18 +56,23 @@ public class SubjectTest {
 	
 	@Test
 	public void equalsTest() {
-		Subject sub1 = new Subject("first name", "John");
+		// some special cases
+		Assert.assertFalse(new Subject("first name", "John").equals(null));
+		Assert.assertFalse(new Subject("first name", "John").equals("Student"));
+		Assert.assertTrue(new Subject().equals(new Subject()));
 		
-		Assert.assertFalse(sub1.equals(null));
-		Assert.assertFalse("first name".equals(sub1));
+		// check only name
+		Assert.assertTrue(new Subject("first name").equals(new Subject("first name")));
+		Assert.assertFalse(new Subject("first name").equals(new Subject("last name")));
+		Assert.assertFalse(new Subject("first name").equals(new Subject()));
+		Assert.assertFalse(new Subject().equals(new Subject("last name")));
 		
-		Subject sub2 = new Subject("first name", "Mary");
-		Assert.assertFalse(sub1.equals(sub2));
 		
-		Subject sub3 = new Subject("last name", "John");
-		Assert.assertFalse(sub1.equals(sub3));
-		
-		Subject sub4 = new Subject("first name", "John");
-		Assert.assertTrue(sub1.equals(sub4));
+		// check name and value
+		Assert.assertTrue(new Subject("first name", "John").equals(new Subject("first name", "John")));
+		Assert.assertFalse(new Subject("first name", "John").equals(new Subject("first name", "Johnny")));
+		Assert.assertFalse(new Subject("last name", "John").equals(new Subject("first name", "John")));
+		Assert.assertFalse(new Subject("first name", "John").equals(new Subject("first name")));
+		Assert.assertFalse(new Subject("first name").equals(new Subject("first name", "John")));
 	}
 }
