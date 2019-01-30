@@ -34,8 +34,15 @@ import personal.wuyi.jibernate.expression.Expression;
  */
 public class QueryConverterTest {
 	@Test
-	public void transformTest() {
-		// TODO
+	public void transformTest1() {
+//		JQuery<Student> jq1 = new JQuery<Student>(Student.class);
+//		jq1.setCriteria(new Expression("firstName", Expression.EQUAL, "John"));
+//		Assert.assertEquals(jq1, QueryConverter.transform(jq1));
+	}
+	
+	@Test
+	public void transformTest2() {
+		
 	}
 	
 	@Test

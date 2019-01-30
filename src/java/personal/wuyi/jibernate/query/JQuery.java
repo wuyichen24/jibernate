@@ -151,6 +151,17 @@ public class JQuery<E extends Persisted> {
     
     @Override
     public String toString() {
-        return "";
+        StringBuilder sb = new StringBuilder();
+        sb.append("{");
+        sb.append("class:"         + clazz.getSimpleName() + ",");
+        sb.append("criteria:"      + criteria.toString()   + ",");
+        sb.append("sort:"          + sort                  + ",");
+        sb.append("offset:"        + offset                + ",");
+        sb.append("limit:"         + limit                 + ",");
+        sb.append("caseSensitive:" + caseSensitive         + ",");
+        sb.append("distinct:"      + distinct              + ",");
+        sb.append("history:"       + history);
+        sb.append("}");
+        return sb.toString();
     }
 }

@@ -74,6 +74,6 @@ public class JQueryTest2 {
 	public void toStringTest() {
 		JQuery<Student> jq = new JQuery<>(Student.class);
 		jq.setCriteria("firstName", Expression.EQUAL, "John");
-		Assert.assertEquals("", jq.toString());
+		Assert.assertEquals("{class:Student,criteria:([firstName]==\"John\"),sort:null,offset:null,limit:null,caseSensitive:true,distinct:false,history:false}", jq.toString());
 	}
 }
