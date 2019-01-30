@@ -33,7 +33,7 @@ import personal.wuyi.jibernate.entity.Student;
 public class EntityQueryTest {
 	@Test
 	public void setJpqlTest() {
-		EntityQuery<Student> eq = new EntityQuery<Student>(Student.class);
+		EntityQuery<Student> eq = new EntityQuery<>(Student.class);
 		eq.setJpql("test");
 		Assert.assertEquals("test", eq.getJpql());
 	}

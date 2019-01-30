@@ -36,6 +36,8 @@ import personal.wuyi.jibernate.expression.Expression;
 /**
  * The test class for {@code Query}.
  * 
+ * <p>This class is with DB connection.
+ * 
  * @author  Wuyi Chen
  * @date    09/19/2018
  * @version 1.0
@@ -54,7 +56,7 @@ public class JQueryTest {
 	
 	@Test
 	public void setSortTest() {
-		// test ascending
+		// test ascending (single column)
 		EntityQuery<Student> q1 = new EntityQuery<Student>(Student.class);
 		q1.setCriteria(new Expression("firstName", Expression.EQUAL, "John"));
 		q1.setSort("gpa+");
@@ -65,7 +67,7 @@ public class JQueryTest {
 		}
 		Assert.assertTrue(Ordering.natural().isOrdered(gpaList1));
 		
-		// test descending
+		// test descending (single column)
 		EntityQuery<Student> q2 = new EntityQuery<Student>(Student.class);
 		q2.setCriteria(new Expression("firstName", Expression.EQUAL, "John"));
 		q2.setSort("gpa-");
@@ -75,6 +77,17 @@ public class JQueryTest {
 			gpaList2.add(student.getGpa());
 		}
 		Assert.assertTrue(Ordering.natural().reverse().isOrdered(gpaList2));
+		
+		// test ascending (multiple columns)
+		EntityQuery<Student> q3 = new EntityQuery<Student>(Student.class);
+		q3.setCriteria(new Expression("firstName", Expression.EQUAL, "John"));
+		q3.setSort("gpa+", "dob-");
+		List<Student> studentList3 = dao.read(q3);
+		List<Double> gpaList3 = new ArrayList<>();
+		for (Student student : studentList3) {
+			gpaList3.add(student.getGpa());
+		}
+		Assert.assertTrue(Ordering.natural().isOrdered(gpaList3));
 	}
 	
 	@Test
