@@ -38,6 +38,7 @@ public class QueryConverterTest {
 //		JQuery<Student> jq1 = new JQuery<Student>(Student.class);
 //		jq1.setCriteria(new Expression("firstName", Expression.EQUAL, "John"));
 //		Assert.assertEquals(jq1, QueryConverter.transform(jq1));
+		
 	}
 	
 	@Test

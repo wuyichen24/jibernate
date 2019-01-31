@@ -164,4 +164,71 @@ public class JQuery<E extends Persisted> {
         sb.append("}");
         return sb.toString();
     }
+    
+    @Override
+    public boolean equals(Object o) {
+    	if (o == null) {
+    		return false;
+    	}
+    	
+    	if (!(o instanceof JQuery)) {
+    		return false;
+    	}
+    	
+    	JQuery<?> jq = (JQuery<?>) o;
+    	
+    	if (clazz == null) {
+    		if (jq.getPersistedClass() != null) {
+    			return false;
+    		}
+    	} else if (!clazz.equals(jq.getPersistedClass())) {
+    		return false;
+    	}
+    	
+    	if (criteria == null) {
+    		if (jq.getCriteria() != null) {
+    			return false;
+    		}
+    	} else if (!criteria.equals(jq.getCriteria())) {
+    		return false;
+    	}
+    	
+    	if (sort == null) {
+    		if (jq.getSort() != null) {
+    			return false;
+    		}
+    	} else if (!sort.equals(jq.getSort())) {
+    		return false;
+    	}
+    	
+    	if (offset == null) {
+    		if (jq.getOffset() != null) {
+    			return false;
+    		}
+    	} else if (!offset.equals(jq.getOffset())) {
+    		return false;
+    	}
+    	
+    	if (limit == null) {
+    		if (jq.getLimit() != null) {
+    			return false;
+    		}
+    	} else if (!limit.equals(jq.getLimit())) {
+    		return false;
+    	}
+    	
+    	if (caseSensitive != jq.isCaseSensitive()) {
+    		return false;
+    	}
+    	
+    	if (distinct != jq.isDistinct()) {
+    		return false;
+    	}
+    	
+    	if (history != jq.isHistory()) {
+    		return false;
+    	}
+    	
+    	return true;
+    }
 }

@@ -30,7 +30,7 @@ import java.util.List;
  * 
  * @author  Wuyi Chen
  * @date    10/08/2018
- * @version 1.0
+ * @version 1.1
  * @since   1.0
  */
 public class Sort {
@@ -68,12 +68,13 @@ public class Sort {
         this.ascending = ascending;
     }
 
-    public String  getField()                      { return field;               }
-    public void    setField(String field)          { this.field = field;         }
-    public boolean isAscending()                   { return ascending;           }
-    public void    setAscending(boolean ascending) { this.ascending = ascending; }
-    
-    /**
+    public    String     getField()                      { return field;               }
+    public    void       setField(String field)          { this.field = field;         }
+    public    boolean    isAscending()                   { return ascending;           }
+    public    void       setAscending(boolean ascending) { this.ascending = ascending; }
+    protected List<Sort> getList()                       { return list;                }
+
+	/**
      * Parse sort expression.
      * 
      * <p>Different fields are separated by comma, and for each field, use "-" 
@@ -217,15 +218,17 @@ public class Sort {
 
     @Override
     public String toString() {
-    		if (isCascading()) {
-    			StringBuilder sb = new StringBuilder();
+    	if (isCascading()) {
+    		StringBuilder sb = new StringBuilder();
+    		
             for (Sort sort : list) {
-            		if (list.get(list.size() - 1).equals(sort)) {
-            			sb.append(getStringOfSimpleSort(sort));
-            		} else {
-            			sb.append(getStringOfSimpleSort(sort)).append(",");
-            		}
+            	if (list.get(list.size() - 1).equals(sort)) {
+            		sb.append(getStringOfSimpleSort(sort));
+            	} else {
+            		sb.append(getStringOfSimpleSort(sort)).append(",");
+            	}
             }
+            
             return sb.toString();
         } else {
             return getStringOfSimpleSort(this);
@@ -244,5 +247,52 @@ public class Sort {
      */
     public String getStringOfSimpleSort(Sort sort) {
     		return sort.getField() + (sort.isAscending() ? "+" : "-");
+    }
+    
+    @Override
+    public boolean equals(Object o) {
+    	if (o == null) {
+    		return false;
+    	}
+    	
+    	if (!(o instanceof Sort)) {
+    		return false;
+    	}
+    	
+    	Sort s = (Sort) o;
+    	
+    	if (field == null) {
+    		if (s.getField() != null) {
+    			return false;
+    		}
+    	} else if (!field.equals(s.getField())) {
+    		return false;
+    	}
+    	
+    	if (ascending != s.isAscending()) {
+    		return false;
+    	}
+    	
+    	if (list == null) {
+    		if (s.getList() != null) {
+    			return false;
+    		}
+    	} else {
+    		if (s.getList() == null) {
+    			return false;
+    		}
+    		
+    		if (list.size() != s.getList().size()) {
+    			return false;
+    		}
+    		
+    		for (int i = 0; i < list.size(); i++) {
+    			if (!list.get(i).equals(s.getList().get(i))) {
+    				return false;
+    			}
+    		}
+    	}
+    	
+    	return true;
     }
 }

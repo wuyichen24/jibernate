@@ -74,4 +74,22 @@ public class SortTest {
 		Sort sort1 = new Sort("firstname", true).add("lastname", false).add("gpa", true).add("age", false);
 		Assert.assertEquals("firstname+,lastname-,gpa+,age-", sort1.toString());
 	}
+	
+	@Test
+	public void equalsTest() {
+		// test some special cases
+		Assert.assertFalse(Sort.parse("firstname+").equals(null));
+		Assert.assertFalse(Sort.parse("firstname+").equals("ABC"));
+		
+		// test single column sort
+		Assert.assertTrue(Sort.parse("firstname+").equals(Sort.parse("firstname+")));
+		Assert.assertFalse(Sort.parse("firstname+").equals(Sort.parse("firstname-")));
+		Assert.assertFalse(Sort.parse("firstname+").equals(Sort.parse("lastname+")));
+		
+		// test multiple column sort
+		Assert.assertTrue(Sort.parse("firstname+,lastname-").equals(Sort.parse("firstname+,lastname-")));
+		Assert.assertFalse(Sort.parse("firstname+,lastname-").equals(Sort.parse("firstname+,lastname+")));
+		Assert.assertFalse(Sort.parse("firstname+,lastname-").equals(Sort.parse("lastname-,firstname+")));  // order is priority, the order should be same
+		Assert.assertFalse(Sort.parse("firstname+,lastname-").equals(Sort.parse("firstname+")));
+	}
 }
