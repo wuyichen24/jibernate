@@ -141,12 +141,15 @@ public class JQueryTest2 {
 		JQuery<Student> jq5a = new JQuery<>(Student.class);
 		JQuery<Student> jq5b = new JQuery<>(Student.class);
 		JQuery<Student> jq5c = new JQuery<>(Student.class);
+		JQuery<Student> jq5d = new JQuery<>(Student.class);
 		jq5a.setLimit(10);
 		jq5b.setLimit(10);
 		jq5c.setLimit(3);
 		Assert.assertTrue(jq5a.equals(jq5b));
 		Assert.assertFalse(jq5a.equals(jq5c));
 		Assert.assertFalse(jq5c.equals(jq5a));
+		Assert.assertFalse(jq5a.equals(jq5d));
+		Assert.assertFalse(jq5d.equals(jq5a));
 		
 		// test case-sensitive
 		JQuery<Student> jq6a = new JQuery<>(Student.class);
@@ -174,9 +177,9 @@ public class JQueryTest2 {
 		JQuery<Student> jq8a = new JQuery<>(Student.class);
 		JQuery<Student> jq8b = new JQuery<>(Student.class);
 		JQuery<Student> jq8c = new JQuery<>(Student.class);
-		jq8a.setDistinct(true);
-		jq8b.setDistinct(true);
-		jq8c.setDistinct(false);
+		jq8a.setHistory(true);
+		jq8b.setHistory(true);
+		jq8c.setHistory(false);
 		Assert.assertTrue(jq8a.equals(jq8b));
 		Assert.assertFalse(jq8a.equals(jq8c));
 		Assert.assertFalse(jq8c.equals(jq8a));
