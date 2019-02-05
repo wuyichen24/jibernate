@@ -22,6 +22,7 @@ import org.junit.Test;
 
 import junit.framework.Assert;
 import personal.wuyi.jibernate.entity.Student;
+import personal.wuyi.jibernate.entity.VersionedStudent;
 import personal.wuyi.jibernate.expression.Expression;
 
 /**
@@ -34,24 +35,40 @@ import personal.wuyi.jibernate.expression.Expression;
  */
 public class QueryConverterTest {
 	@Test
-	public void transformTest1() {
-//		JQuery<Student> jq1 = new JQuery<Student>(Student.class);
-//		jq1.setCriteria(new Expression("firstName", Expression.EQUAL, "John"));
-//		Assert.assertEquals(jq1, QueryConverter.transform(jq1));
+	public void transformTest() {
+		// test non-versioned class
+		JQuery<Student> jq1 = new JQuery<Student>(Student.class);
+		jq1.setCriteria(new Expression("firstName", Expression.EQUAL, "John"));
+		Assert.assertEquals(jq1, QueryConverter.transform(jq1));
 		
-	}
-	
-	@Test
-	public void transformTest2() {
+		// test versioned class (with criteria)
+		JQuery<VersionedStudent> jq2               = new JQuery<VersionedStudent>(VersionedStudent.class);
+		JQuery<VersionedStudent> jq2ExpectedResult = new JQuery<VersionedStudent>(VersionedStudent.class);
+		jq2.setCriteria(new Expression("firstName", Expression.EQUAL, "John"));
+		jq2ExpectedResult.setCriteria(new Expression("firstName", Expression.EQUAL, "John").and("head", Expression.EQUAL, true));
+		Assert.assertEquals(jq2ExpectedResult, QueryConverter.transform(jq2));
 		
+		// test versioned class (without criteria)
+		JQuery<VersionedStudent> jq3               = new JQuery<VersionedStudent>(VersionedStudent.class);
+		JQuery<VersionedStudent> jq3ExpectedResult = new JQuery<VersionedStudent>(VersionedStudent.class);
+		jq3ExpectedResult.setCriteria(new Expression("head", Expression.EQUAL, true));
+		Assert.assertEquals(jq3ExpectedResult, QueryConverter.transform(jq3));
 	}
 	
 	@Test
 	public void getJpqlStatementTest() {
+		// test jpql field is null
 		EntityQuery<Student> q1 = new EntityQuery<Student>(Student.class);
 		q1.setCriteria(new Expression("firstName", Expression.EQUAL, "John"));
 		String js1 = QueryConverter.getJpqlStatement(q1);
 		Assert.assertEquals("SELECT student FROM Student student WHERE student.firstName = :STUDENT_FIRSTNAME_61409aa1fd47d4a5332de23cbf59a36f", js1);
+		
+		// test jpql field is not null
+		EntityQuery<Student> q2 = new EntityQuery<Student>(Student.class);
+		q2.setCriteria(new Expression("lastName", Expression.EQUAL, "John"));   // there is last name, not first name
+		q2.setJpql("SELECT student FROM Student student WHERE student.firstName = :STUDENT_FIRSTNAME_61409aa1fd47d4a5332de23cbf59a36f");
+		String js2 = QueryConverter.getJpqlStatement(q2);
+		Assert.assertEquals("SELECT student FROM Student student WHERE student.firstName = :STUDENT_FIRSTNAME_61409aa1fd47d4a5332de23cbf59a36f", js2);
 	}
 	
 	@Test
