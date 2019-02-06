@@ -17,6 +17,8 @@
 package personal.wuyi.jibernate.query;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 import org.junit.Test;
 
@@ -24,6 +26,10 @@ import junit.framework.Assert;
 import personal.wuyi.jibernate.entity.Student;
 import personal.wuyi.jibernate.entity.VersionedStudent;
 import personal.wuyi.jibernate.expression.Expression;
+
+import org.hamcrest.collection.IsMapContaining;
+
+import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * The test class for {@code QueryConverter}.
@@ -69,6 +75,20 @@ public class QueryConverterTest {
 		q2.setJpql("SELECT student FROM Student student WHERE student.firstName = :STUDENT_FIRSTNAME_61409aa1fd47d4a5332de23cbf59a36f");
 		String js2 = QueryConverter.getJpqlStatement(q2);
 		Assert.assertEquals("SELECT student FROM Student student WHERE student.firstName = :STUDENT_FIRSTNAME_61409aa1fd47d4a5332de23cbf59a36f", js2);
+	}
+	
+	@Test
+	public void getParameterMapTest() {
+		// special cases
+		Assert.assertNull(QueryConverter.getParameterMap(Student.class, null, true));
+		
+		// test simple expression
+		Map<String, Object> paramMap1 = QueryConverter.getParameterMap(Student.class, new Expression("firstName", Expression.EQUAL, "John"), true);  // case sensitive
+		assertThat(paramMap1, IsMapContaining.hasEntry("STUDENT_FIRSTNAME_61409aa1fd47d4a5332de23cbf59a36f", "John"));
+		Map<String, Object> paramMap2 = QueryConverter.getParameterMap(Student.class, new Expression("firstName", Expression.EQUAL, "John"), false);  // case non-sensitive
+		assertThat(paramMap2, IsMapContaining.hasEntry("STUDENT_FIRSTNAME_61409aa1fd47d4a5332de23cbf59a36f", "JOHN"));
+		Map<String, Object> paramMap3 = QueryConverter.getParameterMap(Student.class, new Expression("firstName", Expression.EQUAL, new String[]{"John","Johnny"}), true);  // case sensitive - list as value
+		assertThat(paramMap3, IsMapContaining.hasEntry("STUDENT_FIRSTNAME_8ab4d802949bc28780acce7bc3b3a472",      Arrays.asList("John","Johnny")));
 	}
 	
 	@Test
