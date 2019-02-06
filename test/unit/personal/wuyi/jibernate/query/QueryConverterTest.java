@@ -119,18 +119,23 @@ public class QueryConverterTest {
 	
 	@Test
 	public void buildWhereClauseTest() {
+		// test simple expression
 		Assert.assertEquals("WHERE UPPER(student.firstname) = :STUDENT_FIRSTNAME_61409aa1fd47d4a5332de23cbf59a36f", 
-				QueryConverter.buildWhereClause(Student.class, new Expression("firstname", Expression.EQUAL, "John"), false));
+				QueryConverter.buildWhereClause(Student.class, new Expression("firstname", Expression.EQUAL, "John"), false));                      // test case non-sensitive
 		Assert.assertEquals("WHERE student.firstname = :STUDENT_FIRSTNAME_61409aa1fd47d4a5332de23cbf59a36f",        
-				QueryConverter.buildWhereClause(Student.class, new Expression("firstname", Expression.EQUAL, "John"), true));
+				QueryConverter.buildWhereClause(Student.class, new Expression("firstname", Expression.EQUAL, "John"), true));                       // test case sensitive
 		Assert.assertEquals("WHERE student.firstname IS NULL",                                                      
-				QueryConverter.buildWhereClause(Student.class, new Expression("firstname", Expression.EQUAL, null), true));                                       // test: is null
+				QueryConverter.buildWhereClause(Student.class, new Expression("firstname", Expression.EQUAL, null), true));                         // test EQUAL null
 		Assert.assertEquals("WHERE student.firstname IS NOT NULL",                                                  
-				QueryConverter.buildWhereClause(Student.class, new Expression("firstname", Expression.NOT_EQUAL, null), true));                                   // test: is not null
+				QueryConverter.buildWhereClause(Student.class, new Expression("firstname", Expression.NOT_EQUAL, null), true));                     // test NOT_EQUAL null
 		Assert.assertEquals("WHERE student.firstname IN (:STUDENT_FIRSTNAME_9aefd7dd925d795da67a249e696d7a56)",     
-				QueryConverter.buildWhereClause(Student.class, new Expression("firstname", Expression.IN, Arrays.asList("John", "Mary")), true));                 // test: in expression
-		Assert.assertEquals("WHERE student.firstname = :STUDENT_FIRSTNAME_61409aa1fd47d4a5332de23cbf59a36f AND student.gpa = :STUDENT_GPA_2fe1d1290c6aeb51f235f9ffda8332db", 
-				QueryConverter.buildWhereClause(Student.class, new Expression("firstname", Expression.EQUAL, "John").and("gpa", Expression.EQUAL, 3.45), true));  // test: compound expression
+				QueryConverter.buildWhereClause(Student.class, new Expression("firstname", Expression.IN, Arrays.asList("John", "Mary")), true));   // test IN           
+		
+		// test compound expressions
+		Assert.assertEquals("WHERE student.firstname = :STUDENT_FIRSTNAME_61409aa1fd47d4a5332de23cbf59a36f AND student.gpa = :STUDENT_GPA_2fe1d1290c6aeb51f235f9ffda8332db",
+				QueryConverter.buildWhereClause(Student.class, new Expression("firstname", Expression.EQUAL, "John").and("gpa", Expression.EQUAL, 3.45), true));              // test AND
+		Assert.assertEquals("WHERE student.firstname = :STUDENT_FIRSTNAME_61409aa1fd47d4a5332de23cbf59a36f OR student.gpa = :STUDENT_GPA_2fe1d1290c6aeb51f235f9ffda8332db", 
+				QueryConverter.buildWhereClause(Student.class, new Expression("firstname", Expression.EQUAL, "John").or("gpa", Expression.EQUAL, 3.45), true));               // test OR
 	}
 	
 	@Test
