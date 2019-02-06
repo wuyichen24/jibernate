@@ -32,6 +32,8 @@ import personal.wuyi.jibernate.expression.Expression;
 import org.hamcrest.collection.IsMapContaining;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.fail;
 
 /**
  * The test class for {@code QueryConverter}.
@@ -93,7 +95,8 @@ public class QueryConverterTest {
 		List<Entry<String, Object>> entryList = new ArrayList<>();
 		entryList.addAll(paramMap3.entrySet());
 		Assert.assertEquals(Arrays.asList("John","Johnny"), entryList.get(0).getValue());
-//		assertThat(paramMap3, IsMapContaining.hasEntry("STUDENT_FIRSTNAME_8ab4d802949bc28780acce7bc3b3a472",      Arrays.asList("John","Johnny")));
+//      the hex value in the key can be different among different environments, so just check the value
+//		assertThat(paramMap3, IsMapContaining.hasEntry("STUDENT_FIRSTNAME_8ab4d802949bc28780acce7bc3b3a472",      Arrays.asList("John","Johnny")));    // the hex value in key can be diff
 	}
 	
 	@Test
@@ -128,6 +131,25 @@ public class QueryConverterTest {
 				QueryConverter.buildWhereClause(Student.class, new Expression("firstname", Expression.IN, Arrays.asList("John", "Mary")), true));                 // test: in expression
 		Assert.assertEquals("WHERE student.firstname = :STUDENT_FIRSTNAME_61409aa1fd47d4a5332de23cbf59a36f AND student.gpa = :STUDENT_GPA_2fe1d1290c6aeb51f235f9ffda8332db", 
 				QueryConverter.buildWhereClause(Student.class, new Expression("firstname", Expression.EQUAL, "John").and("gpa", Expression.EQUAL, 3.45), true));  // test: compound expression
+	}
+	
+	@Test
+	public void buildWhereClauseTestException() {
+		// test use IN as operator but the value is not a list
+		try {
+			QueryConverter.buildWhereClause(Student.class, new Expression("firstname", Expression.IN, "John"), false);
+			fail("Expected an java.lang.IllegalArgumentException to be thrown");
+		} catch (IllegalArgumentException e) {
+			assertThat(e.getMessage(), is("You are passing single value into Expression, the operator can not be Expression.IN"));
+		}
+		
+		// test use non-IN as operator but the value is a list
+		try {
+			QueryConverter.buildWhereClause(Student.class, new Expression("firstname", Expression.ENDS_WITH, Arrays.asList("John", "Mary")), true);
+			fail("Expected an java.lang.IllegalArgumentException to be thrown");
+		} catch (IllegalArgumentException e) {
+			assertThat(e.getMessage(), is("You are passing multiple values into Expression, the operator must be Expression.IN"));
+		}
 	}
 	
 	@Test
