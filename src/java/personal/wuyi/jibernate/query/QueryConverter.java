@@ -16,6 +16,8 @@
 
 package personal.wuyi.jibernate.query;
 
+import java.io.UnsupportedEncodingException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -499,10 +501,6 @@ public class QueryConverter {
             }
         }
 
-        if (sb.length() == 0) {
-            return null;
-        }
-
         return sb.toString();
     }
     
@@ -576,8 +574,10 @@ public class QueryConverter {
     		try {
     			String hash = Md5.hash(value.toString());
     			sb.append("_").append(hash);
-    		} catch(Exception e) {
-    			// TODO
+    		} catch(UnsupportedEncodingException e) {
+    			throw new RuntimeException("If the charset of the input text \"" + value.toString() + "\" is not supported.");
+    		} catch(NoSuchAlgorithmException e) {
+    			throw new RuntimeException("MD5 algorithm is not supported.");
     		}
     	}
 
