@@ -16,9 +16,11 @@
 
 package personal.wuyi.jibernate.query;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.junit.Test;
 
@@ -88,7 +90,10 @@ public class QueryConverterTest {
 		Map<String, Object> paramMap2 = QueryConverter.getParameterMap(Student.class, new Expression("firstName", Expression.EQUAL, "John"), false);  // case non-sensitive
 		assertThat(paramMap2, IsMapContaining.hasEntry("STUDENT_FIRSTNAME_61409aa1fd47d4a5332de23cbf59a36f", "JOHN"));
 		Map<String, Object> paramMap3 = QueryConverter.getParameterMap(Student.class, new Expression("firstName", Expression.EQUAL, new String[]{"John","Johnny"}), true);  // case sensitive - list as value
-		assertThat(paramMap3, IsMapContaining.hasEntry("STUDENT_FIRSTNAME_8ab4d802949bc28780acce7bc3b3a472",      Arrays.asList("John","Johnny")));
+		List<Entry<String, Object>> entryList = new ArrayList<>();
+		entryList.addAll(paramMap3.entrySet());
+		Assert.assertEquals(Arrays.asList("John","Johnny"), entryList.get(0).getValue());
+//		assertThat(paramMap3, IsMapContaining.hasEntry("STUDENT_FIRSTNAME_8ab4d802949bc28780acce7bc3b3a472",      Arrays.asList("John","Johnny")));
 	}
 	
 	@Test
