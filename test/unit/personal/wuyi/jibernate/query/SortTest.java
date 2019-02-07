@@ -29,6 +29,20 @@ import org.junit.Test;
  */
 public class SortTest {
 	@Test
+	public void setFieldTest() {
+		Sort sort = new Sort("firstname");
+		sort.setField("lastname");
+		Assert.assertEquals("lastname", sort.getField());
+	}
+	
+	@Test
+	public void setAscendingTest() {
+		Sort sort = new Sort("firstname", true);
+		sort.setAscending(false);
+		Assert.assertFalse(sort.isAscending());
+	}
+	
+	@Test
 	public void parseTest() {
 		Sort sort1 = Sort.parse("firstname+");
 		Assert.assertEquals("firstname", sort1.getField());
@@ -49,6 +63,7 @@ public class SortTest {
 	
 	@Test
 	public void addTest() {
+		// test {firstname+, lastname-}
 		Sort sort1 = new Sort("firstname", true);
 		sort1.add("lastname", false);
 		Assert.assertEquals("firstname", sort1.toList().get(0).getField());
@@ -56,6 +71,7 @@ public class SortTest {
 		Assert.assertTrue(sort1.toList().get(0).isAscending());
 		Assert.assertFalse(sort1.toList().get(1).isAscending());
 		
+		// test {firstname+, lastname-, gpa+, age-}
 		Sort sort2 = new Sort("gpa", true);
 		sort2.add("age", false);
 		sort1.add(sort2);
@@ -67,12 +83,29 @@ public class SortTest {
 		Assert.assertFalse(sort1.toList().get(1).isAscending());
 		Assert.assertTrue(sort1.toList().get(2).isAscending());
 		Assert.assertFalse(sort1.toList().get(3).isAscending());
+		
+		// test {firstname+, lastname-, gpa+, age-, race+}
+		sort1.add("race");                                                   // add field name (use default ascending order)
+		Assert.assertEquals("firstname", sort1.toList().get(0).getField());
+		Assert.assertEquals("lastname",  sort1.toList().get(1).getField());
+		Assert.assertEquals("gpa",       sort1.toList().get(2).getField());
+		Assert.assertEquals("age",       sort1.toList().get(3).getField());
+		Assert.assertEquals("race",      sort1.toList().get(4).getField());
+		Assert.assertTrue(sort1.toList().get(0).isAscending());
+		Assert.assertFalse(sort1.toList().get(1).isAscending());
+		Assert.assertTrue(sort1.toList().get(2).isAscending());
+		Assert.assertFalse(sort1.toList().get(3).isAscending());
+		Assert.assertTrue(sort1.toList().get(4).isAscending());
 	}
 	
 	@Test
 	public void toStringTest() {
-		Sort sort1 = new Sort("firstname", true).add("lastname", false).add("gpa", true).add("age", false);
-		Assert.assertEquals("firstname+,lastname-,gpa+,age-", sort1.toString());
+		Sort sort1 = new Sort("firstname", true);
+		Assert.assertEquals("firstname+", sort1.toString());
+		
+		// test multiple sorts
+		Sort sort2 = new Sort("firstname", true).add("lastname", false).add("gpa", true).add("age", false);
+		Assert.assertEquals("firstname+,lastname-,gpa+,age-", sort2.toString());
 	}
 	
 	@Test
@@ -91,5 +124,14 @@ public class SortTest {
 		Assert.assertFalse(Sort.parse("firstname+,lastname-").equals(Sort.parse("firstname+,lastname+")));
 		Assert.assertFalse(Sort.parse("firstname+,lastname-").equals(Sort.parse("lastname-,firstname+")));  // order is priority, the order should be same
 		Assert.assertFalse(Sort.parse("firstname+,lastname-").equals(Sort.parse("firstname+")));
+		
+		// test multiple sort and single sort comparison
+		Sort mulSort1 = new Sort("firstname").add("lastname");
+		Sort mulSort2 = new Sort("firstname").add("lastname").add("age");
+		Sort sinSort = new Sort("age");
+		Assert.assertFalse(mulSort1.equals(sinSort));
+		Assert.assertFalse(sinSort.equals(mulSort1));
+		Assert.assertFalse(mulSort1.equals(mulSort2));
+		Assert.assertFalse(mulSort2.equals(mulSort1));
 	}
 }
