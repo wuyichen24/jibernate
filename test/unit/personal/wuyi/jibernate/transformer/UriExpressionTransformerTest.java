@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package personal.wuyi.jibernate.transformer;
 
 import org.junit.Assert;
@@ -24,33 +23,28 @@ import personal.wuyi.jibernate.expression.Expression;
 import personal.wuyi.jibernate.expression.Subject;
 
 /**
- * The test class for {@code SearchExpressionTransformer}.
+ * The test class for {@code UriExpressionTransformer}.
  * 
  * @author  Wuyi Chen
  * @date    02/12/2018
  * @version 1.1
  * @since   1.1
  */
-public class SearchExpressionTransformerTest {
-	private SearchExpressionTransformer transformer;
+public class UriExpressionTransformerTest {
+	private UriExpressionTransformer transformer;
 	
 	@Before
 	public void initialize() {
-		transformer = new SearchExpressionTransformer();
+		transformer = new UriExpressionTransformer();
 	}
 	
 	@Test
 	public void transformTest() {
-	    // test equal
-		Assert.assertEquals(new Expression("firstName", Expression.EQUAL, "John"), transformer.transform(new Subject("firstName"), Expression.EQUAL, "John"));
-		
-		// test start_with
-		Assert.assertEquals(new Expression("firstName", "LIKE", "John%"), transformer.transform(new Subject("firstName"), Expression.STARTS_WITH, "John"));
-		
-		// test end_with
-		Assert.assertEquals(new Expression("firstName", "LIKE", "%John"), transformer.transform(new Subject("firstName"), Expression.ENDS_WITH, "John"));
-		
-		// test contains
-		Assert.assertEquals(new Expression("firstName", "LIKE", "%John%"), transformer.transform(new Subject("firstName"), Expression.CONTAINS, "John"));
+		Assert.assertEquals(new Expression("id", Expression.EQUAL, 27), transformer.transform(new Subject("uri"), Expression.EQUAL, "/personal/wuyi/jibernate/entity/Student/27"));
+	}
+	
+	@Test
+	public void getAttributeTest() {
+		Assert.assertEquals("id", transformer.getAttribute());
 	}
 }
