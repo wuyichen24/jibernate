@@ -41,7 +41,7 @@ public class UriExpressionTransformer extends ExpressionTransformer {
     @Override
     public Expression transform(Subject subject, String operator, Object value) {
     	Subject newSubject = subject;
-        if ("uri".equals(subject.getName()) && value != null) {
+        if ("uri".equals(newSubject.getName()) && value != null) {
         	newSubject = new Subject(getAttribute());
         	if (value instanceof String) {
         		value = Uri.parse((String) value);

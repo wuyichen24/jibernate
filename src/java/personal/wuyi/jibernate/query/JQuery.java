@@ -225,10 +225,6 @@ public class JQuery<E extends Persisted> {
     		return false;
     	}
     	
-    	if (history != jq.isHistory()) {
-    		return false;
-    	}
-    	
-    	return true;
+    	return history == jq.isHistory();
     }
 }

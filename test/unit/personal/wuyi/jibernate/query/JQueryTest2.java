@@ -82,7 +82,7 @@ public class JQueryTest2 {
 		// some special cases
 		JQuery<Student> jq = new JQuery<>(Student.class);
 		Assert.assertFalse(jq.equals(null));
-		Assert.assertFalse(jq.equals("ABC"));
+		Assert.assertFalse(jq.equals(new Integer(20)));
 		
 		// test class equality
 		JQuery<Student> jq1a = new JQuery<>(Student.class);

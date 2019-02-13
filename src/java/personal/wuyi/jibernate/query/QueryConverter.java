@@ -379,8 +379,8 @@ public class QueryConverter {
      * @since   1.0
      */
     protected static String buildWhereClause(Class<?> clazz, Expression criteria, boolean caseSensitive) {
-    	criteria = criteria.minimized();
-    	String whereExpression = buildWhereExpression(clazz, criteria, caseSensitive);
+    	Expression criteriaLocal = criteria.minimized();
+    	String whereExpression = buildWhereExpression(clazz, criteriaLocal, caseSensitive);
     	return Joiner.on(" ").join("WHERE", whereExpression);
     }
     
@@ -575,9 +575,9 @@ public class QueryConverter {
     			String hash = Md5.hash(value.toString());
     			sb.append("_").append(hash);
     		} catch(UnsupportedEncodingException e) {
-    			throw new RuntimeException("If the charset of the input text \"" + value.toString() + "\" is not supported.");
+    			throw new IllegalArgumentException("If the charset of the input text \"" + value.toString() + "\" is not supported.");
     		} catch(NoSuchAlgorithmException e) {
-    			throw new RuntimeException("MD5 algorithm is not supported.");
+    			throw new IllegalArgumentException("MD5 algorithm is not supported.");
     		}
     	}
 

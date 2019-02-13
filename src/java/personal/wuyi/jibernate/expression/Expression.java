@@ -1003,6 +1003,8 @@ public class Expression implements Cloneable, Serializable {
      * @since   1.0      
      */
     public static void applyDeMorganLaw(Expression complementExpr, Expression disjunctExpr, Expression subExpr, String leftOptr, String rightOptr) {
+    	Expression disjunctExprLocal = disjunctExpr;
+    	
     	if (leftOptr == null || leftOptr.equals(Expression.OR)) {
     		if (!complementExpr.isCompound()) {
     			complementExpr.compound();
@@ -1013,22 +1015,22 @@ public class Expression implements Cloneable, Serializable {
                 complementExpr.addSubExpressionWithOperator(subExpr, Expression.AND);
             } else {
                 // case 2
-                if (disjunctExpr.getNumberOfSubExpression() > 0) {
-                    disjunctExpr = new Expression();
+                if (disjunctExprLocal.getNumberOfSubExpression() > 0) {
+                	disjunctExprLocal = new Expression();
                 }
-                if (!disjunctExpr.isCompound()) {
-            		disjunctExpr.compound();
+                if (!disjunctExprLocal.isCompound()) {
+                	disjunctExprLocal.compound();
         		}
-                disjunctExpr.addSubExpressionWithOperator(subExpr, null);
-                complementExpr.addSubExpressionWithOperator(disjunctExpr, Expression.AND);
+                disjunctExprLocal.addSubExpressionWithOperator(subExpr, null);
+                complementExpr.addSubExpressionWithOperator(disjunctExprLocal, Expression.AND);
             }
         } else {
         	// case 3
-        	if (!disjunctExpr.isCompound()) {
-        		disjunctExpr.compound();
+        	if (!disjunctExprLocal.isCompound()) {
+        		disjunctExprLocal.compound();
     		}
         	
-            disjunctExpr.addSubExpressionWithOperator(subExpr, Expression.OR);
+        	disjunctExprLocal.addSubExpressionWithOperator(subExpr, Expression.OR);
         }
     }
 
