@@ -82,5 +82,43 @@ public class ReflectUtil2Test {
 		assertThat(map2, IsMapContaining.hasEntry("AMERICAN_INDIAN",  Enum.class));
 		assertThat(map2, IsMapContaining.hasEntry("HISPANIC",         Enum.class));
 		assertThat(map2, IsMapContaining.hasEntry("BLACK",            Enum.class));
+		
+		Map<String, Class<?>> map3 = ReflectUtil2.getPropertyMap(ClassRoom.class, true, false);
+		assertThat(map3, IsMapContaining.hasEntry("studentA.serialVersionUID", Long.TYPE));
+		assertThat(map3, IsMapContaining.hasEntry("studentA.id",               Long.class));
+		assertThat(map3, IsMapContaining.hasEntry("studentA.firstName",        String.class));
+		assertThat(map3, IsMapContaining.hasEntry("studentA.lastName",         String.class));
+		assertThat(map3, IsMapContaining.hasEntry("studentA.dob",              Date.class));
+		assertThat(map3, IsMapContaining.hasEntry("studentA.gpa",              Double.TYPE));
+		assertThat(map3, IsMapContaining.hasEntry("studentA.race",             Ethnicity.class));
+		assertThat(map3, IsMapContaining.hasEntry("studentA.WHITE",            Enum.class));
+		assertThat(map3, IsMapContaining.hasEntry("studentA.ASIAN",            Enum.class));
+		assertThat(map3, IsMapContaining.hasEntry("studentA.AMERICAN_INDIAN",  Enum.class));
+		assertThat(map3, IsMapContaining.hasEntry("studentA.HISPANIC",         Enum.class));
+		assertThat(map3, IsMapContaining.hasEntry("studentA.BLACK",            Enum.class));
+		assertThat(map3, IsMapContaining.hasEntry("studentB.serialVersionUID", Long.TYPE));
+		assertThat(map3, IsMapContaining.hasEntry("studentB.id",               Long.class));
+		assertThat(map3, IsMapContaining.hasEntry("studentB.firstName",        String.class));
+		assertThat(map3, IsMapContaining.hasEntry("studentB.lastName",         String.class));
+		assertThat(map3, IsMapContaining.hasEntry("studentB.dob",              Date.class));
+		assertThat(map3, IsMapContaining.hasEntry("studentB.gpa",              Double.TYPE));
+		assertThat(map3, IsMapContaining.hasEntry("studentB.race",             Ethnicity.class));
+		assertThat(map3, IsMapContaining.hasEntry("studentB.WHITE",            Enum.class));
+		assertThat(map3, IsMapContaining.hasEntry("studentB.ASIAN",            Enum.class));
+		assertThat(map3, IsMapContaining.hasEntry("studentB.AMERICAN_INDIAN",  Enum.class));
+		assertThat(map3, IsMapContaining.hasEntry("studentB.HISPANIC",         Enum.class));
+		assertThat(map3, IsMapContaining.hasEntry("studentB.BLACK",            Enum.class));
+		assertThat(map3, IsMapContaining.hasEntry("studentC.serialVersionUID", Long.TYPE));
+		assertThat(map3, IsMapContaining.hasEntry("studentC.id",               Long.class));
+		assertThat(map3, IsMapContaining.hasEntry("studentC.firstName",        String.class));
+		assertThat(map3, IsMapContaining.hasEntry("studentC.lastName",         String.class));
+		assertThat(map3, IsMapContaining.hasEntry("studentC.dob",              Date.class));
+		assertThat(map3, IsMapContaining.hasEntry("studentC.gpa",              Double.TYPE));
+		assertThat(map3, IsMapContaining.hasEntry("studentC.race",             Ethnicity.class));
+		assertThat(map3, IsMapContaining.hasEntry("studentC.WHITE",            Enum.class));
+		assertThat(map3, IsMapContaining.hasEntry("studentC.ASIAN",            Enum.class));
+		assertThat(map3, IsMapContaining.hasEntry("studentC.AMERICAN_INDIAN",  Enum.class));
+		assertThat(map3, IsMapContaining.hasEntry("studentC.HISPANIC",         Enum.class));
+		assertThat(map3, IsMapContaining.hasEntry("studentC.BLACK",            Enum.class));
 	}
 }

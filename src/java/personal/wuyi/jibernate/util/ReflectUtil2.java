@@ -205,14 +205,14 @@ public class ReflectUtil2 {
                 	map.put(nested, entry1.getValue());
                 }
             } else {
-            		map.put(fieldName, fieldClass);
+            	map.put(fieldName, fieldClass);
             		
-            		if (fieldClass.isEnum() && recurse) {
-            			Object[] values = fieldClass.getEnumConstants();
-            			for (Object value : values) {
-            				map.put(value.toString(), Enum.class);
-            			}
-            		} 
+            	if (fieldClass.isEnum() && recurse) {
+            		Object[] values = fieldClass.getEnumConstants();
+            		for (Object value : values) {
+            			map.put(value.toString(), Enum.class);
+            		}
+            	} 
             }
         }
 
