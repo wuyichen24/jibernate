@@ -39,17 +39,27 @@ public class ReflectUtil2Test {
 	
 	@Test
 	public void isEqualListTest() {
+		// same list
 		List<String> list1 = Arrays.asList("ABC", "123", "XYZ");
 		List<String> list2 = Arrays.asList("ABC", "123", "XYZ");
 		Assert.assertTrue(ReflectUtil2.isEqualList(list1, list2));
 		
+		// different list (same size, different elements)
 		List<String> list3 = Arrays.asList("ABC", "123", "XYZ");
 		List<String> list4 = Arrays.asList("ABC", "XYZ", "123");
 		Assert.assertFalse(ReflectUtil2.isEqualList(list3, list4));
+		
+		// different list (different size)
+		List<String> list5 = Arrays.asList("ABC", "123", "XYZ");
+		List<String> list6 = Arrays.asList("ABC", "XYZ");
+		Assert.assertFalse(ReflectUtil2.isEqualList(list5, list6));
 	}
 	
 	@Test
 	public void getPropertyMapTest() {
+		// special case
+		Assert.assertNull(ReflectUtil2.getPropertyMap(null));
+		
 		Map<String, Class<?>> map1 = ReflectUtil2.getPropertyMap(Student.class);
 		assertThat(map1, IsMapContaining.hasEntry("serialVersionUID", Long.TYPE));
 		assertThat(map1, IsMapContaining.hasEntry("id",               Long.class));
