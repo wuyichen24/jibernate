@@ -23,7 +23,7 @@ import java.io.Serializable;
  * 
  * @author  Wuyi Chen
  * @date    09/17/2018
- * @version 1.0
+ * @version 1.1
  * @since   1.0
  */
 public class Subject implements Cloneable, Serializable {

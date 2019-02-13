@@ -23,7 +23,7 @@ import personal.wuyi.jibernate.entity.Persisted;
  *
  * @author  Wuyi Chen
  * @date    09/19/2018
- * @version 1.0
+ * @version 1.1
  * @since   1.0
  */
 public class EntityQuery<E extends Persisted> extends JQuery<E> {

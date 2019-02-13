@@ -53,7 +53,7 @@ import personal.wuyi.reflect.ReflectUtil;
  * 
  * @author  Wuyi Chen
  * @date    08/07/2018
- * @version 1.0
+ * @version 1.1
  * @since   1.0
  */
 abstract class AbstractEntityManagerDao implements Dao {

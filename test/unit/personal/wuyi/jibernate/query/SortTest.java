@@ -24,7 +24,7 @@ import org.junit.Test;
  * 
  * @author  Wuyi Chen
  * @date    10/09/2018
- * @version 1.0
+ * @version 1.1
  * @since   1.0
  */
 public class SortTest {

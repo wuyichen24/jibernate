@@ -54,7 +54,7 @@ import personal.wuyi.jibernate.test.GenericDbClientUtil;
  * 
  * @author  Wuyi Chen
  * @date    08/30/2018
- * @version 1.0
+ * @version 1.1
  * @since   1.0
  */
 public class AbstractEntityManagerDaoTest {

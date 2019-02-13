@@ -27,7 +27,7 @@ import personal.wuyi.jibernate.config.MysqlDbConfig;
  * 
  * @author  Wuyi Chen
  * @date    08/08/2018
- * @version 1.0
+ * @version 1.1
  * @since   1.0
  */
 public class MysqlEntityManagerDao extends AbstractEntityManagerDao {
