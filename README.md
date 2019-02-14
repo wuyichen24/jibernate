@@ -55,7 +55,7 @@ Please see our [Wiki](https://github.com/wuyichen24/jibernate/wiki) page.
 
 ## Download
 - [Download ZIP](https://github.com/wuyichen24/jibernate/archive/master.zip)
-- [Download JAR](https://github.com/wuyichen24/jibernate/releases/download/v1.0/jibernate-1.0.jar)
+- [Download JAR](https://github.com/wuyichen24/jibernate/releases/download/v1.1/jibernate-1.1.jar)
 
 ## Contributing
 
