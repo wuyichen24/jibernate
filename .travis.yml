@@ -16,5 +16,5 @@ services:
   - mysql
 
 before_install:
-  - echo "USE mysql;\nUPDATE user SET password=PASSWORD('6ytow2-;S3lA') WHERE user='root';\n"
+  - mysqladmin --user=root password "6ytow2-;S3lA"
   - mysql -u root --password="6ytow2-;S3lA" < config/travis.sql
